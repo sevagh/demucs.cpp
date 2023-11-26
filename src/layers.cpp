@@ -4,91 +4,6 @@
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
 
-Eigen::Tensor3dXf
-demucscpp::conv2d(const Eigen::Tensor3dXf &x, const Eigen::Tensor4dXf &w,
-                  const Eigen::Tensor1dXf &b, const int kernel_height,
-                  const int kernel_width, const int stride_height,
-                  const int stride_width, const int pad_height,
-                  const int pad_width, int dilation_height, int dilation_width)
-{
-    // always ensure dilation is at least 1
-    dilation_height = (dilation_height == 0) ? 1 : dilation_height;
-    dilation_width = (dilation_width == 0) ? 1 : dilation_width;
-
-    int in_channels = x.dimension(0);
-    int in_height = x.dimension(1);
-    int in_width = x.dimension(2);
-
-    int out_channels = w.dimension(0);
-    int kernel_height_w = w.dimension(2);
-    int kernel_width_w = w.dimension(3);
-
-    demucscppdebug::assert_(kernel_height == kernel_height_w);
-    demucscppdebug::assert_(kernel_width == kernel_width_w);
-
-    int out_height = static_cast<int>(std::floor(in_height + 2 * pad_height -
-                                                 kernel_height) /
-                                      stride_height) +
-                     1;
-    int out_width =
-        static_cast<int>(std::floor(in_width + 2 * pad_width - kernel_width) /
-                         stride_width) +
-        1;
-
-    Eigen::Tensor3dXf y_out(out_channels, out_height, out_width);
-    y_out.setZero();
-
-    // 2d convolution loop
-    for (int chout = 0; chout < out_channels; ++chout)
-    {
-        for (int i = 0; i < out_height; ++i)
-        {
-            for (int j = 0; j < out_width; ++j)
-            {
-                float sum = 0.0f;
-                float c =
-                    0.0f; // A running compensation for lost low-order bits.
-                for (int chin = 0; chin < in_channels; ++chin)
-                {
-                    for (int m = 0; m < kernel_height; ++m)
-                    {
-                        for (int n = 0; n < kernel_width; ++n)
-                        {
-                            int ih = i * stride_height + m * dilation_height -
-                                     pad_height;
-                            int jw = j * stride_width + n * dilation_width -
-                                     pad_width;
-                            if (ih >= 0 && ih < in_height && jw >= 0 &&
-                                jw < in_width)
-                            {
-                                float y =
-                                    x(chin, ih, jw) * w(chout, chin, m, n);
-                                float t = sum + y;
-                                if (abs(sum) >= abs(y))
-                                {
-                                    c += (sum - t) +
-                                         y; // If sum is larger, low-order
-                                            // digits of y are lost.
-                                }
-                                else
-                                {
-                                    c += (y - t) + sum; // Else low-order digits
-                                                        // of sum are lost
-                                }
-                                sum = t;
-                            }
-                        }
-                    }
-                }
-                y_out(chout, i, j) =
-                    sum + c + b(chout); // Add compensation to the final sum
-            }
-        }
-    }
-
-    return y_out;
-}
-
 Eigen::Tensor3dXf demucscpp::group_norm(const Eigen::Tensor3dXf &x,
                                         const Eigen::Tensor1dXf &weight,
                                         const Eigen::Tensor1dXf &b,
@@ -273,32 +188,6 @@ Eigen::Tensor3dXf demucscpp::conv1d_tr(const Eigen::Tensor3dXf &x,
     return y_out_shuf;
 }
 
-Eigen::Tensor3dXf demucscpp::conv1d(const Eigen::Tensor3dXf &x,
-                                    const Eigen::Tensor3dXf &w,
-                                    const Eigen::Tensor1dXf &b, int kernel_size,
-                                    int stride, int pad, int dilation)
-{
-    // always ensure dilation is at least 1
-    dilation = (dilation == 0) ? 1 : dilation;
-
-    // copy w into a 4d tensor with trailing (,1) dimension
-    Eigen::Tensor4dXf w_4d = w.reshape(Eigen::array<int, 4>(
-        {(int)w.dimension(0), (int)w.dimension(1), (int)w.dimension(2), 1}));
-
-    // move 0 axis to the end
-    Eigen::Tensor3dXf x_shuff = x.shuffle(Eigen::array<int, 3>({1, 2, 0}));
-
-    // do 2d convolution inference here
-    // treating the in_freq dimension as a width dimension with a no-op kernel
-    Eigen::Tensor3dXf y_out = demucscpp::conv2d(
-        x_shuff, w_4d, b, kernel_size, 1, stride, 1, pad, 0, dilation, 1);
-
-    // move end axis to the front
-    Eigen::Tensor3dXf y_out_shuf =
-        y_out.shuffle(Eigen::array<int, 3>({2, 0, 1}));
-    return y_out_shuf;
-}
-
 Eigen::Tensor3dXf demucscpp::layer_norm(const Eigen::Tensor3dXf &x,
                                         const Eigen::Tensor1dXf &weight,
                                         const Eigen::Tensor1dXf &bias,
@@ -340,11 +229,10 @@ void demucscpp::apply_dconv(struct demucscpp::demucs_model_4s &model,
     // now dconv time
 
     // Conv1d(48, 6, kernel_size=(3,), stride=(1,), padding=(1,))
-    y = demucscpp::conv1d(
+    y = demucscpp::conv1d<3, 1, 1, 1>(
         y,
         model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx][0],
-        model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx][0], 3,
-        1, 1, 0);
+        model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx][0]);
 
     y = demucscpp::group_norm(
         y,
@@ -356,11 +244,10 @@ void demucscpp::apply_dconv(struct demucscpp::demucs_model_4s &model,
     y = demucscpp::gelu(y);
 
     // Conv1d(6, 96, kernel_size=(1,), stride=(1,))
-    y = demucscpp::conv1d(
+    y = demucscpp::conv1d<1, 1, 0, 0>(
         y,
         model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx][0],
-        model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx][0], 1,
-        1, 0, 0);
+        model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx][0]);
 
     y = demucscpp::group_norm(
         y,
@@ -383,11 +270,10 @@ void demucscpp::apply_dconv(struct demucscpp::demucs_model_4s &model,
     // NEXT ENTIRE SUBSEQUENCE OF DCONV WITH SLIGHTLY DIFFERENT PARAMS
 
     // Conv1d(48, 6, kernel_size=(3,), stride=(1,), padding=(2,), dilation=(2,))
-    y = demucscpp::conv1d(
+    y = demucscpp::conv1d<3, 1, 2, 2>(
         y,
         model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx][1],
-        model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx][1], 3,
-        1, 2, 2);
+        model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx][1]);
 
     Eigen::Tensor3dXf y_cropped =
         y.slice(Eigen::array<Eigen::Index, 3>({0, 0, 0}),
@@ -406,11 +292,10 @@ void demucscpp::apply_dconv(struct demucscpp::demucs_model_4s &model,
     y = demucscpp::gelu(y);
 
     // Conv1d(6, 96, kernel_size=(1,), stride=(1,))
-    y = demucscpp::conv1d(
+    y = demucscpp::conv1d<1, 1, 0, 0>(
         y,
         model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx][1],
-        model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx][1], 1,
-        1, 0, 0);
+        model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx][1]);
 
     y = demucscpp::group_norm(
         y,
@@ -528,22 +413,19 @@ void demucscpp::common_encoder_layer(
 
     for (int h = 0; h < num_heads; ++h)
     {
-        for (int t = 0; t < T; ++t)
-        {
-            for (int s = 0; s < S; ++s)
-            {
-                float sum = 0.0f;
-                float c = 0.0f;
-                for (int d = 0; d < head_split; ++d)
-                {
-                    float y = Q_heads(t, h, d) * K_heads(s, h, d) - c;
-                    float t_sum = sum + y;
-                    c = (t_sum - sum) - y;
-                    sum = t_sum;
-                }
-                scores(h * T + t, s) = sum / std::sqrt((float)head_split);
-            }
-        }
+        // Extract the h-th head from Q_heads and K_heads
+        Eigen::Tensor<float, 2> Q_head_tensor = Q_heads.chip(h, 1);
+        Eigen::Tensor<float, 2> K_head_tensor = K_heads.chip(h, 1);
+
+        // Reshape the tensors to matrices
+        Eigen::Map<Eigen::MatrixXf> Q_head(Q_head_tensor.data(), T, head_split);
+        Eigen::Map<Eigen::MatrixXf> K_head(K_head_tensor.data(), S, head_split);
+
+        // Compute the dot product of Q_head and K_head
+        Eigen::MatrixXf dot_product = Q_head * K_head.transpose();
+
+        // Store the result in scores
+        scores.block(h * T, 0, T, S) = dot_product / std::sqrt((float)head_split);
     }
 
     // Apply softmax to scores

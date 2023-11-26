@@ -52,7 +52,6 @@ TEST(DemucsCPPLayers, FreqEncoders)
     Eigen::Tensor3dXf x_fake(4, 2048, 336);
 
     // fill with -1, 1 alternating
-#pragma omp parallel for collapse(3)
     for (size_t i = 0; i < 4; ++i)
     {
         for (size_t j = 0; j < 2048; ++j)
@@ -77,17 +76,17 @@ TEST(DemucsCPPLayers, FreqEncoders)
     demucscppdebug::debug_tensor_3dxf(x_fake, "x_fake");
     demucscppdebug::debug_tensor_3dxf(x_fake_enc_0, "x_fake_enc_0");
 
-    Eigen::Tensor3dXf x_fake_enc_1(96, 128, 336);
-    demucscpp::apply_freq_encoder(model, 1, x_fake_enc_0, x_fake_enc_1);
-    demucscppdebug::debug_tensor_3dxf(x_fake_enc_1, "x_fake_enc_1");
+    //Eigen::Tensor3dXf x_fake_enc_1(96, 128, 336);
+    //demucscpp::apply_freq_encoder(model, 1, x_fake_enc_0, x_fake_enc_1);
+    //demucscppdebug::debug_tensor_3dxf(x_fake_enc_1, "x_fake_enc_1");
 
-    Eigen::Tensor3dXf x_fake_enc_2(192, 32, 336);
-    demucscpp::apply_freq_encoder(model, 2, x_fake_enc_1, x_fake_enc_2);
-    demucscppdebug::debug_tensor_3dxf(x_fake_enc_2, "x_fake_enc_2");
+    //Eigen::Tensor3dXf x_fake_enc_2(192, 32, 336);
+    //demucscpp::apply_freq_encoder(model, 2, x_fake_enc_1, x_fake_enc_2);
+    //demucscppdebug::debug_tensor_3dxf(x_fake_enc_2, "x_fake_enc_2");
 
-    Eigen::Tensor3dXf x_fake_enc_3(384, 8, 336);
-    demucscpp::apply_freq_encoder(model, 3, x_fake_enc_2, x_fake_enc_3);
-    demucscppdebug::debug_tensor_3dxf(x_fake_enc_3, "x_fake_enc_3");
+    //Eigen::Tensor3dXf x_fake_enc_3(384, 8, 336);
+    //demucscpp::apply_freq_encoder(model, 3, x_fake_enc_2, x_fake_enc_3);
+    //demucscppdebug::debug_tensor_3dxf(x_fake_enc_3, "x_fake_enc_3");
 }
 
 TEST(DemucsCPPLayers, FreqDecoders)
@@ -109,7 +108,6 @@ TEST(DemucsCPPLayers, FreqDecoders)
     Eigen::Tensor3dXf x_fake_dec_4(4, 2048, 336);
 
     // fill with -1, 1 alternating
-#pragma omp parallel for collapse(3)
     for (size_t i = 0; i < 384; ++i)
     {
         for (size_t j = 0; j < 8; ++j)
@@ -129,7 +127,6 @@ TEST(DemucsCPPLayers, FreqDecoders)
             }
         }
     }
-#pragma omp parallel for collapse(3)
     for (size_t i = 0; i < 192; ++i)
     {
         for (size_t j = 0; j < 32; ++j)
@@ -147,7 +144,6 @@ TEST(DemucsCPPLayers, FreqDecoders)
             }
         }
     }
-#pragma omp parallel for collapse(3)
     for (size_t i = 0; i < 96; ++i)
     {
         for (size_t j = 0; j < 128; ++j)
@@ -165,7 +161,6 @@ TEST(DemucsCPPLayers, FreqDecoders)
             }
         }
     }
-#pragma omp parallel for collapse(3)
     for (size_t i = 0; i < 48; ++i)
     {
         for (size_t j = 0; j < 512; ++j)
@@ -221,7 +216,6 @@ TEST(DemucsCPPLayers, TimeEncoders)
     Eigen::Tensor3dXf xt_fake(1, 2, 343980);
 
     // fill with -1, 1 alternating
-#pragma omp parallel for collapse(3)
     for (size_t i = 0; i < 1; ++i)
     {
         for (size_t j = 0; j < 2; ++j)
@@ -282,7 +276,6 @@ TEST(DemucsCPPLayers, TimeDecoders)
     Eigen::Tensor3dXf xt_fake_dec_4(1, 8, 343980);
 
     // fill with -1, 1 alternating
-#pragma omp parallel for collapse(2)
     for (size_t i = 0; i < 384; ++i)
     {
         for (size_t j = 0; j < 1344; ++j)
@@ -299,7 +292,6 @@ TEST(DemucsCPPLayers, TimeDecoders)
             }
         }
     }
-#pragma omp parallel for collapse(2)
     for (size_t i = 0; i < 192; ++i)
     {
         for (size_t j = 0; j < 5375; ++j)
@@ -314,7 +306,6 @@ TEST(DemucsCPPLayers, TimeDecoders)
             }
         }
     }
-#pragma omp parallel for collapse(2)
     for (size_t i = 0; i < 96; ++i)
     {
         for (size_t j = 0; j < 21499; ++j)
@@ -329,7 +320,6 @@ TEST(DemucsCPPLayers, TimeDecoders)
             }
         }
     }
-#pragma omp parallel for collapse(2)
     for (size_t i = 0; i < 48; ++i)
     {
         for (size_t j = 0; j < 85995; ++j)
@@ -384,7 +374,6 @@ TEST(DemucsCPPLayers, CrossTransformer)
     Eigen::Tensor3dXf xt_fake(1, 384, 1344);
 
     // fill with -1, 1 alternating
-#pragma omp parallel for collapse(3)
     for (size_t i = 0; i < 384; ++i)
     {
         for (size_t j = 0; j < 8; ++j)
@@ -403,7 +392,6 @@ TEST(DemucsCPPLayers, CrossTransformer)
         }
     }
 
-#pragma omp parallel for collapse(2)
     for (size_t j = 0; j < 384; ++j)
     {
         for (size_t k = 0; k < 1344; ++k)
@@ -428,8 +416,8 @@ TEST(DemucsCPPLayers, CrossTransformer)
     Eigen::Tensor3dXf x_fake_reshaped =
         x_fake.reshape(Eigen::array<int, 3>({1, 384, 8 * 336}));
     Eigen::Tensor3dXf x_fake_reshaped_upsampled =
-        demucscpp::conv1d(x_fake_reshaped, model.channel_upsampler_weight,
-                          model.channel_upsampler_bias, 1, 1, 0, 1);
+        demucscpp::conv1d<1, 1, 0, 1>(x_fake_reshaped, model.channel_upsampler_weight,
+                          model.channel_upsampler_bias);
     Eigen::Tensor3dXf x_fake_upsampled =
         x_fake_reshaped_upsampled.reshape(Eigen::array<int, 3>({512, 8, 336}));
 
@@ -440,8 +428,8 @@ TEST(DemucsCPPLayers, CrossTransformer)
     // for time channel upsampling
     // apply upsampler directly to xt_3 no reshaping drama needed
     Eigen::Tensor3dXf xt_fake_upsampled =
-        demucscpp::conv1d(xt_fake, model.channel_upsampler_t_weight,
-                          model.channel_upsampler_t_bias, 1, 1, 0, 1);
+        demucscpp::conv1d<1, 1, 0, 1>(xt_fake, model.channel_upsampler_t_weight,
+                          model.channel_upsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_upsampled,
                                       "x pre-crosstransformer");
@@ -467,15 +455,15 @@ TEST(DemucsCPPLayers, CrossTransformer)
     // then apply the conv1d_2d function
 
     Eigen::Tensor3dXf x_fake_reshaped_downsampled =
-        demucscpp::conv1d(x_fake_upsampled, model.channel_downsampler_weight,
-                          model.channel_downsampler_bias, 1, 1, 0, 0);
+        demucscpp::conv1d<1, 1, 0, 0>(x_fake_upsampled, model.channel_downsampler_weight,
+                          model.channel_downsampler_bias);
     Eigen::Tensor3dXf x_fake_downsampled = x_fake_reshaped_downsampled.reshape(
         Eigen::array<int, 3>({384, 8, 336}));
 
     // apply upsampler directly to xt_3
     Eigen::Tensor3dXf xt_fake_downsampled =
-        demucscpp::conv1d(xt_fake_upsampled, model.channel_downsampler_t_weight,
-                          model.channel_downsampler_t_bias, 1, 1, 0, 0);
+        demucscpp::conv1d<1, 1, 0, 0>(xt_fake_upsampled, model.channel_downsampler_t_weight,
+                          model.channel_downsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_downsampled, "x post-downsampler");
     demucscppdebug::debug_tensor_3dxf(xt_fake_downsampled,
@@ -490,7 +478,6 @@ TEST(DemucsCPPLayers, CrossTransformerNoUpsamp)
     Eigen::Tensor3dXf xt_fake(1, 512, 1344);
 
     // fill with -1, 1 alternating
-#pragma omp parallel for collapse(3)
     for (size_t i = 0; i < 512; ++i)
     {
         for (size_t j = 0; j < 8; ++j)
@@ -509,7 +496,6 @@ TEST(DemucsCPPLayers, CrossTransformerNoUpsamp)
         }
     }
 
-#pragma omp parallel for collapse(2)
     for (size_t j = 0; j < 512; ++j)
     {
         for (size_t k = 0; k < 1344; ++k)
@@ -549,7 +535,6 @@ TEST(DemucsCPPLayers, Upsamplers)
     Eigen::Tensor3dXf xt_fake(1, 384, 1344);
 
     // fill with -1, 1 alternating
-#pragma omp parallel for collapse(3)
     for (size_t i = 0; i < 384; ++i)
     {
         for (size_t j = 0; j < 8; ++j)
@@ -568,7 +553,6 @@ TEST(DemucsCPPLayers, Upsamplers)
         }
     }
 
-#pragma omp parallel for collapse(2)
     for (size_t j = 0; j < 384; ++j)
     {
         for (size_t k = 0; k < 1344; ++k)
@@ -593,8 +577,8 @@ TEST(DemucsCPPLayers, Upsamplers)
     Eigen::Tensor3dXf x_fake_reshaped =
         x_fake.reshape(Eigen::array<int, 3>({1, 384, 8 * 336}));
     Eigen::Tensor3dXf x_fake_reshaped_upsampled =
-        demucscpp::conv1d(x_fake_reshaped, model.channel_upsampler_weight,
-                          model.channel_upsampler_bias, 1, 1, 0, 1);
+        demucscpp::conv1d<1, 1, 0, 1>(x_fake_reshaped, model.channel_upsampler_weight,
+                          model.channel_upsampler_bias);
     Eigen::Tensor3dXf x_fake_upsampled =
         x_fake_reshaped_upsampled.reshape(Eigen::array<int, 3>({512, 8, 336}));
 
@@ -605,8 +589,8 @@ TEST(DemucsCPPLayers, Upsamplers)
     // for time channel upsampling
     // apply upsampler directly to xt_3 no reshaping drama needed
     Eigen::Tensor3dXf xt_fake_upsampled =
-        demucscpp::conv1d(xt_fake, model.channel_upsampler_t_weight,
-                          model.channel_upsampler_t_bias, 1, 1, 0, 1);
+        demucscpp::conv1d<1, 1, 0, 1>(xt_fake, model.channel_upsampler_t_weight,
+                          model.channel_upsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_upsampled, "x upsampled");
     demucscppdebug::debug_tensor_3dxf(xt_fake_upsampled, "xt upsampled");
@@ -615,16 +599,16 @@ TEST(DemucsCPPLayers, Upsamplers)
 
     Eigen::Tensor3dXf x_fake_upsampled_reshaped =
         x_fake_upsampled.reshape(Eigen::array<int, 3>({1, 512, 8 * 336}));
-    Eigen::Tensor3dXf x_fake_downsampled_reshaped = demucscpp::conv1d(
+    Eigen::Tensor3dXf x_fake_downsampled_reshaped = demucscpp::conv1d<1, 1, 0, 0>(
         x_fake_upsampled_reshaped, model.channel_downsampler_weight,
-        model.channel_downsampler_bias, 1, 1, 0, 0);
+        model.channel_downsampler_bias);
     Eigen::Tensor3dXf x_fake_downsampled = x_fake_downsampled_reshaped.reshape(
         Eigen::array<int, 3>({384, 8, 336}));
 
     // apply upsampler directly to xt_3
     Eigen::Tensor3dXf xt_fake_downsampled =
-        demucscpp::conv1d(xt_fake_upsampled, model.channel_downsampler_t_weight,
-                          model.channel_downsampler_t_bias, 1, 1, 0, 0);
+        demucscpp::conv1d<1, 1, 0, 0>(xt_fake_upsampled, model.channel_downsampler_t_weight,
+                          model.channel_downsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_downsampled, "x post-downsampler");
     demucscppdebug::debug_tensor_3dxf(xt_fake_downsampled,
@@ -639,7 +623,6 @@ TEST(DemucsCPPLayers, CTLayers)
     Eigen::Tensor3dXf xt_fake(1, 1344, 512);
 
     // fill with -1, 1 alternating
-#pragma omp parallel for collapse(2)
     for (size_t i = 0; i < 2688; ++i)
     {
         for (size_t j = 0; j < 512; ++j)
@@ -655,7 +638,6 @@ TEST(DemucsCPPLayers, CTLayers)
         }
     }
 
-#pragma omp parallel for collapse(2)
     for (size_t i = 0; i < 1344; ++i)
     {
         for (size_t j = 0; j < 512; ++j)
@@ -753,34 +735,34 @@ TEST(DemucsCPPLayers, CTLayers)
     demucscppdebug::debug_tensor_3dxf(x_fake, "x post-layer-0");
     demucscppdebug::debug_tensor_3dxf(xt_fake, "xt post-tlayer-0");
 
-    demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_weight,
-                                      "norm_in weight");
-    demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_bias,
-                                      "norm_in bias");
+    //demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_weight,
+    //                                  "norm_in weight");
+    //demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_bias,
+    //                                  "norm_in bias");
 
-    demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_t_weight,
-                                      "norm_in_t weight");
-    demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_t_bias,
-                                      "norm_in_t bias");
+    //demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_t_weight,
+    //                                  "norm_in_t weight");
+    //demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_t_bias,
+    //                                  "norm_in_t bias");
 
-    Eigen::Tensor3dXf x_norm_in = demucscpp::layer_norm(
-        x_fake_copy, model.crosstransformer_norm_in_weight,
-        model.crosstransformer_norm_in_bias, eps);
-    Eigen::Tensor3dXf xt_norm_in = demucscpp::layer_norm(
-        xt_fake_copy, model.crosstransformer_norm_in_t_weight,
-        model.crosstransformer_norm_in_t_bias, eps);
-    Eigen::Tensor3dXf x_norm_in_t = demucscpp::layer_norm(
-        xt_fake_copy, model.crosstransformer_norm_in_weight,
-        model.crosstransformer_norm_in_bias, eps);
-    Eigen::Tensor3dXf xt_norm_in_f = demucscpp::layer_norm(
-        x_fake_copy, model.crosstransformer_norm_in_t_weight,
-        model.crosstransformer_norm_in_t_bias, eps);
+    //Eigen::Tensor3dXf x_norm_in = demucscpp::layer_norm(
+    //    x_fake_copy, model.crosstransformer_norm_in_weight,
+    //    model.crosstransformer_norm_in_bias, eps);
+    //Eigen::Tensor3dXf xt_norm_in = demucscpp::layer_norm(
+    //    xt_fake_copy, model.crosstransformer_norm_in_t_weight,
+    //    model.crosstransformer_norm_in_t_bias, eps);
+    //Eigen::Tensor3dXf x_norm_in_t = demucscpp::layer_norm(
+    //    xt_fake_copy, model.crosstransformer_norm_in_weight,
+    //    model.crosstransformer_norm_in_bias, eps);
+    //Eigen::Tensor3dXf xt_norm_in_f = demucscpp::layer_norm(
+    //    x_fake_copy, model.crosstransformer_norm_in_t_weight,
+    //    model.crosstransformer_norm_in_t_bias, eps);
 
-    demucscppdebug::debug_tensor_3dxf(x_norm_in, "x norm-in");
-    demucscppdebug::debug_tensor_3dxf(xt_norm_in, "xt norm-in-t");
+    //demucscppdebug::debug_tensor_3dxf(x_norm_in, "x norm-in");
+    //demucscppdebug::debug_tensor_3dxf(xt_norm_in, "xt norm-in-t");
 
-    demucscppdebug::debug_tensor_3dxf(x_norm_in_t, "x norm-in_t");
-    demucscppdebug::debug_tensor_3dxf(xt_norm_in_f, "xt norm-in-t_f");
+    //demucscppdebug::debug_tensor_3dxf(x_norm_in_t, "x norm-in_t");
+    //demucscppdebug::debug_tensor_3dxf(xt_norm_in_f, "xt norm-in-t_f");
 }
 
 TEST(DemucsCPPLayers, LayerNormBasic)
@@ -820,7 +802,6 @@ TEST(DemucsCPPLayers, LayerNormBigger)
     Eigen::Tensor1dXf b(512);
 
     // fill x with alternating -1, 1
-#pragma omp parallel for collapse(2)
     for (size_t i = 0; i < 2688; ++i)
     {
         for (size_t j = 0; j < 512; ++j)

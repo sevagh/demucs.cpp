@@ -15,8 +15,8 @@ void demucscpp::apply_freq_encoder(struct demucscpp::demucs_model_4s &model,
     Eigen::Tensor3dXf x_shuf = x_in.shuffle(Eigen::array<int, 3>({2, 0, 1}));
     // 2D Convolution operation
     Eigen::Tensor3dXf y =
-        demucscpp::conv1d(x_shuf, model.encoder_conv_weight[encoder_idx],
-                          model.encoder_conv_bias[encoder_idx], 8, 4, 2, 1);
+        demucscpp::conv1d<8, 4, 2, 1>(x_shuf, model.encoder_conv_weight[encoder_idx],
+                          model.encoder_conv_bias[encoder_idx]);
 
     Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({1, 2, 0}));
 
@@ -33,8 +33,8 @@ void demucscpp::apply_freq_encoder(struct demucscpp::demucs_model_4s &model,
     Eigen::Tensor3dXf y_shuff_2 = y.shuffle(Eigen::array<int, 3>({2, 1, 0}));
 
     // need rewrite, norm2, glu
-    y = demucscpp::conv1d(y_shuff_2, model.encoder_rewrite_weight[encoder_idx],
-                          model.encoder_rewrite_bias[encoder_idx], 1, 1, 0, 1);
+    y = demucscpp::conv1d<1, 1, 0, 1>(y_shuff_2, model.encoder_rewrite_weight[encoder_idx],
+                          model.encoder_rewrite_bias[encoder_idx]);
 
     y_shuff_2 = y.shuffle(Eigen::array<int, 3>({1, 2, 0}));
 
@@ -73,8 +73,8 @@ void demucscpp::apply_time_encoder(struct demucscpp::demucs_model_4s &model,
     // first, apply the convolution
     // Conv1d(2, 48, kernel_size=(8,), stride=(4,), padding=(2,))
     Eigen::Tensor3dXf yt =
-        demucscpp::conv1d(xt_in, model.tencoder_conv_weight[tencoder_idx],
-                          model.tencoder_conv_bias[tencoder_idx], 8, 4, 2, 1);
+        demucscpp::conv1d<8, 4, 2, 1>(xt_in, model.tencoder_conv_weight[tencoder_idx],
+                          model.tencoder_conv_bias[tencoder_idx]);
 
     yt = demucscpp::gelu(yt);
 
@@ -84,9 +84,8 @@ void demucscpp::apply_time_encoder(struct demucscpp::demucs_model_4s &model,
     // end of dconv?
 
     // need rewrite, norm2, glu
-    yt = demucscpp::conv1d(yt, model.tencoder_rewrite_weight[tencoder_idx],
-                           model.tencoder_rewrite_bias[tencoder_idx], 1, 1, 0,
-                           1);
+    yt = demucscpp::conv1d<1, 1, 0, 1>(yt, model.tencoder_rewrite_weight[tencoder_idx],
+                           model.tencoder_rewrite_bias[tencoder_idx]);
 
     xt_out = demucscpp::glu(yt, 1);
 }
@@ -99,9 +98,9 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model_4s &model,
                                    const Eigen::Tensor3dXf &skip)
 {
     // need rewrite, norm2, glu
-    Eigen::Tensor3dXf y = demucscpp::conv2d(
+    Eigen::Tensor3dXf y = demucscpp::conv2d<3, 3, 1, 1, 1, 1, 1, 1>(
         x_in + skip, model.decoder_rewrite_weight[decoder_idx],
-        model.decoder_rewrite_bias[decoder_idx], 3, 3, 1, 1, 1, 1);
+        model.decoder_rewrite_bias[decoder_idx]);
 
     y = demucscpp::glu(y, 0);
 
@@ -183,9 +182,9 @@ void demucscpp::apply_time_decoder(struct demucscpp::demucs_model_4s &model,
     }
 
     // need rewrite, norm2, glu
-    Eigen::Tensor3dXf yt = demucscpp::conv1d(
+    Eigen::Tensor3dXf yt = demucscpp::conv1d<3, 1, 1, 1>(
         xt_in + skip, model.tdecoder_rewrite_weight[tdecoder_idx],
-        model.tdecoder_rewrite_bias[tdecoder_idx], 3, 1, 1, 1);
+        model.tdecoder_rewrite_bias[tdecoder_idx]);
 
     yt = demucscpp::glu(yt, 1);
 

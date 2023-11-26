@@ -87,17 +87,7 @@ Eigen::Tensor3dXf demucscpp::demucs_inference_4s(struct demucs_model_4s &model,
 
     // now inverse the normalization in Eigen C++
     // sources = sources * ref.std() + ref.mean()
-    for (int i = 0; i < 4; ++i)
-    {
-        for (int j = 0; j < 2; ++j)
-        {
-            for (int k = 0; k < length; ++k)
-            {
-                waveform_outputs(i, j, k) =
-                    waveform_outputs(i, j, k) * ref_std + ref_mean;
-            }
-        }
-    }
+    waveform_outputs = (waveform_outputs * ref_std).eval() + ref_mean;
 
     return waveform_outputs;
 }
@@ -146,33 +136,7 @@ shift_inference_4s(struct demucscpp::demucs_model_4s &model,
 
     // trim the output to the original length
     // waveform_outputs = waveform_outputs[..., max_shift:max_shift + length]
-    Eigen::Tensor3dXf trimmed_waveform_outputs =
-        Eigen::Tensor3dXf(4, 2, length);
-    trimmed_waveform_outputs.setZero();
-
-    demucscppdebug::debug_tensor_3dxf(trimmed_waveform_outputs,
-                                      "trimmed_waveform_outputs zero");
-
-    std::cout << "trimming max_shift: " << max_shift << std::endl;
-    std::cout << "or trimming offset?: " << offset << std::endl;
-
-    std::cout << "size diff between outputs and trimmed: "
-              << trimmed_waveform_outputs.dimension(2) -
-                     waveform_outputs.dimension(2)
-              << std::endl;
-
-    for (int i = 0; i < 4; ++i)
-    {
-        for (int j = 0; j < 2; ++j)
-        {
-            for (int k = 0; k < length; ++k)
-            {
-                // offset or max shift here? confusing...
-                trimmed_waveform_outputs(i, j, k) =
-                    waveform_outputs(i, j, k + max_shift - offset);
-            }
-        }
-    }
+    Eigen::Tensor3dXf trimmed_waveform_outputs = waveform_outputs.reshape(Eigen::array<int, 3>({4, 2, waveform_outputs.dimension(2)})).slice(Eigen::array<int, 3>({0, 0, max_shift - offset}), Eigen::array<int, 3>({4, 2, length}));
 
     return trimmed_waveform_outputs;
 }
@@ -212,11 +176,8 @@ split_inference_4s(struct demucscpp::demucs_model_4s &model,
     Eigen::VectorXf weight(segment_samples);
     weight.setZero();
 
-    for (int i = 0; i < segment_samples / 2; ++i)
-    {
-        weight(i) = i + 1;
-        weight(segment_samples - i - 1) = i + 1;
-    }
+    weight.head(segment_samples / 2) = Eigen::VectorXf::LinSpaced(segment_samples / 2, 1, segment_samples / 2);
+    weight.tail(segment_samples / 2) = weight.head(segment_samples / 2).reverse();
     weight /= weight.maxCoeff();
     weight = weight.array().pow(demucscpp::TRANSITION_POWER);
 
@@ -291,21 +252,6 @@ split_inference_4s(struct demucscpp::demucs_model_4s &model,
 
     demucscppdebug::debug_tensor_3dxf(out, "out");
     return out;
-
-    // now copy the appropriate segment of the output
-    // into the output tensor same shape as the input
-    // Eigen::Tensor3dXf waveform_outputs(4, 2, length);
-
-    // for (int i = 0; i < 4; ++i) {
-    //     for (int j = 0; j < 2; ++j) {
-    //         for (int k = 0; k < length; ++k) {
-    //             waveform_outputs(i, j, k) = out(i, j, k);
-    //         }
-    //     }
-    // }
-    // demucscppdebug::debug_tensor_3dxf(waveform_outputs, "waveform_outputs");
-
-    // return waveform_outputs;
 }
 
 static Eigen::Tensor3dXf

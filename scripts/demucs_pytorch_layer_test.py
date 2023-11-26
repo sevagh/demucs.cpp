@@ -262,15 +262,15 @@ if __name__ == '__main__':
         debug_tensor_demucscpp(x_layer_0, "x crosstran-layer-0")
         debug_tensor_demucscpp(xt_layer_0, "xt crosstran-tlayer-0")
 
-        debug_tensor_demucscpp(model.models[0].crosstransformer.norm_in.weight, "x norm-in weight")
-        debug_tensor_demucscpp(model.models[0].crosstransformer.norm_in.bias, "x norm-in bias")
-        debug_tensor_demucscpp(model.models[0].crosstransformer.norm_in_t.weight, "xt norm-in-t weight")
-        debug_tensor_demucscpp(model.models[0].crosstransformer.norm_in_t.bias, "xt norm-in-t bias")
+        #debug_tensor_demucscpp(model.models[0].crosstransformer.norm_in.weight, "x norm-in weight")
+        #debug_tensor_demucscpp(model.models[0].crosstransformer.norm_in.bias, "x norm-in bias")
+        #debug_tensor_demucscpp(model.models[0].crosstransformer.norm_in_t.weight, "xt norm-in-t weight")
+        #debug_tensor_demucscpp(model.models[0].crosstransformer.norm_in_t.bias, "xt norm-in-t bias")
 
-        x_norm_in = model.models[0].crosstransformer.norm_in(x_2)
-        xt_norm_in = model.models[0].crosstransformer.norm_in_t(xt_2)
-        x_norm_in_t = model.models[0].crosstransformer.norm_in(xt_2)
-        xt_norm_in_f = model.models[0].crosstransformer.norm_in_t(x_2)
+        #x_norm_in = model.models[0].crosstransformer.norm_in(x_2)
+        #xt_norm_in = model.models[0].crosstransformer.norm_in_t(xt_2)
+        #x_norm_in_t = model.models[0].crosstransformer.norm_in(xt_2)
+        #xt_norm_in_f = model.models[0].crosstransformer.norm_in_t(x_2)
 
         #x_norm_in = torch.nn.functional.layer_norm(
         #    x_2,
@@ -301,10 +301,10 @@ if __name__ == '__main__':
         #    eps=1e-5
         #)
 
-        debug_tensor_demucscpp(x_norm_in, "x norm-in")
-        debug_tensor_demucscpp(xt_norm_in, "xt norm-in-t")
-        debug_tensor_demucscpp(x_norm_in_t, "x norm-in_t")
-        debug_tensor_demucscpp(xt_norm_in_f, "xt norm-in-t_f")
+        #debug_tensor_demucscpp(x_norm_in, "x norm-in")
+        #debug_tensor_demucscpp(xt_norm_in, "xt norm-in-t")
+        #debug_tensor_demucscpp(x_norm_in_t, "x norm-in_t")
+        #debug_tensor_demucscpp(xt_norm_in_f, "xt norm-in-t_f")
 
     if test_name == "all" or test_name == "layer-norm-basic":
         x = torch.ones((1, 2, 3))
