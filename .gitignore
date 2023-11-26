@@ -1,0 +1,7 @@
+/build/
+*.bin
+*.wav
+!/test/data/*.wav
+*.json
+/__pycache__
+*.pyc

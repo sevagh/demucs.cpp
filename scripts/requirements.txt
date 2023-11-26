@@ -1,0 +1,7 @@
+#demucs==4.0.1
+# pass local path to demucs in vendored folder
+-e ./vendor/demucs
+librosa
+museval
+musdb
+numpy
