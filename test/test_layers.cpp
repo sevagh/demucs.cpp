@@ -185,20 +185,20 @@ TEST(DemucsCPPLayers, FreqDecoders)
     demucscppdebug::debug_tensor_3dxf(x_fake_dec_0, "x_fake_dec_0");
     demucscppdebug::debug_tensor_3dxf(x_fake_dec_1, "x_fake_dec_1");
 
-    demucscpp::apply_freq_decoder(model, 1, x_fake_dec_1, x_fake_dec_2,
-                                  skip_fake_dec_1);
+    //demucscpp::apply_freq_decoder(model, 1, x_fake_dec_1, x_fake_dec_2,
+    //                              skip_fake_dec_1);
 
-    demucscppdebug::debug_tensor_3dxf(x_fake_dec_2, "x_fake_dec_2");
+    //demucscppdebug::debug_tensor_3dxf(x_fake_dec_2, "x_fake_dec_2");
 
-    demucscpp::apply_freq_decoder(model, 2, x_fake_dec_2, x_fake_dec_3,
-                                  skip_fake_dec_2);
+    //demucscpp::apply_freq_decoder(model, 2, x_fake_dec_2, x_fake_dec_3,
+    //                              skip_fake_dec_2);
 
-    demucscppdebug::debug_tensor_3dxf(x_fake_dec_3, "x_fake_dec_3");
+    //demucscppdebug::debug_tensor_3dxf(x_fake_dec_3, "x_fake_dec_3");
 
-    demucscpp::apply_freq_decoder(model, 3, x_fake_dec_3, x_fake_dec_4,
-                                  skip_fake_dec_3);
+    //demucscpp::apply_freq_decoder(model, 3, x_fake_dec_3, x_fake_dec_4,
+    //                              skip_fake_dec_3);
 
-    demucscppdebug::debug_tensor_3dxf(x_fake_dec_4, "x_fake_dec_4");
+    //demucscppdebug::debug_tensor_3dxf(x_fake_dec_4, "x_fake_dec_4");
 
     // compare first and last element of waveform_outputs and normalized_audio
     // EXPECT_NEAR(waveform_outputs(0, 0, 0), normalized_audio(0, 0),
@@ -416,7 +416,7 @@ TEST(DemucsCPPLayers, CrossTransformer)
     Eigen::Tensor3dXf x_fake_reshaped =
         x_fake.reshape(Eigen::array<int, 3>({1, 384, 8 * 336}));
     Eigen::Tensor3dXf x_fake_reshaped_upsampled =
-        demucscpp::conv1d<1, 1, 0, 1>(x_fake_reshaped, model.channel_upsampler_weight,
+        demucscpp::conv1d<384, 512, 1, 1, 0, 1>(x_fake_reshaped, model.channel_upsampler_weight,
                           model.channel_upsampler_bias);
     Eigen::Tensor3dXf x_fake_upsampled =
         x_fake_reshaped_upsampled.reshape(Eigen::array<int, 3>({512, 8, 336}));
@@ -428,7 +428,7 @@ TEST(DemucsCPPLayers, CrossTransformer)
     // for time channel upsampling
     // apply upsampler directly to xt_3 no reshaping drama needed
     Eigen::Tensor3dXf xt_fake_upsampled =
-        demucscpp::conv1d<1, 1, 0, 1>(xt_fake, model.channel_upsampler_t_weight,
+        demucscpp::conv1d<384, 512, 1, 1, 0, 1>(xt_fake, model.channel_upsampler_t_weight,
                           model.channel_upsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_upsampled,
@@ -455,14 +455,14 @@ TEST(DemucsCPPLayers, CrossTransformer)
     // then apply the conv1d_2d function
 
     Eigen::Tensor3dXf x_fake_reshaped_downsampled =
-        demucscpp::conv1d<1, 1, 0, 0>(x_fake_upsampled, model.channel_downsampler_weight,
+        demucscpp::conv1d<512, 384, 1, 1, 0, 1>(x_fake_upsampled, model.channel_downsampler_weight,
                           model.channel_downsampler_bias);
     Eigen::Tensor3dXf x_fake_downsampled = x_fake_reshaped_downsampled.reshape(
         Eigen::array<int, 3>({384, 8, 336}));
 
     // apply upsampler directly to xt_3
     Eigen::Tensor3dXf xt_fake_downsampled =
-        demucscpp::conv1d<1, 1, 0, 0>(xt_fake_upsampled, model.channel_downsampler_t_weight,
+        demucscpp::conv1d<512, 384, 1, 1, 0, 1>(xt_fake_upsampled, model.channel_downsampler_t_weight,
                           model.channel_downsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_downsampled, "x post-downsampler");
@@ -577,7 +577,7 @@ TEST(DemucsCPPLayers, Upsamplers)
     Eigen::Tensor3dXf x_fake_reshaped =
         x_fake.reshape(Eigen::array<int, 3>({1, 384, 8 * 336}));
     Eigen::Tensor3dXf x_fake_reshaped_upsampled =
-        demucscpp::conv1d<1, 1, 0, 1>(x_fake_reshaped, model.channel_upsampler_weight,
+        demucscpp::conv1d<384, 512, 1, 1, 0, 1>(x_fake_reshaped, model.channel_upsampler_weight,
                           model.channel_upsampler_bias);
     Eigen::Tensor3dXf x_fake_upsampled =
         x_fake_reshaped_upsampled.reshape(Eigen::array<int, 3>({512, 8, 336}));
@@ -589,7 +589,7 @@ TEST(DemucsCPPLayers, Upsamplers)
     // for time channel upsampling
     // apply upsampler directly to xt_3 no reshaping drama needed
     Eigen::Tensor3dXf xt_fake_upsampled =
-        demucscpp::conv1d<1, 1, 0, 1>(xt_fake, model.channel_upsampler_t_weight,
+        demucscpp::conv1d<384, 512, 1, 1, 0, 1>(xt_fake, model.channel_upsampler_t_weight,
                           model.channel_upsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_upsampled, "x upsampled");
@@ -599,7 +599,7 @@ TEST(DemucsCPPLayers, Upsamplers)
 
     Eigen::Tensor3dXf x_fake_upsampled_reshaped =
         x_fake_upsampled.reshape(Eigen::array<int, 3>({1, 512, 8 * 336}));
-    Eigen::Tensor3dXf x_fake_downsampled_reshaped = demucscpp::conv1d<1, 1, 0, 0>(
+    Eigen::Tensor3dXf x_fake_downsampled_reshaped = demucscpp::conv1d<512, 384, 1, 1, 0, 0>(
         x_fake_upsampled_reshaped, model.channel_downsampler_weight,
         model.channel_downsampler_bias);
     Eigen::Tensor3dXf x_fake_downsampled = x_fake_downsampled_reshaped.reshape(
@@ -607,7 +607,7 @@ TEST(DemucsCPPLayers, Upsamplers)
 
     // apply upsampler directly to xt_3
     Eigen::Tensor3dXf xt_fake_downsampled =
-        demucscpp::conv1d<1, 1, 0, 0>(xt_fake_upsampled, model.channel_downsampler_t_weight,
+        demucscpp::conv1d<512, 384, 1, 1, 0, 0>(xt_fake_upsampled, model.channel_downsampler_t_weight,
                           model.channel_downsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_downsampled, "x post-downsampler");

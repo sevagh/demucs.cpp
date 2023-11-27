@@ -59,6 +59,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
         if (magic != 0x646d6334) // dmc4
         {
             fprintf(stderr, "%s: invalid model data (bad magic)\n", __func__);
+            fclose(f);
             return false;
         }
 

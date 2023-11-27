@@ -71,123 +71,6 @@ Eigen::Tensor3dXf demucscpp::glu(const Eigen::Tensor3dXf &x, const int dim)
     return first_half * sigmoid_second_half;
 }
 
-Eigen::Tensor3dXf demucscpp::conv2d_tr(
-    const Eigen::Tensor3dXf &x, const Eigen::Tensor4dXf &w,
-    const Eigen::Tensor1dXf &b, const int kernel_height, const int kernel_width,
-    const int stride_height, const int stride_width, const int pad_height,
-    const int pad_width, int dilation_height, int dilation_width)
-{
-    // Always ensure dilation is at least 1
-    dilation_height = (dilation_height == 0) ? 1 : dilation_height;
-    dilation_width = (dilation_width == 0) ? 1 : dilation_width;
-
-    int in_channels = x.dimension(0);
-    int in_height = x.dimension(1);
-    int in_width = x.dimension(2);
-
-    int out_channels = w.dimension(1);
-    int kernel_height_w = w.dimension(2);
-    int kernel_width_w = w.dimension(3);
-
-    demucscppdebug::assert_(kernel_height == kernel_height_w);
-    demucscppdebug::assert_(kernel_width == kernel_width_w);
-
-    // Transposed convolution output size calculation
-    int out_height =
-        (in_height - 1) * stride_height - 2 * pad_height + kernel_height;
-    int out_width =
-        (in_width - 1) * stride_width - 2 * pad_width + kernel_width;
-
-    Eigen::Tensor3dXf y_out(out_channels, out_height, out_width);
-    y_out.setZero();
-
-    for (int chout = 0; chout < out_channels; ++chout)
-    {
-        for (int i = 0; i < in_height; ++i)
-        {
-            for (int j = 0; j < in_width; ++j)
-            {
-                for (int chin = 0; chin < in_channels; ++chin)
-                {
-                    for (int m = 0; m < kernel_height; ++m)
-                    {
-                        for (int n = 0; n < kernel_width; ++n)
-                        {
-                            int oh = i * stride_height + m * dilation_height -
-                                     pad_height;
-                            int ow = j * stride_width + n * dilation_width -
-                                     pad_width;
-
-                            // Check if the indices are within the bounds of the
-                            // output tensor
-                            if (oh >= 0 && oh < out_height && ow >= 0 &&
-                                ow < out_width)
-                            {
-                                float y = x(chin, i, j) * w(chin, chout, m, n);
-                                float sum = y_out(chout, oh, ow);
-                                float t = sum + y;
-                                float c = 0.0f;
-                                // Kahan's sum correction
-                                if (abs(sum) >= abs(y))
-                                {
-                                    c = (sum - t) + y;
-                                }
-                                else
-                                {
-                                    c = (y - t) + sum;
-                                }
-                                y_out(chout, oh, ow) = t + c;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Second pass to add the bias
-    for (int chout = 0; chout < out_channels; ++chout)
-    {
-        for (int oh = 0; oh < out_height; ++oh)
-        {
-            for (int ow = 0; ow < out_width; ++ow)
-            {
-                y_out(chout, oh, ow) += b(chout);
-            }
-        }
-    }
-
-    return y_out;
-}
-
-Eigen::Tensor3dXf demucscpp::conv1d_tr(const Eigen::Tensor3dXf &x,
-                                       const Eigen::Tensor3dXf &w,
-                                       const Eigen::Tensor1dXf &b,
-                                       int kernel_size, int stride, int pad,
-                                       int dilation)
-{
-    // always ensure dilation is at least 1
-    dilation = (dilation == 0) ? 1 : dilation;
-
-    // copy w into a 4d tensor with trailing (,1) dimension
-    Eigen::Tensor4dXf w_4d = w.reshape(Eigen::array<int, 4>(
-        {(int)w.dimension(0), (int)w.dimension(1), (int)w.dimension(2), 1}));
-
-    // move 0 axis to the end
-    // we may not need this in the transposed case...
-    Eigen::Tensor3dXf x_shuff = x.shuffle(Eigen::array<int, 3>({1, 2, 0}));
-
-    // do 2d transposed convolution inference here
-    // treating the in_freq dimension as a width dimension with a no-op kernel
-    Eigen::Tensor3dXf y_out = demucscpp::conv2d_tr(
-        x_shuff, w_4d, b, kernel_size, 1, stride, 1, pad, 0, dilation, 1);
-
-    // move end axis to the front
-    Eigen::Tensor3dXf y_out_shuf =
-        y_out.shuffle(Eigen::array<int, 3>({2, 0, 1}));
-    return y_out_shuf;
-}
-
 Eigen::Tensor3dXf demucscpp::layer_norm(const Eigen::Tensor3dXf &x,
                                         const Eigen::Tensor1dXf &weight,
                                         const Eigen::Tensor1dXf &bias,
@@ -228,11 +111,33 @@ void demucscpp::apply_dconv(struct demucscpp::demucs_model_4s &model,
 
     // now dconv time
 
-    // Conv1d(48, 6, kernel_size=(3,), stride=(1,), padding=(1,))
-    y = demucscpp::conv1d<3, 1, 1, 1>(
-        y,
-        model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx][0],
-        model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx][0]);
+    switch (layer_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<48, 6, 3, 1, 1, 1>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx][0],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx][0]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<96, 12, 3, 1, 1, 1>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx][0],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx][0]);
+        break;
+    case 2:
+        y = demucscpp::conv1d<192, 24, 3, 1, 1, 1>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx][0],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx][0]);
+        break;
+    case 3:
+        y = demucscpp::conv1d<384, 48, 3, 1, 1, 1>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx][0],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx][0]);
+        break;
+    };
 
     y = demucscpp::group_norm(
         y,
@@ -243,11 +148,33 @@ void demucscpp::apply_dconv(struct demucscpp::demucs_model_4s &model,
 
     y = demucscpp::gelu(y);
 
-    // Conv1d(6, 96, kernel_size=(1,), stride=(1,))
-    y = demucscpp::conv1d<1, 1, 0, 0>(
-        y,
-        model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx][0],
-        model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx][0]);
+    switch (layer_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<6, 96, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx][0],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx][0]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<12, 192, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx][0],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx][0]);
+        break;
+    case 2:
+        y = demucscpp::conv1d<24, 384, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx][0],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx][0]);
+        break;
+    case 3:
+        y = demucscpp::conv1d<48, 768, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx][0],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx][0]);
+        break;
+    };
 
     y = demucscpp::group_norm(
         y,
@@ -270,10 +197,33 @@ void demucscpp::apply_dconv(struct demucscpp::demucs_model_4s &model,
     // NEXT ENTIRE SUBSEQUENCE OF DCONV WITH SLIGHTLY DIFFERENT PARAMS
 
     // Conv1d(48, 6, kernel_size=(3,), stride=(1,), padding=(2,), dilation=(2,))
-    y = demucscpp::conv1d<3, 1, 2, 2>(
-        y,
-        model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx][1],
-        model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx][1]);
+    switch (layer_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<48, 6, 3, 1, 2, 2>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx][1],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx][1]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<96, 12, 3, 1, 2, 2>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx][1],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx][1]);
+        break;
+    case 2:
+        y = demucscpp::conv1d<192, 24, 3, 1, 2, 2>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx][1],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx][1]);
+        break;
+    case 3:
+        y = demucscpp::conv1d<384, 48, 3, 1, 2, 2>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx][1],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx][1]);
+        break;
+    };
 
     Eigen::Tensor3dXf y_cropped =
         y.slice(Eigen::array<Eigen::Index, 3>({0, 0, 0}),
@@ -292,10 +242,33 @@ void demucscpp::apply_dconv(struct demucscpp::demucs_model_4s &model,
     y = demucscpp::gelu(y);
 
     // Conv1d(6, 96, kernel_size=(1,), stride=(1,))
-    y = demucscpp::conv1d<1, 1, 0, 0>(
-        y,
-        model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx][1],
-        model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx][1]);
+    switch (layer_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<6, 96, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx][1],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx][1]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<12, 192, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx][1],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx][1]);
+        break;
+    case 2:
+        y = demucscpp::conv1d<24, 384, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx][1],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx][1]);
+        break;
+    case 3:
+        y = demucscpp::conv1d<48, 768, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx][1],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx][1]);
+        break;
+    };
 
     y = demucscpp::group_norm(
         y,
@@ -518,7 +491,6 @@ void demucscpp::common_encoder_layer(
     ff2.rowwise() += linear2_bias.transpose();
 
     // Apply gamma_2 scale directly on 2D matrix
-    // ff2.array().colwise() *= gamma_2_scale.array();
     ff2 = ff2.array().rowwise() * gamma2_scale.transpose().array();
 
     // now x = x + self.gamma_2(self._ff_block(self.norm3(q))))
