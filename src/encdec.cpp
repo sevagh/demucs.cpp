@@ -43,7 +43,7 @@ void demucscpp::apply_freq_encoder(struct demucscpp::demucs_model_4s &model,
     // from C,H,W into H,C,W
     y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
     y = y_shuff;
-    demucscpp::apply_dconv(model, y, 0, 0, encoder_idx, 336);
+    demucscpp::apply_dconv(model, y, 0, 0, encoder_idx, y.dimension(2));
 
     // swap back from H,C,W to C,H,W
     // then put W in front to use conv1d function for width=1 conv2d
@@ -81,21 +81,20 @@ void demucscpp::apply_time_encoder(struct demucscpp::demucs_model_4s &model,
                                    const Eigen::Tensor3dXf &xt_in,
                                    Eigen::Tensor3dXf &xt_out)
 {
-    int crop = 85995;
+    int crop = demucscpp::TIME_BRANCH_LEN_0;
     // switch case for tencoder_idx
     switch (tencoder_idx)
     {
     case 0:
-        crop = 85995;
         break;
     case 1:
-        crop = 21499;
+        crop = demucscpp::TIME_BRANCH_LEN_1;
         break;
     case 2:
-        crop = 5375;
+        crop = demucscpp::TIME_BRANCH_LEN_2;
         break;
     case 3:
-        crop = 1344;
+        crop = demucscpp::TIME_BRANCH_LEN_3;
         break;
     default:
         std::cout << "invalid tencoder_idx" << std::endl;
@@ -191,10 +190,6 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model_4s &model,
 
     y = demucscpp::glu(y, 0);
 
-    // pre-dconv freq reshape: y.shape: torch.Size([8, 384, 336])
-    // post-dconv freq reshape: y.shape: torch.Size([1, 384, 8, 336])
-    // CHW -> HWC
-
     // swap first and second dimensions
     // from C,H,W into H,C,W
     Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
@@ -202,7 +197,7 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model_4s &model,
 
     // start the DConv
 
-    demucscpp::apply_dconv(model, y, 0, 1, 4-decoder_idx-1, 336);
+    demucscpp::apply_dconv(model, y, 0, 1, 4-decoder_idx-1, y.dimension(2));
 
     // dconv finished
 
@@ -263,24 +258,24 @@ void demucscpp::apply_time_decoder(struct demucscpp::demucs_model_4s &model,
                                    Eigen::Tensor3dXf &xt_out,
                                    const Eigen::Tensor3dXf &skip)
 {
-    int crop = 1344;
-    int out_length = 5375;
+    int crop = demucscpp::TIME_BRANCH_LEN_3;
+    int out_length = demucscpp::TIME_BRANCH_LEN_2;
     // switch case for tdecoder_idx
     switch (tdecoder_idx)
     {
     case 0:
         break;
     case 1:
-        crop = 5375;
-        out_length = 21499;
+        crop = demucscpp::TIME_BRANCH_LEN_2;
+        out_length = demucscpp::TIME_BRANCH_LEN_1;
         break;
     case 2:
-        crop = 21499;
-        out_length = 85995;
+        crop = demucscpp::TIME_BRANCH_LEN_1;
+        out_length = demucscpp::TIME_BRANCH_LEN_0;
         break;
     case 3:
-        crop = 85995;
-        out_length = 343980;
+        crop = demucscpp::TIME_BRANCH_LEN_0;
+        out_length = demucscpp::TIME_BRANCH_LEN_IN;
         break;
     default:
         std::cout << "invalid tdecoder_idx" << std::endl;

@@ -13,8 +13,8 @@ static Eigen::Tensor3dXf create_2d_sin_embedding(int d_model, int height,
 {
     if (d_model % 4 != 0)
     {
-        throw std::invalid_argument(
-            "Cannot use sin/cos positional encoding with odd dimension");
+        std::cerr <<  "Cannot use sin/cos positional encoding with odd dimension" << std::endl;
+        std::exit(1);
     }
 
     Eigen::Tensor3dXf pe(d_model, height, width);
@@ -58,8 +58,6 @@ static Eigen::Tensor3dXf create_sin_embedding(int length, int dim,
                                               int shift = 0,
                                               float max_period = 10000.0f)
 {
-    demucscppdebug::assert_(dim % 2 == 0);
-
     Eigen::Tensor3dXf pos_emb(1, length, dim);
     int half_dim = dim / 2;
     Eigen::ArrayXf div_term =

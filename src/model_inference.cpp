@@ -221,17 +221,18 @@ void demucscpp::model_inference_4s(
     /*****************************/
     /*  FREQ CHANNEL UPSAMPLING  */
     /*****************************/
+    int n_stft_frames = buffers.x_3.dimension(2);
 
     // Reshape buffers.x_3 into x_3_reshaped
     // Apply the conv1d function
     // Reshape back to 512x8x336 and store in buffers.x_3_channel_upsampled
     Eigen::Tensor3dXf x_3_reshaped =
-        buffers.x_3.reshape(Eigen::array<int, 3>({1, 384, 8 * 336}));
+        buffers.x_3.reshape(Eigen::array<int, 3>({1, 384, 8 * n_stft_frames}));
     Eigen::Tensor3dXf x_3_reshaped_upsampled =
         demucscpp::conv1d<384, 512, 1, 1, 0, 1>(x_3_reshaped, model.channel_upsampler_weight,
                           model.channel_upsampler_bias);
     buffers.x_3_channel_upsampled =
-        x_3_reshaped_upsampled.reshape(Eigen::array<int, 3>({512, 8, 336}));
+        x_3_reshaped_upsampled.reshape(Eigen::array<int, 3>({512, 8, n_stft_frames}));
 
     /*****************************/
     /*  TIME CHANNEL UPSAMPLING  */
@@ -270,7 +271,7 @@ void demucscpp::model_inference_4s(
         buffers.x_3_channel_upsampled, model.channel_downsampler_weight,
         model.channel_downsampler_bias);
     buffers.x_3 =
-        x_3_reshaped_downsampled.reshape(Eigen::array<int, 3>({384, 8, 336}));
+        x_3_reshaped_downsampled.reshape(Eigen::array<int, 3>({384, 8, n_stft_frames}));
 
     // apply upsampler directly to xt_3
     buffers.xt_3 = demucscpp::conv1d<512, 384, 1, 1, 0, 0>(

@@ -50,8 +50,8 @@ Eigen::Tensor3dXf demucscpp::glu(const Eigen::Tensor3dXf &x, const int dim)
 {
     if (x.dimension(dim) % 2 != 0)
     {
-        throw std::invalid_argument(
-            "Dimension size must be evenly divisible by 2");
+        std::cerr << "Dimension size must be evenly divisible by 2" << std::endl;
+        std::exit(1);
     }
 
     int split_size = x.dimension(dim) / 2;
