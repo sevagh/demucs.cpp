@@ -162,28 +162,30 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model_4s &model,
                                    Eigen::Tensor3dXf &x_out,
                                    const Eigen::Tensor3dXf &skip)
 {
-    Eigen::Tensor3dXf y;
+    Eigen::Tensor3dXf y = x_in + skip;
+
+    std::cout << "first conv2d!" << std::endl;
 
     // need rewrite, norm2, glu
     switch (decoder_idx) {
         case 0:
             y = demucscpp::conv2d<384, 768, 3, 3, 1, 1, 1, 1, 1, 1>(
-                x_in + skip, model.decoder_rewrite_weight[decoder_idx],
+                y, model.decoder_rewrite_weight[decoder_idx],
                             model.decoder_rewrite_bias[decoder_idx]);
             break;
         case 1:
             y = demucscpp::conv2d<192, 384, 3, 3, 1, 1, 1, 1, 1, 1>(
-                x_in + skip, model.decoder_rewrite_weight[decoder_idx],
+                y, model.decoder_rewrite_weight[decoder_idx],
                             model.decoder_rewrite_bias[decoder_idx]);
             break;
         case 2:
             y = demucscpp::conv2d<96, 192, 3, 3, 1, 1, 1, 1, 1, 1>(
-                x_in + skip, model.decoder_rewrite_weight[decoder_idx],
+                y, model.decoder_rewrite_weight[decoder_idx],
                             model.decoder_rewrite_bias[decoder_idx]);
             break;
         case 3:
             y = demucscpp::conv2d<48, 96, 3, 3, 1, 1, 1, 1, 1, 1>(
-                x_in + skip, model.decoder_rewrite_weight[decoder_idx],
+                y, model.decoder_rewrite_weight[decoder_idx],
                             model.decoder_rewrite_bias[decoder_idx]);
             break;
     };
@@ -196,6 +198,8 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model_4s &model,
     y = y_shuff;
 
     // start the DConv
+ 
+    std::cout << "then dconv!" << std::endl;
 
     demucscpp::apply_dconv(model, y, 0, 1, 4-decoder_idx-1, y.dimension(2));
 
@@ -205,13 +209,19 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model_4s &model,
     Eigen::Tensor3dXf y_shuff_2 = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
 
     // now time for the transpose convolution
+    Eigen::Tensor3dXf y_gemm;
 
     // 2D Convolution operation
     switch (decoder_idx) {
         case 0:
-            y = demucscpp::conv2d_tr<384, 192, 8, 1, 4, 1, 0, 0, 1, 1>(
+            y = demucscpp::conv2d_tr_old<384, 192, 8, 1, 4, 1, 0, 0, 1, 1>(
                 y_shuff_2, model.decoder_conv_tr_weight[decoder_idx],
                 model.decoder_conv_tr_bias[decoder_idx]);
+            y_gemm = demucscpp::conv2d_tr_gemm<384, 192, 8, 1, 4, 1, 0, 0, 1, 1>(
+                y_shuff_2, model.decoder_conv_tr_weight[decoder_idx],
+                model.decoder_conv_tr_bias[decoder_idx]);
+            demucscppdebug::debug_tensor_3dxf(y, "y conv2d-tr-old");
+            demucscppdebug::debug_tensor_3dxf(y_gemm, "y conv2d-tr-gemm");
             break;
         case 1:
             y = demucscpp::conv2d_tr<192, 96, 8, 1, 4, 1, 0, 0, 1, 1>(
@@ -229,6 +239,8 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model_4s &model,
                 model.decoder_conv_tr_bias[decoder_idx]);
             break;
     };
+
+    std::cout << "last conv2d_tr!" << std::endl;
 
     int y_dim1_begin = 2;
     int y_dim1_end = y.dimension(1) - 4;

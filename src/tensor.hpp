@@ -323,6 +323,62 @@ inline void debug_tensor_3dxf(const Eigen::Tensor3dXf &x,
     std::cout << "FINISHED DEBUG for tensor: " << name << std::endl;
 }
 
+// For Tensor3dXf
+inline void debug_tensor_2dxf(const Eigen::Tensor<float, 2> &x,
+                              const std::string &name)
+{
+    std::cout << "Debugging tensor!: " << name << std::endl;
+    std::cout << "\tshape: (" << x.dimension(0) << ", " << x.dimension(1)
+              << ")" << std::endl;
+
+    auto x_min = x.minimum();
+    auto x_max = x.maximum();
+    Eigen::Tensor<float, 0> x_sum_tensor = x.sum();
+    float x_sum = x_sum_tensor(0);
+    Eigen::Tensor<float, 0> x_mean_tensor = x.mean();
+    float x_mean = x_mean_tensor(0);
+    Eigen::Tensor<float, 0> x_stddev_tensor =
+        ((x - x_mean).square()).mean().sqrt();
+    float x_stddev = x_stddev_tensor(0);
+
+    // You might need to keep the existing loop for this purpose, or use other
+    // methods Re-inserting the loop for finding indices of min and max
+    int x_min_idx_0 = -1, x_min_idx_1 = -1;
+    int x_max_idx_0 = -1, x_max_idx_1 = -1;
+    float min_val = std::numeric_limits<float>::max();
+    float max_val = std::numeric_limits<float>::lowest();
+
+    for (int i = 0; i < x.dimension(0); ++i)
+    {
+        for (int j = 0; j < x.dimension(1); ++j)
+        {
+            float val = x(i, j);
+            if (val < min_val)
+            {
+                min_val = val;
+                x_min_idx_0 = i;
+                x_min_idx_1 = j;
+            }
+            if (val > max_val)
+            {
+                max_val = val;
+                x_max_idx_0 = i;
+                x_max_idx_1 = j;
+            }
+        }
+    }
+
+    std::cout << "\tmin: " << x_min << std::endl;
+    std::cout << "\tmax: " << x_max << std::endl;
+    std::cout << "\tmean: " << x_mean << std::endl;
+    std::cout << "\tstddev: " << x_stddev << std::endl;
+    std::cout << "\tsum: " << x_sum << std::endl;
+    std::cout << "\tmin idx: (" << x_min_idx_0 << ", " << x_min_idx_1 << ")" << std::endl;
+    std::cout << "\tmax idx: (" << x_max_idx_0 << ", " << x_max_idx_1 << ")" << std::endl;
+
+    std::cout << "FINISHED DEBUG for tensor: " << name << std::endl;
+}
+
 // For Tensor1dXf
 inline void debug_tensor_1dxf(const Eigen::Tensor1dXf &x,
                               const std::string &name)
