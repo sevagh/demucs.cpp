@@ -34,7 +34,7 @@ other           ==> SDR:   7.420  SIR:  11.287  ISR:  14.250  SAR:   8.184
 
 ```
 
-*n.b.* for testing purposes in this repo, the random shift in the beginning of the song is fixed to 1337 in both PyTorch and C++.
+*n.b.* for the above results, the random shift in the beginning of the song was fixed to 1337 in both PyTorch and C++.
 
 ## Build and run
 
@@ -55,4 +55,4 @@ $ ./demucs.cpp.main ../ggml-demucs/ggml-model-htdemucs-f16.bin ../test/data/gspi
 
 * make lint
 * Valgrind memory error test: `valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./demucs.cpp.main ../ggml-demucs/ggml-model-htdemucs-f16.bin ../test/data/gspi_stereo.wav  ./demucs-out-cpp/`
-* 
+* Callgrind + KCachegrind: `valgrind --tool=callgrind ./demucs.cpp.test --gtest_filter='*FreqDec*'`

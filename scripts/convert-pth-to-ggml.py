@@ -58,8 +58,8 @@ if __name__ == '__main__':
     # get torchub path
     torchhub_path = Path(torch.hub.get_dir()) / "checkpoints"
 
-    suffix_6s = "-6s" if args.six_source else ""
-    dest_name = dir_out / f"ggml-model-{DEMUCS_MODEL}{suffix_6s}-f16.bin"
+    suffix = "-6s" if args.six_source else "-4s"
+    dest_name = dir_out / f"ggml-model-{DEMUCS_MODEL}{suffix}-f16.bin"
 
     fname_inp = torchhub_path / HT_HUB_PATH if not args.six_source else torchhub_path / HT_HUB_PATH_6S
 

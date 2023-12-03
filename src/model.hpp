@@ -280,8 +280,7 @@ struct demucs_model_4s
              {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
              {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
              {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)}},
-        }
-    };
+        }};
 
     // freq_emb
     Eigen::MatrixXf freq_emb_embedding_weight{Eigen::MatrixXf(512, 48)};
@@ -551,16 +550,21 @@ struct demucs_segment_buffers_4s
           // complex-as-channels implies 2*nb_channels for real+imag
           x(2 * nb_channels, nb_stft_bins - 1, nb_stft_frames),
           x_out(4 * 2 * nb_channels, nb_stft_bins - 1, nb_stft_frames),
-          x_0(48, 512, FREQ_BRANCH_LEN), x_1(96, 128, FREQ_BRANCH_LEN), x_2(192, 32, FREQ_BRANCH_LEN),
-          x_3(384, 8, FREQ_BRANCH_LEN), x_3_channel_upsampled(512, 8, FREQ_BRANCH_LEN),
+          x_0(48, 512, FREQ_BRANCH_LEN), x_1(96, 128, FREQ_BRANCH_LEN),
+          x_2(192, 32, FREQ_BRANCH_LEN), x_3(384, 8, FREQ_BRANCH_LEN),
+          x_3_channel_upsampled(512, 8, FREQ_BRANCH_LEN),
           xt(1, nb_channels, segment_samples),
           xt_out(1, 4 * nb_channels, segment_samples),
           xt_decoded_out(1, 8, segment_samples), xt_0(1, 48, TIME_BRANCH_LEN_0),
-          xt_1(1, 96, TIME_BRANCH_LEN_1), xt_2(1, 192, TIME_BRANCH_LEN_2), xt_3(1, 384, TIME_BRANCH_LEN_3),
-          xt_3_channel_upsampled(1, 512, TIME_BRANCH_LEN_3), saved_0(48, 512, FREQ_BRANCH_LEN),
-          saved_1(96, 128, FREQ_BRANCH_LEN), saved_2(192, 32, FREQ_BRANCH_LEN), saved_3(384, 8, FREQ_BRANCH_LEN),
-          savedt_0(1, 48, TIME_BRANCH_LEN_0), savedt_1(1, 96, TIME_BRANCH_LEN_1),
-          savedt_2(1, 192, TIME_BRANCH_LEN_2), savedt_3(1, 384, TIME_BRANCH_LEN_3)
+          xt_1(1, 96, TIME_BRANCH_LEN_1), xt_2(1, 192, TIME_BRANCH_LEN_2),
+          xt_3(1, 384, TIME_BRANCH_LEN_3),
+          xt_3_channel_upsampled(1, 512, TIME_BRANCH_LEN_3),
+          saved_0(48, 512, FREQ_BRANCH_LEN), saved_1(96, 128, FREQ_BRANCH_LEN),
+          saved_2(192, 32, FREQ_BRANCH_LEN), saved_3(384, 8, FREQ_BRANCH_LEN),
+          savedt_0(1, 48, TIME_BRANCH_LEN_0),
+          savedt_1(1, 96, TIME_BRANCH_LEN_1),
+          savedt_2(1, 192, TIME_BRANCH_LEN_2),
+          savedt_3(1, 384, TIME_BRANCH_LEN_3)
     {
         std::cout << "segment_samples: " << segment_samples << std::endl;
         std::cout << "padded segment_samples: " << padded_segment_samples

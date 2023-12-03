@@ -229,10 +229,11 @@ void demucscpp::model_inference_4s(
     Eigen::Tensor3dXf x_3_reshaped =
         buffers.x_3.reshape(Eigen::array<int, 3>({1, 384, 8 * n_stft_frames}));
     Eigen::Tensor3dXf x_3_reshaped_upsampled =
-        demucscpp::conv1d<384, 512, 1, 1, 0, 1>(x_3_reshaped, model.channel_upsampler_weight,
-                          model.channel_upsampler_bias);
-    buffers.x_3_channel_upsampled =
-        x_3_reshaped_upsampled.reshape(Eigen::array<int, 3>({512, 8, n_stft_frames}));
+        demucscpp::conv1d<384, 512, 1, 1, 0, 1>(x_3_reshaped,
+                                                model.channel_upsampler_weight,
+                                                model.channel_upsampler_bias);
+    buffers.x_3_channel_upsampled = x_3_reshaped_upsampled.reshape(
+        Eigen::array<int, 3>({512, 8, n_stft_frames}));
 
     /*****************************/
     /*  TIME CHANNEL UPSAMPLING  */
@@ -240,9 +241,9 @@ void demucscpp::model_inference_4s(
 
     // for time channel upsampling
     // apply upsampler directly to xt_3 no reshaping drama needed
-    buffers.xt_3_channel_upsampled =
-        demucscpp::conv1d<384, 512, 1, 1, 0, 1>(buffers.xt_3, model.channel_upsampler_t_weight,
-                          model.channel_upsampler_t_bias);
+    buffers.xt_3_channel_upsampled = demucscpp::conv1d<384, 512, 1, 1, 0, 1>(
+        buffers.xt_3, model.channel_upsampler_t_weight,
+        model.channel_upsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_3_channel_upsampled,
                                       "x pre-crosstransformer");
@@ -267,11 +268,12 @@ void demucscpp::model_inference_4s(
                                       "xt post-crosstransformer");
     // then apply the conv1d_2d function
 
-    Eigen::Tensor3dXf x_3_reshaped_downsampled = demucscpp::conv1d<512, 384, 1, 1, 0, 0>(
-        buffers.x_3_channel_upsampled, model.channel_downsampler_weight,
-        model.channel_downsampler_bias);
-    buffers.x_3 =
-        x_3_reshaped_downsampled.reshape(Eigen::array<int, 3>({384, 8, n_stft_frames}));
+    Eigen::Tensor3dXf x_3_reshaped_downsampled =
+        demucscpp::conv1d<512, 384, 1, 1, 0, 0>(
+            buffers.x_3_channel_upsampled, model.channel_downsampler_weight,
+            model.channel_downsampler_bias);
+    buffers.x_3 = x_3_reshaped_downsampled.reshape(
+        Eigen::array<int, 3>({384, 8, n_stft_frames}));
 
     // apply upsampler directly to xt_3
     buffers.xt_3 = demucscpp::conv1d<512, 384, 1, 1, 0, 0>(

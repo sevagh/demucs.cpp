@@ -1,8 +1,8 @@
 // use gtest to test the load_audio_for_kissfft function
 
+#include "conv.hpp"
 #include "crosstransformer.hpp"
 #include "dsp.hpp"
-#include "conv.hpp"
 #include "encdec.hpp"
 #include "layers.hpp"
 #include "model.hpp"
@@ -43,114 +43,122 @@ static void setUpTestSuite()
     loaded = true;
 }
 
-//TEST(DemucsCPPLayers, Im2colCol2im)
+// TEST(DemucsCPPLayers, Im2colCol2im)
 //{
-//    setUpTestSuite();
+//     setUpTestSuite();
 //
-//    std::cout << std::fixed << std::setprecision(20) << std::endl;
+//     std::cout << std::fixed << std::setprecision(20) << std::endl;
 //
-//    Eigen::Tensor3dXf x_fake(2, 3, 3);
+//     Eigen::Tensor3dXf x_fake(2, 3, 3);
 //
-//    // fill x_fake with values 1-18
-//    for (size_t i = 0; i < 2; ++i)
-//    {
-//        for (size_t j = 0; j < 3; ++j)
-//        {
-//            for (size_t k = 0; k < 3; ++k)
-//            {
-//                x_fake(i, j, k) = i * 9 + j * 3 + k + 1;
-//            }
-//        }
-//    }
+//     // fill x_fake with values 1-18
+//     for (size_t i = 0; i < 2; ++i)
+//     {
+//         for (size_t j = 0; j < 3; ++j)
+//         {
+//             for (size_t k = 0; k < 3; ++k)
+//             {
+//                 x_fake(i, j, k) = i * 9 + j * 3 + k + 1;
+//             }
+//         }
+//     }
 //
-//    demucscppdebug::debug_tensor_3dxf(x_fake, "x_fake");
+//     demucscppdebug::debug_tensor_3dxf(x_fake, "x_fake");
 //
-//    // use kernel=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1)
-//    Eigen::MatrixXf x_im2col = demucscpp::im2col(x_fake, 1, 1, 1, 1, 0, 0, 1, 1);
+//     // use kernel=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1)
+//     Eigen::MatrixXf x_im2col = demucscpp::im2col(x_fake, 1, 1, 1, 1, 0, 0, 1,
+//     1);
 //
-//    demucscppdebug::debug_matrix_xf(x_im2col, "x_im2col");
+//     demucscppdebug::debug_matrix_xf(x_im2col, "x_im2col");
 //
-//    Eigen::Tensor3dXf x_col2im = demucscpp::col2im(x_im2col, 2, 3, 3, 1, 1, 1, 1, 0, 0, 1, 1);
+//     Eigen::Tensor3dXf x_col2im = demucscpp::col2im(x_im2col, 2, 3, 3, 1, 1,
+//     1, 1, 0, 0, 1, 1);
 //
-//    demucscppdebug::debug_tensor_3dxf(x_col2im, "x_col2im");
+//     demucscppdebug::debug_tensor_3dxf(x_col2im, "x_col2im");
 //
-//    Eigen::Tensor3dXf x_fake_2(2, 4, 4);
+//     Eigen::Tensor3dXf x_fake_2(2, 4, 4);
 //
-//    // Fill x_fake_2 with values
-//    int counter = 1;
-//    for (int i = 0; i < x_fake_2.dimension(0); ++i) {
-//        for (int j = 0; j < x_fake_2.dimension(1); ++j) {
-//            for (int k = 0; k < x_fake_2.dimension(2); ++k) {
-//                x_fake_2(i, j, k) = counter++;
-//            }
-//        }
-//    }
+//     // Fill x_fake_2 with values
+//     int counter = 1;
+//     for (int i = 0; i < x_fake_2.dimension(0); ++i) {
+//         for (int j = 0; j < x_fake_2.dimension(1); ++j) {
+//             for (int k = 0; k < x_fake_2.dimension(2); ++k) {
+//                 x_fake_2(i, j, k) = counter++;
+//             }
+//         }
+//     }
 //
-//    demucscppdebug::debug_tensor_3dxf(x_fake_2, "x_fake_2");
+//     demucscppdebug::debug_tensor_3dxf(x_fake_2, "x_fake_2");
 //
-//    // Parameters: kernel=(2,2), stride=(2,2), padding=(0,0)
-//    Eigen::MatrixXf x_im2col_2 = demucscpp::im2col(x_fake_2, 2, 2, 2, 2, 0, 0, 1, 1);
-//    demucscppdebug::debug_matrix_xf(x_im2col_2, "x_im2col_2");
+//     // Parameters: kernel=(2,2), stride=(2,2), padding=(0,0)
+//     Eigen::MatrixXf x_im2col_2 = demucscpp::im2col(x_fake_2, 2, 2, 2, 2, 0,
+//     0, 1, 1); demucscppdebug::debug_matrix_xf(x_im2col_2, "x_im2col_2");
 //
-//    // Reverse im2col
-//    Eigen::Tensor3dXf x_col2im_2 = demucscpp::col2im(x_im2col_2, 2, 4, 4, 2, 2, 2, 2, 0, 0, 1, 1);
-//    demucscppdebug::debug_tensor_3dxf(x_col2im_2, "x_col2im_2");
+//     // Reverse im2col
+//     Eigen::Tensor3dXf x_col2im_2 = demucscpp::col2im(x_im2col_2, 2, 4, 4, 2,
+//     2, 2, 2, 0, 0, 1, 1); demucscppdebug::debug_tensor_3dxf(x_col2im_2,
+//     "x_col2im_2");
 //
-//    Eigen::Tensor3dXf x_fake_3(2, 4, 4);
+//     Eigen::Tensor3dXf x_fake_3(2, 4, 4);
 //
-//    // Fill x_fake_3 with values
-//    int counter_2 = 1;
-//    for (int i = 0; i < x_fake_3.dimension(0); ++i) {
-//        for (int j = 0; j < x_fake_3.dimension(1); ++j) {
-//            for (int k = 0; k < x_fake_3.dimension(2); ++k) {
-//                x_fake_3(i, j, k) = counter_2++;
-//            }
-//        }
-//    }
+//     // Fill x_fake_3 with values
+//     int counter_2 = 1;
+//     for (int i = 0; i < x_fake_3.dimension(0); ++i) {
+//         for (int j = 0; j < x_fake_3.dimension(1); ++j) {
+//             for (int k = 0; k < x_fake_3.dimension(2); ++k) {
+//                 x_fake_3(i, j, k) = counter_2++;
+//             }
+//         }
+//     }
 //
-//    demucscppdebug::debug_tensor_3dxf(x_fake_3, "x_fake_3");
+//     demucscppdebug::debug_tensor_3dxf(x_fake_3, "x_fake_3");
 //
-//    // Parameters: kernel=(2,2), stride=(2,2), padding=(0,0)
-//    Eigen::MatrixXf x_im2col_3 = demucscpp::im2col(x_fake_3, 2, 2, 2, 2, 1, 1, 1, 1);
-//    demucscppdebug::debug_matrix_xf(x_im2col_3, "x_im2col_3");
+//     // Parameters: kernel=(2,2), stride=(2,2), padding=(0,0)
+//     Eigen::MatrixXf x_im2col_3 = demucscpp::im2col(x_fake_3, 2, 2, 2, 2, 1,
+//     1, 1, 1); demucscppdebug::debug_matrix_xf(x_im2col_3, "x_im2col_3");
 //
-//    // Reverse im2col
-//    Eigen::Tensor3dXf x_col2im_3 = demucscpp::col2im(x_im2col_3, 2, 4, 4, 2, 2, 2, 2, 1, 1, 1, 1);
-//    demucscppdebug::debug_tensor_3dxf(x_col2im_3, "x_col2im_3");
+//     // Reverse im2col
+//     Eigen::Tensor3dXf x_col2im_3 = demucscpp::col2im(x_im2col_3, 2, 4, 4, 2,
+//     2, 2, 2, 1, 1, 1, 1); demucscppdebug::debug_tensor_3dxf(x_col2im_3,
+//     "x_col2im_3");
 //
-//    // dilation test
-//    Eigen::Tensor3dXf x_dilation_test(2, 6, 6);  // Example tensor
+//     // dilation test
+//     Eigen::Tensor3dXf x_dilation_test(2, 6, 6);  // Example tensor
 //
-//    // Fill x_dilation_test with values
-//    int counter_3 = 1;
-//    for (int i = 0; i < x_dilation_test.dimension(0); ++i) {
-//        for (int j = 0; j < x_dilation_test.dimension(1); ++j) {
-//            for (int k = 0; k < x_dilation_test.dimension(2); ++k) {
-//                x_dilation_test(i, j, k) = counter_3++;
-//            }
-//        }
-//    }
+//     // Fill x_dilation_test with values
+//     int counter_3 = 1;
+//     for (int i = 0; i < x_dilation_test.dimension(0); ++i) {
+//         for (int j = 0; j < x_dilation_test.dimension(1); ++j) {
+//             for (int k = 0; k < x_dilation_test.dimension(2); ++k) {
+//                 x_dilation_test(i, j, k) = counter_3++;
+//             }
+//         }
+//     }
 //
-//    demucscppdebug::debug_tensor_3dxf(x_dilation_test, "x_dilation_test");
+//     demucscppdebug::debug_tensor_3dxf(x_dilation_test, "x_dilation_test");
 //
-//    // Dilation test parameters
-//    int kernel_height = 3;
-//    int kernel_width = 3;
-//    int stride_height = 1;
-//    int stride_width = 1;
-//    int pad_height = 0;
-//    int pad_width = 0;
-//    int dilation_height = 2;
-//    int dilation_width = 2;
+//     // Dilation test parameters
+//     int kernel_height = 3;
+//     int kernel_width = 3;
+//     int stride_height = 1;
+//     int stride_width = 1;
+//     int pad_height = 0;
+//     int pad_width = 0;
+//     int dilation_height = 2;
+//     int dilation_width = 2;
 //
-//    // Apply im2col with dilation
-//    Eigen::MatrixXf x_im2col_dilated = demucscpp::im2col(x_dilation_test, kernel_height, kernel_width, stride_height, stride_width, pad_height, pad_width, dilation_height, dilation_width);
-//    demucscppdebug::debug_matrix_xf(x_im2col_dilated, "x_im2col_dilated");
+//     // Apply im2col with dilation
+//     Eigen::MatrixXf x_im2col_dilated = demucscpp::im2col(x_dilation_test,
+//     kernel_height, kernel_width, stride_height, stride_width, pad_height,
+//     pad_width, dilation_height, dilation_width);
+//     demucscppdebug::debug_matrix_xf(x_im2col_dilated, "x_im2col_dilated");
 //
-//    // Reverse with col2im
-//    Eigen::Tensor3dXf x_col2im_dilated = demucscpp::col2im(x_im2col_dilated, 2, 6, 6, kernel_height, kernel_width, stride_height, stride_width, pad_height, pad_width, dilation_height, dilation_width);
-//    demucscppdebug::debug_tensor_3dxf(x_col2im_dilated, "x_col2im_dilated");
-//}
+//     // Reverse with col2im
+//     Eigen::Tensor3dXf x_col2im_dilated = demucscpp::col2im(x_im2col_dilated,
+//     2, 6, 6, kernel_height, kernel_width, stride_height, stride_width,
+//     pad_height, pad_width, dilation_height, dilation_width);
+//     demucscppdebug::debug_tensor_3dxf(x_col2im_dilated, "x_col2im_dilated");
+// }
 
 TEST(DemucsCPPLayers, GemmConv)
 {
@@ -166,24 +174,26 @@ TEST(DemucsCPPLayers, GemmConv)
     Eigen::Tensor3dXf x(in_channels, in_height, in_width);
 
     // fill x with values
-    //int counter = 0;
+    // int counter = 0;
     for (size_t i = 0; i < x.dimension(0); ++i)
     {
         for (size_t j = 0; j < x.dimension(1); ++j)
         {
             for (size_t k = 0; k < x.dimension(2); ++k)
             {
-                if (k % 2 == 0) {
-                    x(i, j, k) = 0.5;//counter++;
+                if (k % 2 == 0)
+                {
+                    x(i, j, k) = 0.5; // counter++;
                 }
-                else {
+                else
+                {
                     x(i, j, k) = -0.75;
                 }
             }
         }
     }
 
-    //demucscppdebug::debug_tensor_3dxf(x, "x");
+    // demucscppdebug::debug_tensor_3dxf(x, "x");
     Eigen::Tensor4dXf w(out_channels, in_channels, kernel_height, kernel_width);
 
     int counter = 1;
@@ -195,23 +205,25 @@ TEST(DemucsCPPLayers, GemmConv)
             {
                 for (size_t l = 0; l < w.dimension(3); ++l)
                 {
-                    w(i, j, k, l) = 0.1f*((float)counter);
-                    if (j % 2 == 0) {
+                    w(i, j, k, l) = 0.1f * ((float)counter);
+                    if (j % 2 == 0)
+                    {
                         w(i, j, k, l) *= -1.0f;
                     }
                     counter++;
-                    // set weights to be -0.5, 0.5 alternating over kernel_height
-                    //if (k % 2 == 0) {
+                    // set weights to be -0.5, 0.5 alternating over
+                    // kernel_height
+                    // if (k % 2 == 0) {
                     //    w(i, j, k, l) = 0.5;
                     //}
-                    //else {
+                    // else {
                     //    w(i, j, k, l) = -0.5;
                     //}
-                    //if (l % 2 == 0)
+                    // if (l % 2 == 0)
                     //{
                     //    w(i, j, k, l) = -0.5;
                     //}
-                    //else
+                    // else
                     //{
                     //    w(i, j, k, l) = 0.5;
                     //}
@@ -220,7 +232,7 @@ TEST(DemucsCPPLayers, GemmConv)
         }
     }
 
-    //demucscppdebug::debug_tensor_4dxf(w, "w");
+    // demucscppdebug::debug_tensor_4dxf(w, "w");
 
     // bias: 4 out channels
     Eigen::Tensor1dXf b(out_channels);
@@ -229,23 +241,27 @@ TEST(DemucsCPPLayers, GemmConv)
     for (size_t i = 0; i < out_channels; ++i)
     {
         b(i) = 0.0f;
-        //if (i % 2 == 0)
+        // if (i % 2 == 0)
         //{
-        //    b(i) = 0.75;
-        //}
-        //else
+        //     b(i) = 0.75;
+        // }
+        // else
         //{
-        //    b(i) = -0.25;
-        //}
+        //     b(i) = -0.25;
+        // }
     }
 
-    //demucscppdebug::debug_tensor_1dxf(b, "b");
+    // demucscppdebug::debug_tensor_1dxf(b, "b");
 
     // apply conv2d_gemm with some params
-    Eigen::Tensor3dXf y_gemm = demucscpp::conv2d_gemm<in_channels, out_channels, kernel_height, kernel_width, 1, 1, 0, 0, 1, 1>(x, w, b);
+    Eigen::Tensor3dXf y_gemm =
+        demucscpp::conv2d_gemm<in_channels, out_channels, kernel_height,
+                               kernel_width, 1, 1, 0, 0, 1, 1>(x, w, b);
 
     // apply regular conv2d with some params
-    Eigen::Tensor3dXf y_conv2d = demucscpp::conv2d<in_channels, out_channels, kernel_height, kernel_width, 1, 1, 0, 0, 1, 1>(x, w, b);
+    Eigen::Tensor3dXf y_conv2d =
+        demucscpp::conv2d<in_channels, out_channels, kernel_height,
+                          kernel_width, 1, 1, 0, 0, 1, 1>(x, w, b);
 
     // print every single value of x with its index; prepend a tab character
     // to each line
@@ -253,41 +269,53 @@ TEST(DemucsCPPLayers, GemmConv)
     std::cout << std::fixed << std::setprecision(4) << std::endl;
 
     std::cout << "x (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < x.dimension(0); ++i) {
+    for (size_t i = 0; i < x.dimension(0); ++i)
+    {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < x.dimension(1); ++j) {
-            for (size_t k = 0; k < x.dimension(2); ++k) {
+        for (size_t j = 0; j < x.dimension(1); ++j)
+        {
+            for (size_t k = 0; k < x.dimension(2); ++k)
+            {
                 std::cout << x(i, j, k) << "\t";
             }
-            std::cout << std::endl;  // New line at the end of each row
+            std::cout << std::endl; // New line at the end of each row
         }
-        std::cout << std::endl;  // Extra line to separate channels
+        std::cout << std::endl; // Extra line to separate channels
     }
     std::cout << "w (Out Channel, In Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < w.dimension(0); ++i) {
-        for (size_t j = 0; j < w.dimension(1); ++j) {
-            std::cout << "Out Channel " << i << ", In Channel " << j << ":" << std::endl;
-            for (size_t k = 0; k < w.dimension(2); ++k) {
-                for (size_t l = 0; l < w.dimension(3); ++l) {
+    for (size_t i = 0; i < w.dimension(0); ++i)
+    {
+        for (size_t j = 0; j < w.dimension(1); ++j)
+        {
+            std::cout << "Out Channel " << i << ", In Channel " << j << ":"
+                      << std::endl;
+            for (size_t k = 0; k < w.dimension(2); ++k)
+            {
+                for (size_t l = 0; l < w.dimension(3); ++l)
+                {
                     std::cout << w(i, j, k, l) << "\t";
                 }
-                std::cout << std::endl;  // New line for each row
+                std::cout << std::endl; // New line for each row
             }
-            std::cout << std::endl;  // Extra line to separate filters
+            std::cout << std::endl; // Extra line to separate filters
         }
     }
 
     std::cout << "b (Bias):" << std::endl;
-    for (size_t i = 0; i < b.dimension(0); ++i) {
+    for (size_t i = 0; i < b.dimension(0); ++i)
+    {
         std::cout << b(i) << "\t";
     }
-    std::cout << std::endl << std::endl;  // New line after printing all biases
+    std::cout << std::endl << std::endl; // New line after printing all biases
 
     std::cout << "y_gemm (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < y_gemm.dimension(0); ++i) {
+    for (size_t i = 0; i < y_gemm.dimension(0); ++i)
+    {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < y_gemm.dimension(1); ++j) {
-            for (size_t k = 0; k < y_gemm.dimension(2); ++k) {
+        for (size_t j = 0; j < y_gemm.dimension(1); ++j)
+        {
+            for (size_t k = 0; k < y_gemm.dimension(2); ++k)
+            {
                 std::cout << y_gemm(i, j, k) << "\t";
             }
             std::cout << std::endl;
@@ -296,10 +324,13 @@ TEST(DemucsCPPLayers, GemmConv)
     }
 
     std::cout << "y_conv2d (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < y_conv2d.dimension(0); ++i) {
+    for (size_t i = 0; i < y_conv2d.dimension(0); ++i)
+    {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < y_conv2d.dimension(1); ++j) {
-            for (size_t k = 0; k < y_conv2d.dimension(2); ++k) {
+        for (size_t j = 0; j < y_conv2d.dimension(1); ++j)
+        {
+            for (size_t k = 0; k < y_conv2d.dimension(2); ++k)
+            {
                 std::cout << y_conv2d(i, j, k) << "\t";
             }
             std::cout << std::endl;
@@ -326,24 +357,26 @@ TEST(DemucsCPPLayers, GemmConv2)
     Eigen::Tensor3dXf x(in_channels, in_height, in_width);
 
     // fill x with values
-    //int counter = 0;
+    // int counter = 0;
     for (size_t i = 0; i < x.dimension(0); ++i)
     {
         for (size_t j = 0; j < x.dimension(1); ++j)
         {
             for (size_t k = 0; k < x.dimension(2); ++k)
             {
-                if (k % 2 == 0) {
-                    x(i, j, k) = 0.5;//counter++;
+                if (k % 2 == 0)
+                {
+                    x(i, j, k) = 0.5; // counter++;
                 }
-                else {
+                else
+                {
                     x(i, j, k) = -0.75;
                 }
             }
         }
     }
 
-    //demucscppdebug::debug_tensor_3dxf(x, "x");
+    // demucscppdebug::debug_tensor_3dxf(x, "x");
     Eigen::Tensor4dXf w(out_channels, in_channels, kernel_height, kernel_width);
 
     int counter = 1;
@@ -355,23 +388,25 @@ TEST(DemucsCPPLayers, GemmConv2)
             {
                 for (size_t l = 0; l < w.dimension(3); ++l)
                 {
-                    w(i, j, k, l) = 0.1f*((float)counter);
-                    if (j % 2 == 0) {
+                    w(i, j, k, l) = 0.1f * ((float)counter);
+                    if (j % 2 == 0)
+                    {
                         w(i, j, k, l) *= -1.0f;
                     }
                     counter++;
-                    // set weights to be -0.5, 0.5 alternating over kernel_height
-                    //if (k % 2 == 0) {
+                    // set weights to be -0.5, 0.5 alternating over
+                    // kernel_height
+                    // if (k % 2 == 0) {
                     //    w(i, j, k, l) = 0.5;
                     //}
-                    //else {
+                    // else {
                     //    w(i, j, k, l) = -0.5;
                     //}
-                    //if (l % 2 == 0)
+                    // if (l % 2 == 0)
                     //{
                     //    w(i, j, k, l) = -0.5;
                     //}
-                    //else
+                    // else
                     //{
                     //    w(i, j, k, l) = 0.5;
                     //}
@@ -380,7 +415,7 @@ TEST(DemucsCPPLayers, GemmConv2)
         }
     }
 
-    //demucscppdebug::debug_tensor_4dxf(w, "w");
+    // demucscppdebug::debug_tensor_4dxf(w, "w");
 
     // bias: 4 out channels
     Eigen::Tensor1dXf b(out_channels);
@@ -389,23 +424,27 @@ TEST(DemucsCPPLayers, GemmConv2)
     for (size_t i = 0; i < out_channels; ++i)
     {
         b(i) = 0.0f;
-        //if (i % 2 == 0)
+        // if (i % 2 == 0)
         //{
-        //    b(i) = 0.75;
-        //}
-        //else
+        //     b(i) = 0.75;
+        // }
+        // else
         //{
-        //    b(i) = -0.25;
-        //}
+        //     b(i) = -0.25;
+        // }
     }
 
-    //demucscppdebug::debug_tensor_1dxf(b, "b");
+    // demucscppdebug::debug_tensor_1dxf(b, "b");
 
     // apply conv2d_gemm with some params
-    Eigen::Tensor3dXf y_gemm = demucscpp::conv2d_gemm<in_channels, out_channels, kernel_height, kernel_width, 1, 1, 0, 0, 1, 1>(x, w, b);
+    Eigen::Tensor3dXf y_gemm =
+        demucscpp::conv2d_gemm<in_channels, out_channels, kernel_height,
+                               kernel_width, 1, 1, 0, 0, 1, 1>(x, w, b);
 
     // apply regular conv2d with some params
-    Eigen::Tensor3dXf y_conv2d = demucscpp::conv2d<in_channels, out_channels, kernel_height, kernel_width, 1, 1, 0, 0, 1, 1>(x, w, b);
+    Eigen::Tensor3dXf y_conv2d =
+        demucscpp::conv2d<in_channels, out_channels, kernel_height,
+                          kernel_width, 1, 1, 0, 0, 1, 1>(x, w, b);
 
     // print every single value of x with its index; prepend a tab character
     // to each line
@@ -413,41 +452,53 @@ TEST(DemucsCPPLayers, GemmConv2)
     std::cout << std::fixed << std::setprecision(4) << std::endl;
 
     std::cout << "x (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < x.dimension(0); ++i) {
+    for (size_t i = 0; i < x.dimension(0); ++i)
+    {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < x.dimension(1); ++j) {
-            for (size_t k = 0; k < x.dimension(2); ++k) {
+        for (size_t j = 0; j < x.dimension(1); ++j)
+        {
+            for (size_t k = 0; k < x.dimension(2); ++k)
+            {
                 std::cout << x(i, j, k) << "\t";
             }
-            std::cout << std::endl;  // New line at the end of each row
+            std::cout << std::endl; // New line at the end of each row
         }
-        std::cout << std::endl;  // Extra line to separate channels
+        std::cout << std::endl; // Extra line to separate channels
     }
     std::cout << "w (Out Channel, In Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < w.dimension(0); ++i) {
-        for (size_t j = 0; j < w.dimension(1); ++j) {
-            std::cout << "Out Channel " << i << ", In Channel " << j << ":" << std::endl;
-            for (size_t k = 0; k < w.dimension(2); ++k) {
-                for (size_t l = 0; l < w.dimension(3); ++l) {
+    for (size_t i = 0; i < w.dimension(0); ++i)
+    {
+        for (size_t j = 0; j < w.dimension(1); ++j)
+        {
+            std::cout << "Out Channel " << i << ", In Channel " << j << ":"
+                      << std::endl;
+            for (size_t k = 0; k < w.dimension(2); ++k)
+            {
+                for (size_t l = 0; l < w.dimension(3); ++l)
+                {
                     std::cout << w(i, j, k, l) << "\t";
                 }
-                std::cout << std::endl;  // New line for each row
+                std::cout << std::endl; // New line for each row
             }
-            std::cout << std::endl;  // Extra line to separate filters
+            std::cout << std::endl; // Extra line to separate filters
         }
     }
 
     std::cout << "b (Bias):" << std::endl;
-    for (size_t i = 0; i < b.dimension(0); ++i) {
+    for (size_t i = 0; i < b.dimension(0); ++i)
+    {
         std::cout << b(i) << "\t";
     }
-    std::cout << std::endl << std::endl;  // New line after printing all biases
+    std::cout << std::endl << std::endl; // New line after printing all biases
 
     std::cout << "y_gemm (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < y_gemm.dimension(0); ++i) {
+    for (size_t i = 0; i < y_gemm.dimension(0); ++i)
+    {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < y_gemm.dimension(1); ++j) {
-            for (size_t k = 0; k < y_gemm.dimension(2); ++k) {
+        for (size_t j = 0; j < y_gemm.dimension(1); ++j)
+        {
+            for (size_t k = 0; k < y_gemm.dimension(2); ++k)
+            {
                 std::cout << y_gemm(i, j, k) << "\t";
             }
             std::cout << std::endl;
@@ -456,10 +507,13 @@ TEST(DemucsCPPLayers, GemmConv2)
     }
 
     std::cout << "y_conv2d (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < y_conv2d.dimension(0); ++i) {
+    for (size_t i = 0; i < y_conv2d.dimension(0); ++i)
+    {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < y_conv2d.dimension(1); ++j) {
-            for (size_t k = 0; k < y_conv2d.dimension(2); ++k) {
+        for (size_t j = 0; j < y_conv2d.dimension(1); ++j)
+        {
+            for (size_t k = 0; k < y_conv2d.dimension(2); ++k)
+            {
                 std::cout << y_conv2d(i, j, k) << "\t";
             }
             std::cout << std::endl;
@@ -486,24 +540,26 @@ TEST(DemucsCPPLayers, GemmTrConv)
     Eigen::Tensor3dXf x(in_channels, in_height, in_width);
 
     // fill x with values
-    //int counter = 0;
+    // int counter = 0;
     for (size_t i = 0; i < x.dimension(0); ++i)
     {
         for (size_t j = 0; j < x.dimension(1); ++j)
         {
             for (size_t k = 0; k < x.dimension(2); ++k)
             {
-                if (k % 2 == 0) {
-                    x(i, j, k) = 0.5;//counter++;
+                if (k % 2 == 0)
+                {
+                    x(i, j, k) = 0.5; // counter++;
                 }
-                else {
+                else
+                {
                     x(i, j, k) = -0.75;
                 }
             }
         }
     }
 
-    //demucscppdebug::debug_tensor_3dxf(x, "x");
+    // demucscppdebug::debug_tensor_3dxf(x, "x");
     Eigen::Tensor4dXf w(in_channels, out_channels, kernel_height, kernel_width);
 
     int counter = 1;
@@ -515,23 +571,25 @@ TEST(DemucsCPPLayers, GemmTrConv)
             {
                 for (size_t l = 0; l < w.dimension(3); ++l)
                 {
-                    w(i, j, k, l) = 0.1f*((float)counter);
-                    if (i % 2 == 0) {
+                    w(i, j, k, l) = 0.1f * ((float)counter);
+                    if (i % 2 == 0)
+                    {
                         w(i, j, k, l) *= -1.0f;
                     }
                     counter++;
-                    // set weights to be -0.5, 0.5 alternating over kernel_height
-                    //if (k % 2 == 0) {
+                    // set weights to be -0.5, 0.5 alternating over
+                    // kernel_height
+                    // if (k % 2 == 0) {
                     //    w(i, j, k, l) = 0.5;
                     //}
-                    //else {
+                    // else {
                     //    w(i, j, k, l) = -0.5;
                     //}
-                    //if (l % 2 == 0)
+                    // if (l % 2 == 0)
                     //{
                     //    w(i, j, k, l) = -0.5;
                     //}
-                    //else
+                    // else
                     //{
                     //    w(i, j, k, l) = 0.5;
                     //}
@@ -540,7 +598,7 @@ TEST(DemucsCPPLayers, GemmTrConv)
         }
     }
 
-    //demucscppdebug::debug_tensor_4dxf(w, "w");
+    // demucscppdebug::debug_tensor_4dxf(w, "w");
 
     // bias: 4 out channels
     Eigen::Tensor1dXf b(out_channels);
@@ -549,23 +607,26 @@ TEST(DemucsCPPLayers, GemmTrConv)
     for (size_t i = 0; i < out_channels; ++i)
     {
         b(i) = 0.0f;
-        //if (i % 2 == 0)
+        // if (i % 2 == 0)
         //{
-        //    b(i) = 0.75;
-        //}
-        //else
+        //     b(i) = 0.75;
+        // }
+        // else
         //{
-        //    b(i) = -0.25;
-        //}
+        //     b(i) = -0.25;
+        // }
     }
 
-    //demucscppdebug::debug_tensor_1dxf(b, "b");
+    // demucscppdebug::debug_tensor_1dxf(b, "b");
 
     // apply conv2d_gemm with some params
-    Eigen::Tensor3dXf y_gemm = demucscpp::conv2d_tr_gemm<in_channels, out_channels, kernel_height, kernel_width, 1, 1, 0, 0, 1, 1>(x, w, b);
+    Eigen::Tensor3dXf y_gemm =
+        demucscpp::conv2d_tr_gemm<in_channels, out_channels, kernel_height,
+                                  kernel_width, 1, 1, 0, 0, 1, 1>(x, w, b);
 
     // apply regular conv2d with some params
-    Eigen::Tensor3dXf y_conv2d = demucscpp::conv2d_tr_old<in_channels, out_channels, kernel_height, kernel_width, 1, 1, 0, 0, 1, 1>(x, w, b);
+    // Eigen::Tensor3dXf y_conv2d = demucscpp::conv2d_tr_old<in_channels,
+    // out_channels, kernel_height, kernel_width, 1, 1, 0, 0, 1, 1>(x, w, b);
 
     // print every single value of x with its index; prepend a tab character
     // to each line
@@ -573,41 +634,53 @@ TEST(DemucsCPPLayers, GemmTrConv)
     std::cout << std::fixed << std::setprecision(4) << std::endl;
 
     std::cout << "x (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < x.dimension(0); ++i) {
+    for (size_t i = 0; i < x.dimension(0); ++i)
+    {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < x.dimension(1); ++j) {
-            for (size_t k = 0; k < x.dimension(2); ++k) {
+        for (size_t j = 0; j < x.dimension(1); ++j)
+        {
+            for (size_t k = 0; k < x.dimension(2); ++k)
+            {
                 std::cout << x(i, j, k) << "\t";
             }
-            std::cout << std::endl;  // New line at the end of each row
+            std::cout << std::endl; // New line at the end of each row
         }
-        std::cout << std::endl;  // Extra line to separate channels
+        std::cout << std::endl; // Extra line to separate channels
     }
     std::cout << "w (Out Channel, In Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < w.dimension(0); ++i) {
-        for (size_t j = 0; j < w.dimension(1); ++j) {
-            std::cout << "Out Channel " << i << ", In Channel " << j << ":" << std::endl;
-            for (size_t k = 0; k < w.dimension(2); ++k) {
-                for (size_t l = 0; l < w.dimension(3); ++l) {
+    for (size_t i = 0; i < w.dimension(0); ++i)
+    {
+        for (size_t j = 0; j < w.dimension(1); ++j)
+        {
+            std::cout << "Out Channel " << i << ", In Channel " << j << ":"
+                      << std::endl;
+            for (size_t k = 0; k < w.dimension(2); ++k)
+            {
+                for (size_t l = 0; l < w.dimension(3); ++l)
+                {
                     std::cout << w(i, j, k, l) << "\t";
                 }
-                std::cout << std::endl;  // New line for each row
+                std::cout << std::endl; // New line for each row
             }
-            std::cout << std::endl;  // Extra line to separate filters
+            std::cout << std::endl; // Extra line to separate filters
         }
     }
 
     std::cout << "b (Bias):" << std::endl;
-    for (size_t i = 0; i < b.dimension(0); ++i) {
+    for (size_t i = 0; i < b.dimension(0); ++i)
+    {
         std::cout << b(i) << "\t";
     }
-    std::cout << std::endl << std::endl;  // New line after printing all biases
+    std::cout << std::endl << std::endl; // New line after printing all biases
 
     std::cout << "y_gemm (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < y_gemm.dimension(0); ++i) {
+    for (size_t i = 0; i < y_gemm.dimension(0); ++i)
+    {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < y_gemm.dimension(1); ++j) {
-            for (size_t k = 0; k < y_gemm.dimension(2); ++k) {
+        for (size_t j = 0; j < y_gemm.dimension(1); ++j)
+        {
+            for (size_t k = 0; k < y_gemm.dimension(2); ++k)
+            {
                 std::cout << y_gemm(i, j, k) << "\t";
             }
             std::cout << std::endl;
@@ -615,21 +688,21 @@ TEST(DemucsCPPLayers, GemmTrConv)
         std::cout << std::endl;
     }
 
-    std::cout << "y_conv2d (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < y_conv2d.dimension(0); ++i) {
-        std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < y_conv2d.dimension(1); ++j) {
-            for (size_t k = 0; k < y_conv2d.dimension(2); ++k) {
-                std::cout << y_conv2d(i, j, k) << "\t";
-            }
-            std::cout << std::endl;
-        }
-        std::cout << std::endl;
-    }
+    // std::cout << "y_conv2d (Channel, Height, Width):" << std::endl;
+    // for (size_t i = 0; i < y_conv2d.dimension(0); ++i) {
+    //     std::cout << "Channel " << i << ":" << std::endl;
+    //     for (size_t j = 0; j < y_conv2d.dimension(1); ++j) {
+    //         for (size_t k = 0; k < y_conv2d.dimension(2); ++k) {
+    //             std::cout << y_conv2d(i, j, k) << "\t";
+    //         }
+    //         std::cout << std::endl;
+    //     }
+    //     std::cout << std::endl;
+    // }
 
     // compare y_gemm and y_conv2d
     demucscppdebug::debug_tensor_3dxf(y_gemm, "y_gemm");
-    demucscppdebug::debug_tensor_3dxf(y_conv2d, "y_conv2d");
+    // demucscppdebug::debug_tensor_3dxf(y_conv2d, "y_conv2d");
 }
 
 // write a basic test case for a stereo file
@@ -1001,8 +1074,9 @@ TEST(DemucsCPPLayers, CrossTransformer)
     Eigen::Tensor3dXf x_fake_reshaped =
         x_fake.reshape(Eigen::array<int, 3>({1, 384, 8 * 336}));
     Eigen::Tensor3dXf x_fake_reshaped_upsampled =
-        demucscpp::conv1d<384, 512, 1, 1, 0, 1>(x_fake_reshaped, model.channel_upsampler_weight,
-                          model.channel_upsampler_bias);
+        demucscpp::conv1d<384, 512, 1, 1, 0, 1>(x_fake_reshaped,
+                                                model.channel_upsampler_weight,
+                                                model.channel_upsampler_bias);
     Eigen::Tensor3dXf x_fake_upsampled =
         x_fake_reshaped_upsampled.reshape(Eigen::array<int, 3>({512, 8, 336}));
 
@@ -1013,8 +1087,9 @@ TEST(DemucsCPPLayers, CrossTransformer)
     // for time channel upsampling
     // apply upsampler directly to xt_3 no reshaping drama needed
     Eigen::Tensor3dXf xt_fake_upsampled =
-        demucscpp::conv1d<384, 512, 1, 1, 0, 1>(xt_fake, model.channel_upsampler_t_weight,
-                          model.channel_upsampler_t_bias);
+        demucscpp::conv1d<384, 512, 1, 1, 0, 1>(
+            xt_fake, model.channel_upsampler_t_weight,
+            model.channel_upsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_upsampled,
                                       "x pre-crosstransformer");
@@ -1040,15 +1115,17 @@ TEST(DemucsCPPLayers, CrossTransformer)
     // then apply the conv1d_2d function
 
     Eigen::Tensor3dXf x_fake_reshaped_downsampled =
-        demucscpp::conv1d<512, 384, 1, 1, 0, 1>(x_fake_upsampled, model.channel_downsampler_weight,
-                          model.channel_downsampler_bias);
+        demucscpp::conv1d<512, 384, 1, 1, 0, 1>(
+            x_fake_upsampled, model.channel_downsampler_weight,
+            model.channel_downsampler_bias);
     Eigen::Tensor3dXf x_fake_downsampled = x_fake_reshaped_downsampled.reshape(
         Eigen::array<int, 3>({384, 8, 336}));
 
     // apply upsampler directly to xt_3
     Eigen::Tensor3dXf xt_fake_downsampled =
-        demucscpp::conv1d<512, 384, 1, 1, 0, 1>(xt_fake_upsampled, model.channel_downsampler_t_weight,
-                          model.channel_downsampler_t_bias);
+        demucscpp::conv1d<512, 384, 1, 1, 0, 1>(
+            xt_fake_upsampled, model.channel_downsampler_t_weight,
+            model.channel_downsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_downsampled, "x post-downsampler");
     demucscppdebug::debug_tensor_3dxf(xt_fake_downsampled,
@@ -1162,8 +1239,9 @@ TEST(DemucsCPPLayers, Upsamplers)
     Eigen::Tensor3dXf x_fake_reshaped =
         x_fake.reshape(Eigen::array<int, 3>({1, 384, 8 * 336}));
     Eigen::Tensor3dXf x_fake_reshaped_upsampled =
-        demucscpp::conv1d<384, 512, 1, 1, 0, 1>(x_fake_reshaped, model.channel_upsampler_weight,
-                          model.channel_upsampler_bias);
+        demucscpp::conv1d<384, 512, 1, 1, 0, 1>(x_fake_reshaped,
+                                                model.channel_upsampler_weight,
+                                                model.channel_upsampler_bias);
     Eigen::Tensor3dXf x_fake_upsampled =
         x_fake_reshaped_upsampled.reshape(Eigen::array<int, 3>({512, 8, 336}));
 
@@ -1174,8 +1252,9 @@ TEST(DemucsCPPLayers, Upsamplers)
     // for time channel upsampling
     // apply upsampler directly to xt_3 no reshaping drama needed
     Eigen::Tensor3dXf xt_fake_upsampled =
-        demucscpp::conv1d<384, 512, 1, 1, 0, 1>(xt_fake, model.channel_upsampler_t_weight,
-                          model.channel_upsampler_t_bias);
+        demucscpp::conv1d<384, 512, 1, 1, 0, 1>(
+            xt_fake, model.channel_upsampler_t_weight,
+            model.channel_upsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_upsampled, "x upsampled");
     demucscppdebug::debug_tensor_3dxf(xt_fake_upsampled, "xt upsampled");
@@ -1184,16 +1263,18 @@ TEST(DemucsCPPLayers, Upsamplers)
 
     Eigen::Tensor3dXf x_fake_upsampled_reshaped =
         x_fake_upsampled.reshape(Eigen::array<int, 3>({1, 512, 8 * 336}));
-    Eigen::Tensor3dXf x_fake_downsampled_reshaped = demucscpp::conv1d<512, 384, 1, 1, 0, 0>(
-        x_fake_upsampled_reshaped, model.channel_downsampler_weight,
-        model.channel_downsampler_bias);
+    Eigen::Tensor3dXf x_fake_downsampled_reshaped =
+        demucscpp::conv1d<512, 384, 1, 1, 0, 0>(
+            x_fake_upsampled_reshaped, model.channel_downsampler_weight,
+            model.channel_downsampler_bias);
     Eigen::Tensor3dXf x_fake_downsampled = x_fake_downsampled_reshaped.reshape(
         Eigen::array<int, 3>({384, 8, 336}));
 
     // apply upsampler directly to xt_3
     Eigen::Tensor3dXf xt_fake_downsampled =
-        demucscpp::conv1d<512, 384, 1, 1, 0, 0>(xt_fake_upsampled, model.channel_downsampler_t_weight,
-                          model.channel_downsampler_t_bias);
+        demucscpp::conv1d<512, 384, 1, 1, 0, 0>(
+            xt_fake_upsampled, model.channel_downsampler_t_weight,
+            model.channel_downsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_downsampled, "x post-downsampler");
     demucscppdebug::debug_tensor_3dxf(xt_fake_downsampled,
@@ -1320,34 +1401,34 @@ TEST(DemucsCPPLayers, CTLayers)
     demucscppdebug::debug_tensor_3dxf(x_fake, "x post-layer-0");
     demucscppdebug::debug_tensor_3dxf(xt_fake, "xt post-tlayer-0");
 
-    //demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_weight,
-    //                                  "norm_in weight");
-    //demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_bias,
-    //                                  "norm_in bias");
+    // demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_weight,
+    //                                   "norm_in weight");
+    // demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_bias,
+    //                                   "norm_in bias");
 
-    //demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_t_weight,
-    //                                  "norm_in_t weight");
-    //demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_t_bias,
-    //                                  "norm_in_t bias");
+    // demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_t_weight,
+    //                                   "norm_in_t weight");
+    // demucscppdebug::debug_tensor_1dxf(model.crosstransformer_norm_in_t_bias,
+    //                                   "norm_in_t bias");
 
-    //Eigen::Tensor3dXf x_norm_in = demucscpp::layer_norm(
-    //    x_fake_copy, model.crosstransformer_norm_in_weight,
-    //    model.crosstransformer_norm_in_bias, eps);
-    //Eigen::Tensor3dXf xt_norm_in = demucscpp::layer_norm(
-    //    xt_fake_copy, model.crosstransformer_norm_in_t_weight,
-    //    model.crosstransformer_norm_in_t_bias, eps);
-    //Eigen::Tensor3dXf x_norm_in_t = demucscpp::layer_norm(
-    //    xt_fake_copy, model.crosstransformer_norm_in_weight,
-    //    model.crosstransformer_norm_in_bias, eps);
-    //Eigen::Tensor3dXf xt_norm_in_f = demucscpp::layer_norm(
-    //    x_fake_copy, model.crosstransformer_norm_in_t_weight,
-    //    model.crosstransformer_norm_in_t_bias, eps);
+    // Eigen::Tensor3dXf x_norm_in = demucscpp::layer_norm(
+    //     x_fake_copy, model.crosstransformer_norm_in_weight,
+    //     model.crosstransformer_norm_in_bias, eps);
+    // Eigen::Tensor3dXf xt_norm_in = demucscpp::layer_norm(
+    //     xt_fake_copy, model.crosstransformer_norm_in_t_weight,
+    //     model.crosstransformer_norm_in_t_bias, eps);
+    // Eigen::Tensor3dXf x_norm_in_t = demucscpp::layer_norm(
+    //     xt_fake_copy, model.crosstransformer_norm_in_weight,
+    //     model.crosstransformer_norm_in_bias, eps);
+    // Eigen::Tensor3dXf xt_norm_in_f = demucscpp::layer_norm(
+    //     x_fake_copy, model.crosstransformer_norm_in_t_weight,
+    //     model.crosstransformer_norm_in_t_bias, eps);
 
-    //demucscppdebug::debug_tensor_3dxf(x_norm_in, "x norm-in");
-    //demucscppdebug::debug_tensor_3dxf(xt_norm_in, "xt norm-in-t");
+    // demucscppdebug::debug_tensor_3dxf(x_norm_in, "x norm-in");
+    // demucscppdebug::debug_tensor_3dxf(xt_norm_in, "xt norm-in-t");
 
-    //demucscppdebug::debug_tensor_3dxf(x_norm_in_t, "x norm-in_t");
-    //demucscppdebug::debug_tensor_3dxf(xt_norm_in_f, "xt norm-in-t_f");
+    // demucscppdebug::debug_tensor_3dxf(x_norm_in_t, "x norm-in_t");
+    // demucscppdebug::debug_tensor_3dxf(xt_norm_in_f, "xt norm-in-t_f");
 }
 
 TEST(DemucsCPPLayers, LayerNormBasic)

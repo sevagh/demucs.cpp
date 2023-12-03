@@ -328,8 +328,8 @@ inline void debug_tensor_2dxf(const Eigen::Tensor<float, 2> &x,
                               const std::string &name)
 {
     std::cout << "Debugging tensor!: " << name << std::endl;
-    std::cout << "\tshape: (" << x.dimension(0) << ", " << x.dimension(1)
-              << ")" << std::endl;
+    std::cout << "\tshape: (" << x.dimension(0) << ", " << x.dimension(1) << ")"
+              << std::endl;
 
     auto x_min = x.minimum();
     auto x_max = x.maximum();
@@ -373,8 +373,10 @@ inline void debug_tensor_2dxf(const Eigen::Tensor<float, 2> &x,
     std::cout << "\tmean: " << x_mean << std::endl;
     std::cout << "\tstddev: " << x_stddev << std::endl;
     std::cout << "\tsum: " << x_sum << std::endl;
-    std::cout << "\tmin idx: (" << x_min_idx_0 << ", " << x_min_idx_1 << ")" << std::endl;
-    std::cout << "\tmax idx: (" << x_max_idx_0 << ", " << x_max_idx_1 << ")" << std::endl;
+    std::cout << "\tmin idx: (" << x_min_idx_0 << ", " << x_min_idx_1 << ")"
+              << std::endl;
+    std::cout << "\tmax idx: (" << x_max_idx_0 << ", " << x_max_idx_1 << ")"
+              << std::endl;
 
     std::cout << "FINISHED DEBUG for tensor: " << name << std::endl;
 }

@@ -13,7 +13,8 @@ static Eigen::Tensor3dXf create_2d_sin_embedding(int d_model, int height,
 {
     if (d_model % 4 != 0)
     {
-        std::cerr <<  "Cannot use sin/cos positional encoding with odd dimension" << std::endl;
+        std::cerr << "Cannot use sin/cos positional encoding with odd dimension"
+                  << std::endl;
         std::exit(1);
     }
 

@@ -117,8 +117,8 @@ shift_inference_4s(struct demucscpp::demucs_model_4s &model,
 
     demucscppdebug::debug_matrix_xf(padded_mix, "padded_mix");
 
-    // int offset = rand() % max_shift;
-    int offset = 1337;
+    int offset = rand() % max_shift;
+    // int offset = 1337;
 
     std::cout << "1., apply model w/ shift, offset: " << offset << std::endl;
 
@@ -136,7 +136,12 @@ shift_inference_4s(struct demucscpp::demucs_model_4s &model,
 
     // trim the output to the original length
     // waveform_outputs = waveform_outputs[..., max_shift:max_shift + length]
-    Eigen::Tensor3dXf trimmed_waveform_outputs = waveform_outputs.reshape(Eigen::array<int, 3>({4, 2, waveform_outputs.dimension(2)})).slice(Eigen::array<int, 3>({0, 0, max_shift - offset}), Eigen::array<int, 3>({4, 2, length}));
+    Eigen::Tensor3dXf trimmed_waveform_outputs =
+        waveform_outputs
+            .reshape(
+                Eigen::array<int, 3>({4, 2, waveform_outputs.dimension(2)}))
+            .slice(Eigen::array<int, 3>({0, 0, max_shift - offset}),
+                   Eigen::array<int, 3>({4, 2, length}));
 
     return trimmed_waveform_outputs;
 }
@@ -176,8 +181,10 @@ split_inference_4s(struct demucscpp::demucs_model_4s &model,
     Eigen::VectorXf weight(segment_samples);
     weight.setZero();
 
-    weight.head(segment_samples / 2) = Eigen::VectorXf::LinSpaced(segment_samples / 2, 1, segment_samples / 2);
-    weight.tail(segment_samples / 2) = weight.head(segment_samples / 2).reverse();
+    weight.head(segment_samples / 2) =
+        Eigen::VectorXf::LinSpaced(segment_samples / 2, 1, segment_samples / 2);
+    weight.tail(segment_samples / 2) =
+        weight.head(segment_samples / 2).reverse();
     weight /= weight.maxCoeff();
     weight = weight.array().pow(demucscpp::TRANSITION_POWER);
 
