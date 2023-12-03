@@ -29,8 +29,10 @@ void common_encoder_layer(
     const Eigen::MatrixXf &linear2_weight, const Eigen::VectorXf &linear2_bias,
     const Eigen::VectorXf &gamma_2_scale,
     const Eigen::Tensor1dXf &norm_out_weight,
-    const Eigen::Tensor1dXf &norm_out_bias, float eps = 1e-5,
-    const int num_heads = 8);
+    const Eigen::Tensor1dXf &norm_out_bias,
+    const int num_heads,
+    float eps = 1e-5,
+    const bool self_attention = false);
 
 Eigen::Tensor3dXf group_norm(const Eigen::Tensor3dXf &x,
                              const Eigen::Tensor1dXf &w,

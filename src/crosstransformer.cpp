@@ -114,7 +114,9 @@ my_transformer_encoder_layer(struct demucscpp::demucs_model_4s &model,
                                                         [weight_idx],
         model
             .crosstransformer_my_layers_norm_out_bias[freq_or_time][weight_idx],
-        eps);
+        8, // num_heads
+        eps,
+        true); // define self_attention = true to skip norm2 recalculation
 }
 
 static void
@@ -163,6 +165,7 @@ cross_transformer_encoder_layer(struct demucscpp::demucs_model_4s &model,
                                                            [weight_idx],
         model.crosstransformer_cross_layers_norm_out_bias[freq_or_time]
                                                          [weight_idx],
+        8, // num_heads
         eps);
 }
 

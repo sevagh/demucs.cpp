@@ -25,6 +25,14 @@ drums           ==> SDR:  10.058  SIR:  18.596  ISR:  17.019  SAR:  10.810
 bass            ==> SDR:   3.919  SIR:  12.436  ISR:   6.931  SAR:   3.182
 other           ==> SDR:   7.421  SIR:  11.286  ISR:  14.252  SAR:   8.183
 ```
+WASM inference (freemusicdemixer, based on this codebase):
+```
+vocals          ==> SDR:   8.339  SIR:  18.274  ISR:  15.836  SAR:   8.347
+drums           ==> SDR:  10.058  SIR:  18.596  ISR:  17.017  SAR:  10.813
+bass            ==> SDR:   3.920  SIR:  12.432  ISR:   6.933  SAR:   3.188
+other           ==> SDR:   7.420  SIR:  11.287  ISR:  14.250  SAR:   8.184
+
+```
 
 *n.b.* for testing purposes in this repo, the random shift in the beginning of the song is fixed to 1337 in both PyTorch and C++.
 

@@ -312,13 +312,21 @@ void demucscpp::common_encoder_layer(
     const Eigen::MatrixXf &linear2_weight, const Eigen::VectorXf &linear2_bias,
     const Eigen::VectorXf &gamma2_scale,
     const Eigen::Tensor1dXf &norm_out_weight,
-    const Eigen::Tensor1dXf &norm_out_bias, float eps, const int num_heads)
+    const Eigen::Tensor1dXf &norm_out_bias, const int num_heads,
+    // optional params
+    float eps,
+    const bool self_attention)
 {
     // Normalize x using the norm1 weights and biases
     Eigen::Tensor3dXf q_norm =
         demucscpp::layer_norm(q, norm1_weight, norm1_bias, eps);
-    Eigen::Tensor3dXf k_norm =
-        demucscpp::layer_norm(k, norm2_weight, norm2_bias, eps);
+
+    Eigen::Tensor3dXf k_norm;
+    if (self_attention) {
+        k_norm = q_norm;
+    } else {
+        k_norm = demucscpp::layer_norm(k, norm2_weight, norm2_bias, eps);
+    }
 
     // Cross-attention block
     // Compute Q, K, V matrices
@@ -355,108 +363,52 @@ void demucscpp::common_encoder_layer(
     Eigen::VectorXf k_bias = in_proj_bias.segment(C, C);
     Eigen::VectorXf v_bias = in_proj_bias.segment(2 * C, C);
 
+    // copied from linear layer: ff1.rowwise() += linear1_bias.transpose();
+    Q.rowwise() += q_bias.transpose();
+    K.rowwise() += k_bias.transpose();
+    V.rowwise() += v_bias.transpose();
+
     int head_split = C / num_heads;
 
-    Eigen::Tensor3dXf Q_heads(T, num_heads, head_split);
-    Eigen::Tensor3dXf K_heads(S, num_heads, head_split);
-    Eigen::MatrixXf V_heads_2d(S * num_heads, head_split);
+    // map matrices to tensors
+    Eigen::Tensor3dXf Q_heads = Eigen::TensorMap<Eigen::Tensor3dXf>(Q.data(), T, head_split, num_heads);
+    Eigen::Tensor3dXf K_heads = Eigen::TensorMap<Eigen::Tensor3dXf>(K.data(), S, head_split, num_heads);
+    Eigen::Tensor3dXf V_heads = Eigen::TensorMap<Eigen::Tensor3dXf>(V.data(), S, head_split, num_heads);
 
-    // reverse loop order to combine with K and V
-    for (int d = 0; d < head_split; ++d)
-    {
-        for (int h = 0; h < num_heads; ++h)
-        {
-            for (int t = 0; t < T; ++t)
-            {
-                Q_heads(t, h, d) =
-                    Q(t, h * head_split + d) + q_bias(h * head_split + d);
-            }
-            for (int s = 0; s < S; ++s)
-            {
-                K_heads(s, h, d) =
-                    K(s, h * head_split + d) + k_bias(h * head_split + d);
-                V_heads_2d(s * num_heads + h, d) =
-                    V(s, h * head_split + d) + v_bias(h * head_split + d);
-            }
-        }
-    }
+    demucscppdebug::debug_tensor_3dxf(Q_heads, "Q_heads");
+    demucscppdebug::debug_tensor_3dxf(K_heads, "K_heads");
 
-    // Compute cross-attention scores
-    Eigen::MatrixXf scores(num_heads * T, S); // Initialize to zeros
+    Eigen::MatrixXf cross_attn_out(T, C);
 
     for (int h = 0; h < num_heads; ++h)
     {
         // Extract the h-th head from Q_heads and K_heads
-        Eigen::Tensor<float, 2> Q_head_tensor = Q_heads.chip(h, 1);
-        Eigen::Tensor<float, 2> K_head_tensor = K_heads.chip(h, 1);
+        Eigen::Tensor2dXf Q_head_tensor = Q_heads.chip(h, 2);
+        Eigen::Tensor2dXf K_head_tensor = K_heads.chip(h, 2);
+        Eigen::Tensor2dXf V_head_tensor = V_heads.chip(h, 2);
 
         // Reshape the tensors to matrices
         Eigen::Map<Eigen::MatrixXf> Q_head(Q_head_tensor.data(), T, head_split);
         Eigen::Map<Eigen::MatrixXf> K_head(K_head_tensor.data(), S, head_split);
+        Eigen::Map<Eigen::MatrixXf> V_head(V_head_tensor.data(), S, head_split);
 
         // Compute the dot product of Q_head and K_head
-        Eigen::MatrixXf dot_product = Q_head * K_head.transpose();
+        Eigen::MatrixXf dot_product = Q_head * K_head.transpose() / std::sqrt((float)head_split);
 
-        // Store the result in scores
-        scores.block(h * T, 0, T, S) = dot_product / std::sqrt((float)head_split);
+        // Apply softmax to the dot product
+        Eigen::ArrayXf max_vals = dot_product.rowwise().maxCoeff();
+        Eigen::MatrixXf max_vals_expanded = max_vals.replicate(1, S);
+        Eigen::MatrixXf softmax_scores = (dot_product - max_vals_expanded).array().exp().matrix();
+        Eigen::VectorXf row_sums = softmax_scores.rowwise().sum();
+        Eigen::MatrixXf divisor = row_sums.replicate(1, S);
+        softmax_scores = (softmax_scores.array() / divisor.array()).matrix();
+
+        Eigen::MatrixXf cross_attn_head = softmax_scores * V_head;
+        cross_attn_out.block(0, h * head_split, T, head_split) = cross_attn_head;
+        std::cout << "cross-attn product for head: " << std::to_string(h) << std::endl;
     }
 
-    // Apply softmax to scores
-    Eigen::ArrayXf max_vals = scores.rowwise().maxCoeff();
-    Eigen::MatrixXf max_vals_expanded = max_vals.replicate(1, scores.cols());
-    scores = (scores - max_vals_expanded).array().exp().matrix();
-    Eigen::VectorXf row_sums = scores.rowwise().sum();
-    Eigen::MatrixXf divisor = row_sums.replicate(1, scores.cols());
-    scores = (scores.array() / divisor.array()).matrix();
-
-    // Compute cross-attention output
-    std::vector<Eigen::MatrixXf> cross_attn_out_3d;
-    std::vector<Eigen::MatrixXf> V_heads_3d;
-    std::vector<Eigen::MatrixXf> scores_3d;
-
-    for (int h = 0; h < num_heads; ++h)
-    {
-        V_heads_3d.push_back(Eigen::MatrixXf(S, head_split));
-        scores_3d.push_back(Eigen::MatrixXf(T, S));
-        cross_attn_out_3d.push_back(Eigen::MatrixXf(T, head_split));
-    }
-
-    // first copy V_heads_2d, scores into 3d tensors
-    for (int h = 0; h < num_heads; ++h)
-    {
-        for (int s = 0; s < S; ++s)
-        {
-            for (int t = 0; t < T; ++t)
-            {
-                scores_3d[h](t, s) = scores(h * T + t, s);
-            }
-            for (int d = 0; d < head_split; ++d)
-            {
-                V_heads_3d[h](s, d) = V_heads_2d(s * num_heads + h, d);
-            }
-        }
-    }
-
-    // now loop over 8 and do inner matmuls, assigning
-    // results to cross_attn_out_3d
-    for (int h = 0; h < num_heads; ++h)
-    {
-        cross_attn_out_3d[h] = scores_3d[h] * V_heads_3d[h];
-    }
-
-    Eigen::MatrixXf cross_attn_out(T, C);
-
-    // now copy cross_attn_out_3d into cross_attn_out
-    // from shape (8, T, 64) to (T, C)
-    for (int t = 0; t < T; ++t)
-    {
-        for (int c = 0; c < C; ++c)
-        {
-            int h = c / head_split;
-            int k_ = c % head_split;
-            cross_attn_out(t, c) = cross_attn_out_3d[h](t, k_);
-        }
-    }
+    std::cout << "copy into 3d" << std::endl;
 
     // Apply output projection
     Eigen::MatrixXf out_proj = cross_attn_out * out_proj_weight.transpose();
@@ -471,13 +423,19 @@ void demucscpp::common_encoder_layer(
         }
     }
 
+    std::cout << "assign plus gamma 1" << std::endl;
+
     // copy q into x_2d
     Eigen::MatrixXf q_2d(T, C);
     q_2d = Eigen::Map<const Eigen::MatrixXf>(q.data(), T, C);
 
+    std::cout << "copie x2d" << std::endl;
+
     // before feedforward, apply norm3 to x i.e. q
     q_norm = demucscpp::layer_norm(q, norm3_weight, norm3_bias, eps);
     q_norm_2d = Eigen::Map<const Eigen::MatrixXf>(q_norm.data(), T, C);
+
+    std::cout << "norm3" << std::endl;
 
     // Feedforward block
     // Linear layer 1
@@ -486,6 +444,8 @@ void demucscpp::common_encoder_layer(
 
     ff1 = demucscpp::gelu(ff1);
 
+    std::cout << "ff1" << std::endl;
+
     // Linear layer 2
     Eigen::MatrixXf ff2 = ff1 * linear2_weight.transpose();
     ff2.rowwise() += linear2_bias.transpose();
@@ -493,22 +453,27 @@ void demucscpp::common_encoder_layer(
     // Apply gamma_2 scale directly on 2D matrix
     ff2 = ff2.array().rowwise() * gamma2_scale.transpose().array();
 
+    std::cout << "ff2" << std::endl;
+
     // now x = x + self.gamma_2(self._ff_block(self.norm3(q))))
     q_2d += ff2;
 
     // Map the 2D data back into a 3D tensor with dimensions (T, B, C)
     q = Eigen::TensorMap<Eigen::Tensor3dXf>(q_2d.data(), T, B, C);
 
+    std::cout << "map ff2" << std::endl;
+
     // Swap the first and last dimensions to get a tensor with dimensions (B, C,
     // T)
-    Eigen::array<int, 3> permute_dims = {1, 2, 0};
-    Eigen::Tensor3dXf q_shuf = q.shuffle(permute_dims);
+    Eigen::array<int, 3> permute_dims_3 = {1, 2, 0};
+    Eigen::Tensor3dXf q_shuf = q.shuffle(permute_dims_3);
 
     // Normalize the output with norm_out/MyGroupNorm
     q = demucscpp::group_norm(q_shuf, norm_out_weight, norm_out_bias, 1, eps);
 
-    Eigen::array<int, 3> permute_dims_2 = {0, 2, 1};
-    q_shuf = q.shuffle(permute_dims_2);
+    Eigen::array<int, 3> permute_dims_4 = {0, 2, 1};
+    q_shuf = q.shuffle(permute_dims_4);
 
     q = q_shuf;
+    std::cout << "norm and ret!" << std::endl;
 }
