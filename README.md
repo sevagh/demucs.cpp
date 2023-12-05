@@ -1,6 +1,9 @@
 # demucs.cpp
 
 Demucs v4 hybrid transformer model reimplemented in C++ with Eigen3
+C++17 implementation of the [Demucs v4 hybrid transformer](https://github.com/facebookresearch/demucs), a PyTorch neural network for music demixing.
+
+It uses [libnyquist](https://github.com/ddiakopoulos/libnyquist) to load audio files, the [ggml](https://github.com/ggerganov/ggml) file format to serialize the PyTorch weights of `umxhq` and `umxl` to a binary file format, and [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) (+ OpenMP) to implement the inference.
 
 Track 'Zeno - Signs' from MUSDB18-HQ test set
 
@@ -36,20 +39,100 @@ other           ==> SDR:   7.420  SIR:  11.287  ISR:  14.250  SAR:   8.184
 
 *n.b.* for the above results, the random shift in the beginning of the song was fixed to 1337 in both PyTorch and C++.
 
-## Build and run
+## Instructions
 
-Out-of-source build with CMake:
+0. Clone the repo
+
+Make sure you clone with submodules:
 ```
-$ mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..
-$ make
+$ git clone --recurse-submodules https://github.com/sevagh/demucs.cpp
 ```
 
-The `Release` build type adds optimization flags (Ofast etc.), without which this project is unusably slow.
+Eigen is vendored as a git submodule.
 
-Run:
+1. Set up Python
+
+The first step is to create a Python environment (however you like; I'm a fan of [mamba](https://mamba.readthedocs.io/en/latest/user_guide/mamba.html)) and install the `requirements.txt` file:
 ```
-$ ./demucs.cpp.main ../ggml-demucs/ggml-model-htdemucs-f16.bin ../test/data/gspi_stereo.wav  ./demucs-out-cpp/
+$ mamba create --name umxcpp python=3.11
+$ mamba activate demucscpp
+$ python -m pip install -r ./scripts/requirements.txt
 ```
+
+2. Dump Demucs weights to ggml file:
+```
+$ python ./scripts/convert-pth-to-ggml.py ./ggml-demucs
+...
+Processing variable:  crosstransformer.layers_t.4.norm2.bias  with shape:  (512,)  , dtype:  float16
+Processing variable:  crosstransformer.layers_t.4.norm_out.weight  with shape:  (512,)  , dtype:  float16
+Processing variable:  crosstransformer.layers_t.4.norm_out.bias  with shape:  (512,)  , dtype:  float16
+Processing variable:  crosstransformer.layers_t.4.gamma_1.scale  with shape:  (512,)  , dtype:  float16
+Processing variable:  crosstransformer.layers_t.4.gamma_2.scale  with shape:  (512,)  , dtype:  float16
+Done. Output file:  ggml-demucs/ggml-model-htdemucs-4s-f16.bin
+```
+
+3. Install C++ dependencies, e.g. CMake, gcc, C++/g++, OpenMP for your OS - my instructions are for Pop!\_OS 22.04:
+```
+$ sudo apt-get install gcc g++ cmake clang-tools
+```
+
+4. Compile with CMake:
+```
+$ mkdir -p build && cd build && cmake .. && make
+```
+
+5. Run inference on your track:
+```
+$ ./demucs.cpp.main ../ggml-demucs/ggml-model-htdemucs-4s-f16.bin /path/to/my/track.wav  ./demucs-out-cpp/
+...
+Loading tensor crosstransformer.layers_t.4.gamma_2.scale with shape [512, 1, 1, 1]
+crosstransformer.layers_t.4.gamma_2.scale: [  512], type = float,   0.00 MB
+Loaded model (533 tensors,  80.08 MB) in 0.167395 s
+demucs_model_load returned true
+Starting demucs inference
+
+Debugging matrix!: full_audio
+        shape: (2, 262144)
+        min: -0.69414347410202026367
+        max: 0.57826471328735351562
+        mean: 0.00068868900416418910
+        stddev: 0.07019081711769104004
+        sum: 361.07138061523437500000
+        min idx: (0, 46534)
+        max idx: (0, 172750)
+FINISHED DEBUG for tensor: full_audio
+Debugging matrix!: normalized_audio
+        shape: (2, 262144)
+        min: -9.89647102355957031250
+        max: 8.22639656066894531250
+...
+Writing wav file "./demucs-out-cpp/target_2.wav"
+Debugging matrix!: target_waveform for target 2
+        shape: (2, 262144)
+        min: -0.68454617261886596680
+        max: 0.54826033115386962891
+        mean: 0.00062962016090750694
+        stddev: 0.06953772902488708496
+        sum: 330.10229492187500000000
+        min idx: (1, 140513)
+        max idx: (1, 140517)
+FINISHED DEBUG for tensor: target_waveform for target 2
+Encoder Status: 0
+Writing wav file "./demucs-out-cpp/target_3.wav"
+Debugging matrix!: target_waveform for target 3
+        shape: (2, 262144)
+        min: -0.01484657265245914459
+        max: 0.00672674458473920822
+        mean: 0.00070301460800692439
+        stddev: 0.00090569938765838742
+        sum: 368.58212280273437500000
+        min idx: (1, 172747)
+        max idx: (0, 103435)
+FINISHED DEBUG for tensor: target_waveform for target 3
+Encoder Status: 0
+```
+
+Note: I have only tested this on my Linux-based computer (Pop!\_OS 22.04), and you may need to figure out how to get the dependencies on your own.
 
 ## Hack
 
