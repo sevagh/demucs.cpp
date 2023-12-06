@@ -184,8 +184,6 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model_4s &model,
 {
     Eigen::Tensor3dXf y = x_in + skip;
 
-    std::cout << "first conv2d!" << std::endl;
-
     // need rewrite, norm2, glu
     switch (decoder_idx)
     {
@@ -219,9 +217,6 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model_4s &model,
     y = y_shuff;
 
     // start the DConv
-
-    std::cout << "then dconv!" << std::endl;
-
     demucscpp::apply_dconv(model, y, 0, 1, 4 - decoder_idx - 1, y.dimension(2));
 
     // dconv finished
@@ -256,8 +251,6 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model_4s &model,
         break;
     };
 
-    std::cout << "last conv2d_tr!" << std::endl;
-
     int y_dim1_begin = 2;
     int y_dim1_end = y.dimension(1) - 4;
 
@@ -273,7 +266,6 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model_4s &model,
     }
     else
     {
-        std::cout << "last decoder, no gelu" << std::endl;
         // last, no gelu
         x_out = y_cropped_2;
     }

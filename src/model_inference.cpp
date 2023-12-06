@@ -132,7 +132,7 @@ void demucscpp::model_inference_4s(
         }
     }
 
-    demucscppdebug::debug_tensor_3dxf(buffers.xt, "xt pre-std/mean");
+    std::cout << "Freq branch: normalized" << std::endl;
 
     // apply similar mean, std normalization as above using 2d mean, std
     Eigen::Tensor<float, 0> meant_tensor = buffers.xt.mean();
@@ -143,7 +143,7 @@ void demucscpp::model_inference_4s(
     // Normalize x
     buffers.xt = (buffers.xt - meant) / (stdt + epsilon);
 
-    demucscppdebug::debug_tensor_3dxf(buffers.xt, "xt post-std/mean");
+    std::cout << "Time branch: normalized" << std::endl;
 
     // buffers.xt will be the time branch input
 
@@ -156,10 +156,10 @@ void demucscpp::model_inference_4s(
     demucscppdebug::debug_tensor_3dxf(buffers.x, "x pre-encoder");
 
     demucscpp::apply_time_encoder(model, 0, buffers.xt, buffers.xt_0);
-    demucscppdebug::debug_tensor_3dxf(buffers.xt_0, "xt_0 post-tencoder-0");
+    std::cout << "Time encoder 0" << std::endl;
 
     demucscpp::apply_freq_encoder(model, 0, buffers.x, buffers.x_0);
-    demucscppdebug::debug_tensor_3dxf(buffers.x_0, "x_0 post-encoder-0");
+    std::cout << "Freq encoder 0" << std::endl;
 
     // absorb both scaling factors in one expression
     //   i.e. eliminate const float freq_emb_scale = 0.2f;
@@ -190,28 +190,28 @@ void demucscpp::model_inference_4s(
     buffers.savedt_0 = buffers.xt_0;
 
     apply_time_encoder(model, 1, buffers.xt_0, buffers.xt_1);
-    demucscppdebug::debug_tensor_3dxf(buffers.xt_1, "xt_1 post-tencoder-1");
+    std::cout << "Time encoder 1" << std::endl;
 
     apply_freq_encoder(model, 1, buffers.x_0, buffers.x_1);
-    demucscppdebug::debug_tensor_3dxf(buffers.x_1, "x_1 post-encoder-1");
+    std::cout << "Freq encoder 1" << std::endl;
 
     buffers.saved_1 = buffers.x_1;
     buffers.savedt_1 = buffers.xt_1;
 
     apply_time_encoder(model, 2, buffers.xt_1, buffers.xt_2);
-    demucscppdebug::debug_tensor_3dxf(buffers.xt_2, "xt_2 post-tencoder-2");
+    std::cout << "Time encoder 2" << std::endl;
 
     apply_freq_encoder(model, 2, buffers.x_1, buffers.x_2);
-    demucscppdebug::debug_tensor_3dxf(buffers.x_2, "x_2 post-encoder-2");
+    std::cout << "Freq encoder 2" << std::endl;
 
     buffers.saved_2 = buffers.x_2;
     buffers.savedt_2 = buffers.xt_2;
 
     apply_time_encoder(model, 3, buffers.xt_2, buffers.xt_3);
-    demucscppdebug::debug_tensor_3dxf(buffers.xt_3, "xt_3 post-tencoder-3");
+    std::cout << "Time encoder 3" << std::endl;
 
     apply_freq_encoder(model, 3, buffers.x_2, buffers.x_3);
-    demucscppdebug::debug_tensor_3dxf(buffers.x_3, "x_3 post-encoder-3");
+    std::cout << "Freq encoder 3" << std::endl;
 
     buffers.saved_3 = buffers.x_3;
     buffers.savedt_3 = buffers.xt_3;
@@ -234,6 +234,7 @@ void demucscpp::model_inference_4s(
                                                 model.channel_upsampler_bias);
     buffers.x_3_channel_upsampled = x_3_reshaped_upsampled.reshape(
         Eigen::array<int, 3>({512, 8, n_stft_frames}));
+    std::cout << "Freq: channels upsampled" << std::endl;
 
     /*****************************/
     /*  TIME CHANNEL UPSAMPLING  */
@@ -249,12 +250,15 @@ void demucscpp::model_inference_4s(
                                       "x pre-crosstransformer");
     demucscppdebug::debug_tensor_3dxf(buffers.xt_3_channel_upsampled,
                                       "xt pre-crosstransformer");
+    std::cout << "Time: channels upsampled" << std::endl;
 
     /*************************/
     /*  CROSS-TRANSFORMER!  */
     /************************/
     demucscpp::apply_crosstransformer(model, buffers.x_3_channel_upsampled,
                                       buffers.xt_3_channel_upsampled);
+
+    std::cout << "Crosstransformer: finished" << std::endl;
 
     // reshape buffers.x_3_channel_upsampled into 1, 512, 2688
     // when skipping the crosstransformer
@@ -274,11 +278,14 @@ void demucscpp::model_inference_4s(
             model.channel_downsampler_bias);
     buffers.x_3 = x_3_reshaped_downsampled.reshape(
         Eigen::array<int, 3>({384, 8, n_stft_frames}));
+    std::cout << "Freq: channels downsampled" << std::endl;
 
     // apply upsampler directly to xt_3
     buffers.xt_3 = demucscpp::conv1d<512, 384, 1, 1, 0, 0>(
         buffers.xt_3_channel_upsampled, model.channel_downsampler_t_weight,
         model.channel_downsampler_t_bias);
+
+    std::cout << "Time: channels downsampled" << std::endl;
 
     // now decoder time!
 
@@ -288,64 +295,58 @@ void demucscpp::model_inference_4s(
                                       "saved_3/skip pre-decoder");
     demucscpp::apply_freq_decoder(model, 0, buffers.x_3, buffers.x_2,
                                   buffers.saved_3);
-    demucscppdebug::debug_tensor_3dxf(buffers.x_2, "buffers.x_2 post-decoder");
+    std::cout << "Freq: decoder 0" << std::endl;
 
     demucscppdebug::debug_tensor_3dxf(buffers.xt_3, "xt_3 pre-tdecoder");
     demucscppdebug::debug_tensor_3dxf(buffers.savedt_3,
                                       "savedt_3/skip pre-tdecoder");
     demucscpp::apply_time_decoder(model, 0, buffers.xt_3, buffers.xt_2,
                                   buffers.savedt_3);
-    demucscppdebug::debug_tensor_3dxf(buffers.xt_2,
-                                      "buffers.xt_2 post-tdecoder");
+    std::cout << "Time: decoder 0" << std::endl;
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_2, "x_2 pre-decoder");
     demucscppdebug::debug_tensor_3dxf(buffers.saved_2,
                                       "saved_2/skip pre-decoder");
     demucscpp::apply_freq_decoder(model, 1, buffers.x_2, buffers.x_1,
                                   buffers.saved_2);
-    demucscppdebug::debug_tensor_3dxf(buffers.x_1, "buffers.x_1 post-decoder");
+    std::cout << "Freq: decoder 1" << std::endl;
 
     demucscppdebug::debug_tensor_3dxf(buffers.xt_2, "xt_2 pre-tdecoder");
     demucscppdebug::debug_tensor_3dxf(buffers.savedt_2,
                                       "savedt_2/skip pre-tdecoder");
     demucscpp::apply_time_decoder(model, 1, buffers.xt_2, buffers.xt_1,
                                   buffers.savedt_2);
-    demucscppdebug::debug_tensor_3dxf(buffers.xt_1,
-                                      "buffers.xt_1 post-tdecoder");
+    std::cout << "Time: decoder 1" << std::endl;
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_1, "x_1 pre-decoder");
     demucscppdebug::debug_tensor_3dxf(buffers.saved_1,
                                       "saved_1/skip pre-decoder");
     demucscpp::apply_freq_decoder(model, 2, buffers.x_1, buffers.x_0,
                                   buffers.saved_1);
-    demucscppdebug::debug_tensor_3dxf(buffers.x_0, "buffers.x_0 post-decoder");
+    std::cout << "Freq: decoder 2" << std::endl;
 
     demucscppdebug::debug_tensor_3dxf(buffers.xt_1, "xt_1 pre-tdecoder");
     demucscppdebug::debug_tensor_3dxf(buffers.savedt_1,
                                       "savedt_1/skip pre-tdecoder");
     demucscpp::apply_time_decoder(model, 2, buffers.xt_1, buffers.xt_0,
                                   buffers.savedt_1);
-    demucscppdebug::debug_tensor_3dxf(buffers.xt_0,
-                                      "buffers.xt_0 post-tdecoder");
+    std::cout << "Time: decoder 2" << std::endl;
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_0, "x_0 pre-decoder");
     demucscppdebug::debug_tensor_3dxf(buffers.saved_0,
                                       "saved_0/skip pre-decoder");
     demucscpp::apply_freq_decoder(model, 3, buffers.x_0, buffers.x_out,
                                   buffers.saved_0);
-    demucscppdebug::debug_tensor_3dxf(buffers.x_out,
-                                      "buffers.x_out post-decoder");
+    std::cout << "Freq: decoder 3" << std::endl;
 
     demucscppdebug::debug_tensor_3dxf(buffers.xt_0, "xt_0 pre-tdecoder");
     demucscppdebug::debug_tensor_3dxf(buffers.savedt_0,
                                       "savedt_0/skip pre-tdecoder");
     demucscpp::apply_time_decoder(model, 3, buffers.xt_0, buffers.xt_out,
                                   buffers.savedt_0);
-    demucscppdebug::debug_tensor_3dxf(buffers.xt_out,
-                                      "buffers.xt_out post-tdecoder");
+    std::cout << "Time: decoder 3" << std::endl;
 
-    std::cout << "Now mask time!" << std::endl;
-    demucscppdebug::assert_(4 * 4 == buffers.x_out.dimension(0));
+    std::cout << "Mask + istft" << std::endl;
 
     // xt dim 1 is a fake dim of 1
     // so we could have symmetry between the tensor3dxf of the freq and time

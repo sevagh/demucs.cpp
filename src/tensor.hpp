@@ -43,6 +43,7 @@ inline void assert_(bool condition)
 inline void debug_tensor_4dxf(const Eigen::Tensor4dXf &x,
                               const std::string &name)
 {
+    return;
     std::cout << "Debugging tensor!: " << name << std::endl;
     std::cout << "\tshape: (" << x.dimension(0) << ", " << x.dimension(1)
               << ", " << x.dimension(2) << ", " << x.dimension(3) << ")"
@@ -135,6 +136,7 @@ inline void debug_tensor_4dxf(const Eigen::Tensor4dXf &x,
 inline void debug_tensor_3dxcf(const Eigen::Tensor3dXcf &x,
                                const std::string &name)
 {
+    return;
     std::cout << "Debugging tensor!: " << name << std::endl;
     std::cout << "\tshape: (" << x.dimension(0) << ", " << x.dimension(1)
               << ", " << x.dimension(2) << ")" << std::endl;
@@ -264,6 +266,7 @@ inline void debug_tensor_3dxcf(const Eigen::Tensor3dXcf &x,
 inline void debug_tensor_3dxf(const Eigen::Tensor3dXf &x,
                               const std::string &name)
 {
+    return;
     std::cout << "Debugging tensor!: " << name << std::endl;
     std::cout << "\tshape: (" << x.dimension(0) << ", " << x.dimension(1)
               << ", " << x.dimension(2) << ")" << std::endl;
@@ -327,6 +330,7 @@ inline void debug_tensor_3dxf(const Eigen::Tensor3dXf &x,
 inline void debug_tensor_2dxf(const Eigen::Tensor<float, 2> &x,
                               const std::string &name)
 {
+    return;
     std::cout << "Debugging tensor!: " << name << std::endl;
     std::cout << "\tshape: (" << x.dimension(0) << ", " << x.dimension(1) << ")"
               << std::endl;
@@ -385,6 +389,7 @@ inline void debug_tensor_2dxf(const Eigen::Tensor<float, 2> &x,
 inline void debug_tensor_1dxf(const Eigen::Tensor1dXf &x,
                               const std::string &name)
 {
+    return;
     std::cout << "Debugging tensor!: " << name << std::endl;
     std::cout << "\tshape: (" << x.dimension(0) << ")" << std::endl;
 
@@ -440,6 +445,7 @@ inline void debug_tensor_1dxf(const Eigen::Tensor1dXf &x,
 inline void debug_tensor_4dxh(const Eigen::Tensor4dXh &x,
                               const std::string &name)
 {
+    return;
     std::cout << "Debugging tensor!: " << name << std::endl;
     std::cout << "\tshape: (" << x.dimension(0) << ", " << x.dimension(1)
               << ", " << x.dimension(2) << ", " << x.dimension(3) << ")"
@@ -530,6 +536,7 @@ inline void debug_tensor_4dxh(const Eigen::Tensor4dXh &x,
 // For MatrixXf
 inline void debug_matrix_xf(const Eigen::MatrixXf &x, const std::string &name)
 {
+    return;
     std::cout << "Debugging matrix!: " << name << std::endl;
     std::cout << "\tshape: (" << x.rows() << ", " << x.cols() << ")"
               << std::endl;
@@ -597,6 +604,7 @@ inline void debug_matrix_xf(const Eigen::MatrixXf &x, const std::string &name)
 // debug VectorXf
 inline void debug_vector_xf(const Eigen::VectorXf &x, const std::string &name)
 {
+    return;
     std::cout << "Debugging vector!: " << name << std::endl;
     std::cout << "\tshape: (" << x.size() << ")" << std::endl;
 
@@ -652,6 +660,7 @@ inline void debug_vector_xf(const Eigen::VectorXf &x, const std::string &name)
 inline void debug_tensor_3dxd(const Eigen::Tensor<double, 3> &x,
                               const std::string &name)
 {
+    return;
     std::cout << "Debugging tensor!: " << name << std::endl;
     std::cout << "\tshape: (" << x.dimension(0) << ", " << x.dimension(1)
               << ", " << x.dimension(2) << ")" << std::endl;

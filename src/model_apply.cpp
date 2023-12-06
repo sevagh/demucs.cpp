@@ -289,8 +289,6 @@ segment_inference_4s(struct demucscpp::demucs_model_4s &model,
     demucscppdebug::debug_tensor_3dxf(buffers.targets_out,
                                       "buffers.targets_out");
 
-    std::cout << "padding offset is: " << std::get<0>(padding) << std::endl;
-
     for (int i = 0; i < 4; ++i)
     {
         for (int j = 0; j < 2; ++j)

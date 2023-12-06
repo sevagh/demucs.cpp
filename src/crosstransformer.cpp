@@ -210,6 +210,8 @@ void demucscpp::apply_crosstransformer(struct demucscpp::demucs_model_4s &model,
                               model.crosstransformer_norm_in_bias, eps) +
         pos_embed_2d;
 
+    std::cout << "Freq (crosstransformer): norm + pos_embed" << std::endl;
+
     // (B, C, T2) = xt.shape
     int C = xt.dimension(1);
     int T2 = xt.dimension(2);
@@ -223,8 +225,7 @@ void demucscpp::apply_crosstransformer(struct demucscpp::demucs_model_4s &model,
                                model.crosstransformer_norm_in_t_bias, eps) +
          pos_embed_1d;
 
-    demucscppdebug::debug_tensor_3dxf(x, "x crosstransformer pre-layers");
-    demucscppdebug::debug_tensor_3dxf(xt, "xt crosstransformer pre-tlayers");
+    std::cout << "Time (crosstransformer): norm + pos_embed" << std::endl;
 
     // actual crosstransformer layers here
 
@@ -236,10 +237,10 @@ void demucscpp::apply_crosstransformer(struct demucscpp::demucs_model_4s &model,
     // x = self.layers[0](x)
     // xt = self.layers_t[0](xt)
     my_transformer_encoder_layer(model, x, 0, 0);
-    my_transformer_encoder_layer(model, xt, 1, 0);
+    std::cout << "Freq (crosstransformer): layer 0" << std::endl;
 
-    demucscppdebug::debug_tensor_3dxf(x, "x crosstransformer post-layer-0");
-    demucscppdebug::debug_tensor_3dxf(xt, "xt crosstransformer post-tlayer-0");
+    my_transformer_encoder_layer(model, xt, 1, 0);
+    std::cout << "Time (crosstransformer): layer 0" << std::endl;
 
     // make a copy of x
     Eigen::Tensor3dXf old_x = x;
@@ -247,36 +248,34 @@ void demucscpp::apply_crosstransformer(struct demucscpp::demucs_model_4s &model,
     // x is modified in-place and is the final value of x
     // xt is not modified (const)
     cross_transformer_encoder_layer(model, x, xt, 0, 0);
+    std::cout << "Freq (crosstransformer): layer 1" << std::endl;
 
     // xt is modified in-place and is the final value of xt
     cross_transformer_encoder_layer(model, xt, old_x, 1, 0);
-
-    demucscppdebug::debug_tensor_3dxf(x, "x crosstransformer post-layer-1");
-    demucscppdebug::debug_tensor_3dxf(xt, "xt crosstransformer post-tlayer-1");
+    std::cout << "Time (crosstransformer): layer 1" << std::endl;
 
     my_transformer_encoder_layer(model, x, 0, 1);
-    my_transformer_encoder_layer(model, xt, 1, 1);
+    std::cout << "Freq (crosstransformer): layer 2" << std::endl;
 
-    demucscppdebug::debug_tensor_3dxf(x, "x crosstransformer post-layer-2");
-    demucscppdebug::debug_tensor_3dxf(xt, "xt crosstransformer post-tlayer-2");
+    my_transformer_encoder_layer(model, xt, 1, 1);
+    std::cout << "Time (crosstransformer): layer 2" << std::endl;
 
     // make a copy of x
     old_x = x;
 
     // x is modified in-place and is the final value of x
     cross_transformer_encoder_layer(model, x, xt, 0, 1);
+    std::cout << "Freq (crosstransformer): layer 3" << std::endl;
 
     // old_xt is modified in-place and is the final value of xt
     cross_transformer_encoder_layer(model, xt, old_x, 1, 1);
-
-    demucscppdebug::debug_tensor_3dxf(x, "x crosstransformer post-layer-3");
-    demucscppdebug::debug_tensor_3dxf(xt, "xt crosstransformer post-tlayer-3");
+    std::cout << "Time (crosstransformer): layer 3" << std::endl;
 
     my_transformer_encoder_layer(model, x, 0, 2);
-    my_transformer_encoder_layer(model, xt, 1, 2);
+    std::cout << "Freq (crosstransformer): layer 4" << std::endl;
 
-    demucscppdebug::debug_tensor_3dxf(x, "x crosstransformer post-layer-4");
-    demucscppdebug::debug_tensor_3dxf(xt, "xt crosstransformer post-tlayer-4");
+    my_transformer_encoder_layer(model, xt, 1, 2);
+    std::cout << "Time (crosstransformer): layer 4" << std::endl;
 
     // permute last two dims of xt
     Eigen::array<int, 3> permute_dims = {0, 2, 1};

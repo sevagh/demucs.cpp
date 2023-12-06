@@ -23,17 +23,12 @@ int main(int argc, const char **argv)
         exit(1);
     }
 
-    // enable openmp parallelization for Eigen
-    // init parallelism for eigen
-    // Eigen::initParallel();
-
-    //// set eigen nb threads to physical cores minus 1
-    //// discover number of physical cores through C++ stdlib
-    ////
-    ///https://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine
-    // int nb_cores = std::thread::hardware_concurrency();
-    // std::cout << "Number of physical cores: " << nb_cores << std::endl;
-    // Eigen::setNbThreads(nb_cores - 1);
+    // set eigen nb threads to physical cores minus 1
+    // discover number of physical cores through C++ stdlib
+    // https://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine
+     int nb_cores = std::thread::hardware_concurrency();
+     std::cout << "Number of physical cores: " << nb_cores << std::endl;
+     Eigen::setNbThreads(nb_cores - 1);
 
     std::cout << "demucs.cpp Main driver program" << std::endl;
 
