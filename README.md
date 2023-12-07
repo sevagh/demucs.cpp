@@ -1,8 +1,8 @@
 # demucs.cpp
 
-C++17 implementation of the [Demucs v4 hybrid transformer](https://github.com/facebookresearch/demucs), a PyTorch neural network for music demixing.
+C++17 implementation of the [Demucs v4 hybrid transformer](https://github.com/facebookresearch/demucs), a PyTorch neural network for music demixing. Similar project to [umx.cpp](https://github.com/sevagh/umx.cpp).
 
-It uses [libnyquist](https://github.com/ddiakopoulos/libnyquist) to load audio files, the [ggml](https://github.com/ggerganov/ggml) file format to serialize the PyTorch weights of `umxhq` and `umxl` to a binary file format, and [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) (+ OpenMP) to implement the inference.
+It uses [libnyquist](https://github.com/ddiakopoulos/libnyquist) to load audio files, the [ggml](https://github.com/ggerganov/ggml) file format to serialize the PyTorch weights of `htdemucs_4s` to a binary file format, and [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) (+ OpenMP) to implement the inference.
 
 Track 'Zeno - Signs' from MUSDB18-HQ test set
 
@@ -53,7 +53,7 @@ Eigen is vendored as a git submodule.
 
 The first step is to create a Python environment (however you like; I'm a fan of [mamba](https://mamba.readthedocs.io/en/latest/user_guide/mamba.html)) and install the `requirements.txt` file:
 ```
-$ mamba create --name umxcpp python=3.11
+$ mamba create --name demucscpp python=3.11
 $ mamba activate demucscpp
 $ python -m pip install -r ./scripts/requirements.txt
 ```

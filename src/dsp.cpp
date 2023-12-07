@@ -25,7 +25,7 @@ Eigen::MatrixXf demucscpp::load_audio(std::string filename)
     if (fileData->sampleRate != SUPPORTED_SAMPLE_RATE)
     {
         std::cerr
-            << "[ERROR] umx.cpp only supports the following sample rate (Hz): "
+            << "[ERROR] demucs.cpp only supports the following sample rate (Hz): "
             << SUPPORTED_SAMPLE_RATE << std::endl;
         exit(1);
     }
@@ -37,7 +37,7 @@ Eigen::MatrixXf demucscpp::load_audio(std::string filename)
 
     if (fileData->channelCount != 2 && fileData->channelCount != 1)
     {
-        std::cerr << "[ERROR] umx.cpp only supports mono and stereo audio"
+        std::cerr << "[ERROR] demucs.cpp only supports mono and stereo audio"
                   << std::endl;
         exit(1);
     }
