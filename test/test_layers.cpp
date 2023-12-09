@@ -15,7 +15,7 @@
 #define NEAR_TOLERANCE 1e-4
 
 // initialize a struct demucs_model
-static struct demucscpp::demucs_model_4s model
+static struct demucscpp::demucs_model model
 {
 };
 static bool loaded = false;
@@ -29,9 +29,9 @@ static void setUpTestSuite()
     }
 
     // load model from "../ggml-demucs/ggml-model-htdemucs-f16.bin"
-    std::string model_file = "../ggml-demucs/ggml-model-htdemucs-f16.bin";
+    std::string model_file = "../ggml-demucs/ggml-model-htdemucs-4s-f16.bin";
 
-    auto ret = load_demucs_model_4s(model_file, &model);
+    auto ret = load_demucs_model(model_file, &model);
     std::cout << "demucs_model_load returned " << (ret ? "true" : "false")
               << std::endl;
     if (!ret)
@@ -1073,10 +1073,12 @@ TEST(DemucsCPPLayers, CrossTransformer)
     // Reshape back to 512x8x336 and store in buffers.x_3_channel_upsampled
     Eigen::Tensor3dXf x_fake_reshaped =
         x_fake.reshape(Eigen::array<int, 3>({1, 384, 8 * 336}));
+
+    auto* ct_4s = static_cast<struct demucscpp::demucs_crosstransformer_4s*>(model.crosstransformer.get());
     Eigen::Tensor3dXf x_fake_reshaped_upsampled =
         demucscpp::conv1d<384, 512, 1, 1, 0, 1>(x_fake_reshaped,
-                                                model.channel_upsampler_weight,
-                                                model.channel_upsampler_bias);
+                                                ct_4s->channel_upsampler_weight,
+                                                ct_4s->channel_upsampler_bias);
     Eigen::Tensor3dXf x_fake_upsampled =
         x_fake_reshaped_upsampled.reshape(Eigen::array<int, 3>({512, 8, 336}));
 
@@ -1088,8 +1090,8 @@ TEST(DemucsCPPLayers, CrossTransformer)
     // apply upsampler directly to xt_3 no reshaping drama needed
     Eigen::Tensor3dXf xt_fake_upsampled =
         demucscpp::conv1d<384, 512, 1, 1, 0, 1>(
-            xt_fake, model.channel_upsampler_t_weight,
-            model.channel_upsampler_t_bias);
+            xt_fake, ct_4s->channel_upsampler_t_weight,
+            ct_4s->channel_upsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_upsampled,
                                       "x pre-crosstransformer");
@@ -1116,16 +1118,16 @@ TEST(DemucsCPPLayers, CrossTransformer)
 
     Eigen::Tensor3dXf x_fake_reshaped_downsampled =
         demucscpp::conv1d<512, 384, 1, 1, 0, 1>(
-            x_fake_upsampled, model.channel_downsampler_weight,
-            model.channel_downsampler_bias);
+            x_fake_upsampled, ct_4s->channel_downsampler_weight,
+            ct_4s->channel_downsampler_bias);
     Eigen::Tensor3dXf x_fake_downsampled = x_fake_reshaped_downsampled.reshape(
         Eigen::array<int, 3>({384, 8, 336}));
 
     // apply upsampler directly to xt_3
     Eigen::Tensor3dXf xt_fake_downsampled =
         demucscpp::conv1d<512, 384, 1, 1, 0, 1>(
-            xt_fake_upsampled, model.channel_downsampler_t_weight,
-            model.channel_downsampler_t_bias);
+            xt_fake_upsampled, ct_4s->channel_downsampler_t_weight,
+            ct_4s->channel_downsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_downsampled, "x post-downsampler");
     demucscppdebug::debug_tensor_3dxf(xt_fake_downsampled,
@@ -1233,6 +1235,8 @@ TEST(DemucsCPPLayers, Upsamplers)
     demucscppdebug::debug_tensor_3dxf(x_fake, "x_fake");
     demucscppdebug::debug_tensor_3dxf(xt_fake, "xt_fake");
 
+    auto* ct_4s = static_cast<struct demucscpp::demucs_crosstransformer_4s*>(model.crosstransformer.get());
+
     // Reshape buffers.x_3 into x_3_reshaped
     // Apply the conv1d function
     // Reshape back to 512x8x336 and store in buffers.x_3_channel_upsampled
@@ -1240,8 +1244,8 @@ TEST(DemucsCPPLayers, Upsamplers)
         x_fake.reshape(Eigen::array<int, 3>({1, 384, 8 * 336}));
     Eigen::Tensor3dXf x_fake_reshaped_upsampled =
         demucscpp::conv1d<384, 512, 1, 1, 0, 1>(x_fake_reshaped,
-                                                model.channel_upsampler_weight,
-                                                model.channel_upsampler_bias);
+                                                ct_4s->channel_upsampler_weight,
+                                                ct_4s->channel_upsampler_bias);
     Eigen::Tensor3dXf x_fake_upsampled =
         x_fake_reshaped_upsampled.reshape(Eigen::array<int, 3>({512, 8, 336}));
 
@@ -1253,8 +1257,8 @@ TEST(DemucsCPPLayers, Upsamplers)
     // apply upsampler directly to xt_3 no reshaping drama needed
     Eigen::Tensor3dXf xt_fake_upsampled =
         demucscpp::conv1d<384, 512, 1, 1, 0, 1>(
-            xt_fake, model.channel_upsampler_t_weight,
-            model.channel_upsampler_t_bias);
+            xt_fake, ct_4s->channel_upsampler_t_weight,
+            ct_4s->channel_upsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_upsampled, "x upsampled");
     demucscppdebug::debug_tensor_3dxf(xt_fake_upsampled, "xt upsampled");
@@ -1265,16 +1269,16 @@ TEST(DemucsCPPLayers, Upsamplers)
         x_fake_upsampled.reshape(Eigen::array<int, 3>({1, 512, 8 * 336}));
     Eigen::Tensor3dXf x_fake_downsampled_reshaped =
         demucscpp::conv1d<512, 384, 1, 1, 0, 0>(
-            x_fake_upsampled_reshaped, model.channel_downsampler_weight,
-            model.channel_downsampler_bias);
+            x_fake_upsampled_reshaped, ct_4s->channel_downsampler_weight,
+            ct_4s->channel_downsampler_bias);
     Eigen::Tensor3dXf x_fake_downsampled = x_fake_downsampled_reshaped.reshape(
         Eigen::array<int, 3>({384, 8, 336}));
 
     // apply upsampler directly to xt_3
     Eigen::Tensor3dXf xt_fake_downsampled =
         demucscpp::conv1d<512, 384, 1, 1, 0, 0>(
-            xt_fake_upsampled, model.channel_downsampler_t_weight,
-            model.channel_downsampler_t_bias);
+            xt_fake_upsampled, ct_4s->channel_downsampler_t_weight,
+            ct_4s->channel_downsampler_t_bias);
 
     demucscppdebug::debug_tensor_3dxf(x_fake_downsampled, "x post-downsampler");
     demucscppdebug::debug_tensor_3dxf(xt_fake_downsampled,
@@ -1333,34 +1337,34 @@ TEST(DemucsCPPLayers, CTLayers)
     demucscpp::common_encoder_layer(
         x_fake, // pass x as q
         x_fake, // pass x as k
-        model.crosstransformer_my_layers_norm1_weight[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_norm1_bias[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_norm1_weight[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_norm1_bias[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_self_attn_in_proj_weight[freq_or_time]
+        model.crosstransformer->crosstransformer_my_layers_norm1_weight[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_norm1_bias[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_norm1_weight[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_norm1_bias[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_self_attn_in_proj_weight[freq_or_time]
                                                                  [weight_idx],
-        model.crosstransformer_my_layers_self_attn_in_proj_bias[freq_or_time]
+        model.crosstransformer->crosstransformer_my_layers_self_attn_in_proj_bias[freq_or_time]
                                                                [weight_idx],
-        model.crosstransformer_my_layers_self_attn_out_proj_weight[freq_or_time]
+        model.crosstransformer->crosstransformer_my_layers_self_attn_out_proj_weight[freq_or_time]
                                                                   [weight_idx],
-        model.crosstransformer_my_layers_self_attn_out_proj_bias[freq_or_time]
+        model.crosstransformer->crosstransformer_my_layers_self_attn_out_proj_bias[freq_or_time]
                                                                 [weight_idx],
         model
-            .crosstransformer_my_layers_gamma_1_scale[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_norm2_weight[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_norm2_bias[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_linear1_weight[freq_or_time]
+            .crosstransformer->crosstransformer_my_layers_gamma_1_scale[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_norm2_weight[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_norm2_bias[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_linear1_weight[freq_or_time]
                                                        [weight_idx],
-        model.crosstransformer_my_layers_linear1_bias[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_linear2_weight[freq_or_time]
+        model.crosstransformer->crosstransformer_my_layers_linear1_bias[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_linear2_weight[freq_or_time]
                                                        [weight_idx],
-        model.crosstransformer_my_layers_linear2_bias[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_linear2_bias[freq_or_time][weight_idx],
         model
-            .crosstransformer_my_layers_gamma_2_scale[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_norm_out_weight[freq_or_time]
+            .crosstransformer->crosstransformer_my_layers_gamma_2_scale[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_norm_out_weight[freq_or_time]
                                                         [weight_idx],
         model
-            .crosstransformer_my_layers_norm_out_bias[freq_or_time][weight_idx],
+            .crosstransformer->crosstransformer_my_layers_norm_out_bias[freq_or_time][weight_idx],
         eps);
 
     freq_or_time = 1;
@@ -1368,34 +1372,34 @@ TEST(DemucsCPPLayers, CTLayers)
     demucscpp::common_encoder_layer(
         xt_fake, // pass x as q
         xt_fake, // pass x as k
-        model.crosstransformer_my_layers_norm1_weight[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_norm1_bias[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_norm1_weight[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_norm1_bias[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_self_attn_in_proj_weight[freq_or_time]
+        model.crosstransformer->crosstransformer_my_layers_norm1_weight[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_norm1_bias[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_norm1_weight[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_norm1_bias[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_self_attn_in_proj_weight[freq_or_time]
                                                                  [weight_idx],
-        model.crosstransformer_my_layers_self_attn_in_proj_bias[freq_or_time]
+        model.crosstransformer->crosstransformer_my_layers_self_attn_in_proj_bias[freq_or_time]
                                                                [weight_idx],
-        model.crosstransformer_my_layers_self_attn_out_proj_weight[freq_or_time]
+        model.crosstransformer->crosstransformer_my_layers_self_attn_out_proj_weight[freq_or_time]
                                                                   [weight_idx],
-        model.crosstransformer_my_layers_self_attn_out_proj_bias[freq_or_time]
+        model.crosstransformer->crosstransformer_my_layers_self_attn_out_proj_bias[freq_or_time]
                                                                 [weight_idx],
         model
-            .crosstransformer_my_layers_gamma_1_scale[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_norm2_weight[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_norm2_bias[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_linear1_weight[freq_or_time]
+            .crosstransformer->crosstransformer_my_layers_gamma_1_scale[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_norm2_weight[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_norm2_bias[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_linear1_weight[freq_or_time]
                                                        [weight_idx],
-        model.crosstransformer_my_layers_linear1_bias[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_linear2_weight[freq_or_time]
+        model.crosstransformer->crosstransformer_my_layers_linear1_bias[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_linear2_weight[freq_or_time]
                                                        [weight_idx],
-        model.crosstransformer_my_layers_linear2_bias[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_linear2_bias[freq_or_time][weight_idx],
         model
-            .crosstransformer_my_layers_gamma_2_scale[freq_or_time][weight_idx],
-        model.crosstransformer_my_layers_norm_out_weight[freq_or_time]
+            .crosstransformer->crosstransformer_my_layers_gamma_2_scale[freq_or_time][weight_idx],
+        model.crosstransformer->crosstransformer_my_layers_norm_out_weight[freq_or_time]
                                                         [weight_idx],
         model
-            .crosstransformer_my_layers_norm_out_bias[freq_or_time][weight_idx],
+            .crosstransformer->crosstransformer_my_layers_norm_out_bias[freq_or_time][weight_idx],
         eps);
 
     demucscppdebug::debug_tensor_3dxf(x_fake, "x post-layer-0");

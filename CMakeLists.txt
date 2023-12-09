@@ -54,12 +54,15 @@ include_directories(src)
 # include src/*.cpp and src/*.c as source files
 file(GLOB SOURCES "src/*.cpp")
 
-# compile library, link against libnyquist
-add_library(demucs.cpp.lib SHARED ${SOURCES})
+add_library(demucs.cpp.lib ${SOURCES})
 target_link_libraries(demucs.cpp.lib libnyquist ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} lapacke)
 if(OPENMP_FOUND)
     target_link_libraries(demucs.cpp.lib ${OpenMP_CXX_LIBRARIES})
 endif()
+
+# Add target to compile demucs.cpp.main, the main driver program for demucs.cpp
+add_executable(demucs.cpp.main demucs.cpp)
+target_link_libraries(demucs.cpp.main demucs.cpp.lib)
 
 file(GLOB SOURCES_TO_LINT "src/*.cpp" "src/*.hpp" "demucs.cpp" "test/*.cpp")
 
@@ -73,10 +76,6 @@ add_custom_target(lint
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
-# add target to compile demucs.cpp, the main driver program for demucs.cpp
-add_executable(demucs.cpp.main demucs.cpp)
-# link it against demucs.cpp.lib
-target_link_libraries(demucs.cpp.main demucs.cpp.lib)
 
 # add target to run cpp tests in test/ directory with gtest
 

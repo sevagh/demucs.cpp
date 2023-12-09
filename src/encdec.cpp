@@ -6,7 +6,7 @@
 #include <cmath>
 
 // forward declaration to apply a frequency encoder
-void demucscpp::apply_freq_encoder(struct demucscpp::demucs_model_4s &model,
+void demucscpp::apply_freq_encoder(struct demucscpp::demucs_model &model,
                                    int encoder_idx,
                                    const Eigen::Tensor3dXf &x_in,
                                    Eigen::Tensor3dXf &x_out)
@@ -80,7 +80,7 @@ void demucscpp::apply_freq_encoder(struct demucscpp::demucs_model_4s &model,
 }
 
 // forward declaration to apply a time encoder
-void demucscpp::apply_time_encoder(struct demucscpp::demucs_model_4s &model,
+void demucscpp::apply_time_encoder(struct demucscpp::demucs_model &model,
                                    int tencoder_idx,
                                    const Eigen::Tensor3dXf &xt_in,
                                    Eigen::Tensor3dXf &xt_out)
@@ -168,7 +168,7 @@ void demucscpp::apply_time_encoder(struct demucscpp::demucs_model_4s &model,
 }
 
 // forward declaration to apply a frequency decoder
-void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model_4s &model,
+void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model &model,
                                    int decoder_idx,
                                    const Eigen::Tensor3dXf &x_in,
                                    Eigen::Tensor3dXf &x_out,
@@ -237,10 +237,15 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model_4s &model,
             model.decoder_conv_tr_bias[decoder_idx]);
         break;
     case 3:
-        y = demucscpp::conv2d_tr<48, 16, 8, 1, 4, 1, 0, 0, 1, 1>(
-            y_shuff_2, model.decoder_conv_tr_weight[decoder_idx],
-            model.decoder_conv_tr_bias[decoder_idx]);
-        break;
+        if (model.is_4sources) {
+            y = demucscpp::conv2d_tr<48, 16, 8, 1, 4, 1, 0, 0, 1, 1>(
+                y_shuff_2, model.decoder_conv_tr_weight[decoder_idx],
+                model.decoder_conv_tr_bias[decoder_idx]);
+        } else {
+            y = demucscpp::conv2d_tr<48, 24, 8, 1, 4, 1, 0, 0, 1, 1>(
+                y_shuff_2, model.decoder_conv_tr_weight[decoder_idx],
+                model.decoder_conv_tr_bias[decoder_idx]);
+        }
     };
 
     int y_dim1_begin = 2;
@@ -254,7 +259,7 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model_4s &model,
 }
 
 // forward declaration to apply a time decoder
-void demucscpp::apply_time_decoder(struct demucscpp::demucs_model_4s &model,
+void demucscpp::apply_time_decoder(struct demucscpp::demucs_model &model,
                                    int tdecoder_idx,
                                    const Eigen::Tensor3dXf &xt_in,
                                    Eigen::Tensor3dXf &xt_out,
@@ -338,9 +343,15 @@ void demucscpp::apply_time_decoder(struct demucscpp::demucs_model_4s &model,
             model.tdecoder_conv_tr_bias[tdecoder_idx]);
         break;
     case 3:
-        yt_tmp = demucscpp::conv1d_tr<48, 8, 8, 4, 0, 1>(
-            yt, model.tdecoder_conv_tr_weight[tdecoder_idx],
-            model.tdecoder_conv_tr_bias[tdecoder_idx]);
+        if (model.is_4sources) {
+            yt_tmp = demucscpp::conv1d_tr<48, 8, 8, 4, 0, 1>(
+                yt, model.tdecoder_conv_tr_weight[tdecoder_idx],
+                model.tdecoder_conv_tr_bias[tdecoder_idx]);
+        } else {
+            yt_tmp = demucscpp::conv1d_tr<48, 12, 8, 4, 0, 1>(
+                yt, model.tdecoder_conv_tr_weight[tdecoder_idx],
+                model.tdecoder_conv_tr_bias[tdecoder_idx]);
+        }
         break;
     };
 
