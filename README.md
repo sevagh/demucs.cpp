@@ -1,26 +1,21 @@
 # demucs.cpp
 
-##  6-source
-0 = drums
-1 = bass
-2 = other
-3 = vocals
-4 = guitar
-5 = piano
+C++17 implementation of the [Demucs v4 hybrid transformer](https://github.com/facebookresearch/demucs), a PyTorch neural network for music demixing. Similar project to [umx.cpp](https://github.com/sevagh/umx.cpp). This code powers my site <https://freemusicdemixer.com>.
 
-C++17 implementation of the [Demucs v4 hybrid transformer](https://github.com/facebookresearch/demucs), a PyTorch neural network for music demixing. Similar project to [umx.cpp](https://github.com/sevagh/umx.cpp).
+It uses [libnyquist](https://github.com/ddiakopoulos/libnyquist) to load audio files, the [ggml](https://github.com/ggerganov/ggml) file format to serialize the PyTorch weights of `htdemucs_4s` and `htdemucs_6s` (4-source, 6-source) to a binary file format, and [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) (+ OpenMP) to implement the inference.
 
-It uses [libnyquist](https://github.com/ddiakopoulos/libnyquist) to load audio files, the [ggml](https://github.com/ggerganov/ggml) file format to serialize the PyTorch weights of `htdemucs_4s` to a binary file format, and [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) (+ OpenMP) to implement the inference.
+**Both 4- and 6-source variants are supported.** Simply export both models and use the model you want:
+```
+$ ls -latrh ../ggml-demucs/
+total 133M
+-rw-rw-r--  1 sevagh sevagh  81M Dec  9 10:42 ggml-model-htdemucs-4s-f16.bin
+-rw-rw-r--  1 sevagh sevagh  53M Dec  9 11:37 ggml-model-htdemucs-6s-f16.bin
+```
+
+### Performance of 4-source model
 
 Track 'Zeno - Signs' from MUSDB18-HQ test set
 
-PyTorch CLI inference (output of `demucs /path/to/track` from [this commit of demucs v4](https://github.com/facebookresearch/demucs@2496b8f7f12b01c8dd0187c040000c46e175b44d)):
-```
-vocals          ==> SDR:   8.264  SIR:  18.353  ISR:  15.794  SAR:   8.303
-drums           ==> SDR:  10.111  SIR:  18.503  ISR:  17.089  SAR:  10.746
-bass            ==> SDR:   4.222  SIR:  12.615  ISR:   6.973  SAR:   2.974
-other           ==> SDR:   7.397  SIR:  11.317  ISR:  14.303  SAR:   8.137
-```
 PyTorch custom inference in [my script](./scripts/demucs_pytorch_inference.py):
 ```
 vocals          ==> SDR:   8.339  SIR:  18.274  ISR:  15.835  SAR:   8.354
@@ -35,16 +30,28 @@ drums           ==> SDR:  10.058  SIR:  18.596  ISR:  17.019  SAR:  10.810
 bass            ==> SDR:   3.919  SIR:  12.436  ISR:   6.931  SAR:   3.182
 other           ==> SDR:   7.421  SIR:  11.286  ISR:  14.252  SAR:   8.183
 ```
-WASM inference (freemusicdemixer, based on this codebase):
-```
-vocals          ==> SDR:   8.339  SIR:  18.274  ISR:  15.836  SAR:   8.347
-drums           ==> SDR:  10.058  SIR:  18.596  ISR:  17.017  SAR:  10.813
-bass            ==> SDR:   3.920  SIR:  12.432  ISR:   6.933  SAR:   3.188
-other           ==> SDR:   7.420  SIR:  11.287  ISR:  14.250  SAR:   8.184
-
-```
-
 *n.b.* for the above results, the random shift in the beginning of the song was fixed to 1337 in both PyTorch and C++.
+
+### Performance of 6-source model
+
+Track 'Zeno - Signs' from MUSDB18-HQ test set
+
+PyTorch custom inference in [my script](./scripts/demucs_pytorch_inference.py) with `--six-source` flag:
+```
+vocals          ==> SDR:   8.396  SIR:  18.695  ISR:  16.076  SAR:   8.580
+drums           ==> SDR:   9.928  SIR:  17.930  ISR:  17.523  SAR:  10.635
+bass            ==> SDR:   4.522  SIR:  10.447  ISR:   8.618  SAR:   4.374
+other           ==> SDR:   0.168  SIR:  11.449  ISR:   0.411  SAR:  -2.720
+```
+CPP inference (this codebase):
+```
+vocals          ==> SDR:   8.395  SIR:  18.699  ISR:  16.076  SAR:   8.576
+drums           ==> SDR:   9.927  SIR:  17.921  ISR:  17.518  SAR:  10.635
+bass            ==> SDR:   4.519  SIR:  10.458  ISR:   8.606  SAR:   4.370
+other           ==> SDR:   0.164  SIR:  11.443  ISR:   0.409  SAR:  -2.713
+```
+
+*n.b.* the "other" score will be artificially low because of the extra guitar + piano separation where there are no stems to compare to
 
 ## Instructions
 
@@ -66,7 +73,7 @@ $ mamba activate demucscpp
 $ python -m pip install -r ./scripts/requirements.txt
 ```
 
-2. Dump Demucs weights to ggml file:
+2. Dump Demucs weights to ggml file, with flag `--six-source` for the 6-source variant:
 ```
 $ python ./scripts/convert-pth-to-ggml.py ./ggml-demucs
 ...
@@ -115,6 +122,8 @@ Encoder Status: 0
 Writing wav file "./demucs-out-cpp/target_3.wav"
 Encoder Status: 0
 ```
+
+For the 6-source model, additional targets 4 and 5 correspond to guitar and piano.
 
 Note: I have only tested this on my Linux-based computer (Pop!\_OS 22.04), and you may need to figure out how to get the dependencies on your own.
 

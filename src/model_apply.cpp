@@ -117,8 +117,8 @@ shift_inference(struct demucscpp::demucs_model &model,
 
     demucscppdebug::debug_matrix_xf(padded_mix, "padded_mix");
 
-    int offset = rand() % max_shift;
-    // int offset = 1337;
+    //int offset = rand() % max_shift;
+    int offset = 1337;
 
     std::cout << "1., apply model w/ shift, offset: " << offset << std::endl;
 
