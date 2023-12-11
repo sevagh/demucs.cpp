@@ -28,8 +28,8 @@ static size_t load_single_tensor4d(FILE *f, std::string &name,
                                    int32_t nelements);
 
 // from scripts/convert-pth-to-ggml.py
-bool demucscpp::load_demucs_model_4s(const std::string &model_file,
-                                     struct demucs_model_4s *model)
+bool demucscpp::load_demucs_model(const std::string &model_file,
+                                     struct demucs_model *model)
 {
     fprintf(stderr, "%s: loading model\n", __func__);
 
@@ -56,7 +56,23 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
 
         // read the size of uint32_t bytes from f into magic
         fread(&magic, sizeof(uint32_t), 1, f);
-        if (magic != 0x646d6334) // dmc4
+
+        if (magic == 0x646d6336) // dmc6
+        {
+            model->is_4sources = false;
+
+            // modify a few tensor shapes in the model corresponding to the
+            // number of sources
+            model->decoder_conv_tr_weight[3] = Eigen::Tensor4dXf(48, 24, 8, 1);
+            model->decoder_conv_tr_bias[3] = Eigen::Tensor1dXf(24);
+
+            model->tdecoder_conv_tr_weight[3] = Eigen::Tensor3dXf(48, 12, 8);
+            model->tdecoder_conv_tr_bias[3] = Eigen::Tensor1dXf(12);
+
+        } else if (magic == 0x646d6334) // dmc4
+        {
+            model->is_4sources = true;
+        } else
         {
             fprintf(stderr, "%s: invalid model data (bad magic)\n", __func__);
             fclose(f);
@@ -65,6 +81,8 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
 
         fclose(f);
     }
+
+    model->crosstransformer = demucscpp::initialize_crosstransformer(model->is_4sources);
 
     std::cout << "Loading demucs model... " << std::endl;
 
@@ -248,6 +266,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
             {
                 if (name == "decoder." + std::to_string(i) + ".conv_tr.weight")
                 {
+                    demucscppdebug::debug_tensor_4dxf(model->decoder_conv_tr_weight[i], "decoder_conv_tr_weight");
                     loaded_size = load_single_tensor4d(
                         f, name, model->decoder_conv_tr_weight[i], ne,
                         nelements);
@@ -618,69 +637,77 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                 loaded_size = load_single_matrix(
                     f, name, model->freq_emb_embedding_weight, ne, nelements);
             }
-            else if (name == "channel_upsampler.weight")
+            else if ((name == "channel_upsampler.weight") && (model->is_4sources))
             {
+                auto* ct_4s = static_cast<demucs_crosstransformer_4s*>(model->crosstransformer.get());
                 loaded_size = load_single_tensor3d(
-                    f, name, model->channel_upsampler_weight, ne, nelements);
+                    f, name, ct_4s->channel_upsampler_weight, ne, nelements);
             }
-            else if (name == "channel_upsampler.bias")
+            else if ((name == "channel_upsampler.bias") && (model->is_4sources))
             {
+                auto* ct_4s = static_cast<demucs_crosstransformer_4s*>(model->crosstransformer.get());
                 loaded_size = load_single_tensor1d(
-                    f, name, model->channel_upsampler_bias, ne, nelements);
+                    f, name, ct_4s->channel_upsampler_bias, ne, nelements);
             }
-            else if (name == "channel_downsampler.weight")
+            else if ((name == "channel_downsampler.weight") && (model->is_4sources))
             {
+                auto* ct_4s = static_cast<demucs_crosstransformer_4s*>(model->crosstransformer.get());
                 loaded_size = load_single_tensor3d(
-                    f, name, model->channel_downsampler_weight, ne, nelements);
+                    f, name, ct_4s->channel_downsampler_weight, ne, nelements);
             }
-            else if (name == "channel_downsampler.bias")
+            else if ((name == "channel_downsampler.bias") && (model->is_4sources))
             {
+                auto* ct_4s = static_cast<demucs_crosstransformer_4s*>(model->crosstransformer.get());
                 loaded_size = load_single_tensor1d(
-                    f, name, model->channel_downsampler_bias, ne, nelements);
+                    f, name, ct_4s->channel_downsampler_bias, ne, nelements);
             }
-            else if (name == "channel_upsampler_t.weight")
+            else if ((name == "channel_upsampler_t.weight") && (model->is_4sources))
             {
+                auto* ct_4s = static_cast<demucs_crosstransformer_4s*>(model->crosstransformer.get());
                 loaded_size = load_single_tensor3d(
-                    f, name, model->channel_upsampler_t_weight, ne, nelements);
+                    f, name, ct_4s->channel_upsampler_t_weight, ne, nelements);
             }
-            else if (name == "channel_upsampler_t.bias")
+            else if ((name == "channel_upsampler_t.bias") && (model->is_4sources))
             {
+                auto* ct_4s = static_cast<demucs_crosstransformer_4s*>(model->crosstransformer.get());
                 loaded_size = load_single_tensor1d(
-                    f, name, model->channel_upsampler_t_bias, ne, nelements);
+                    f, name, ct_4s->channel_upsampler_t_bias, ne, nelements);
             }
-            else if (name == "channel_downsampler_t.weight")
+            else if ((name == "channel_downsampler_t.weight") && (model->is_4sources))
             {
+                auto* ct_4s = static_cast<demucs_crosstransformer_4s*>(model->crosstransformer.get());
                 loaded_size = load_single_tensor3d(
-                    f, name, model->channel_downsampler_t_weight, ne,
+                    f, name, ct_4s->channel_downsampler_t_weight, ne,
                     nelements);
             }
-            else if (name == "channel_downsampler_t.bias")
+            else if ((name == "channel_downsampler_t.bias") && (model->is_4sources))
             {
+                auto* ct_4s = static_cast<demucs_crosstransformer_4s*>(model->crosstransformer.get());
                 loaded_size = load_single_tensor1d(
-                    f, name, model->channel_downsampler_t_bias, ne, nelements);
+                    f, name, ct_4s->channel_downsampler_t_bias, ne, nelements);
             }
             else if (name == "crosstransformer.norm_in.weight")
             {
                 loaded_size = load_single_tensor1d(
-                    f, name, model->crosstransformer_norm_in_weight, ne,
+                    f, name, model->crosstransformer->crosstransformer_norm_in_weight, ne,
                     nelements);
             }
             else if (name == "crosstransformer.norm_in.bias")
             {
                 loaded_size = load_single_tensor1d(
-                    f, name, model->crosstransformer_norm_in_bias, ne,
+                    f, name, model->crosstransformer->crosstransformer_norm_in_bias, ne,
                     nelements);
             }
             else if (name == "crosstransformer.norm_in_t.weight")
             {
                 loaded_size = load_single_tensor1d(
-                    f, name, model->crosstransformer_norm_in_t_weight, ne,
+                    f, name, model->crosstransformer->crosstransformer_norm_in_t_weight, ne,
                     nelements);
             }
             else if (name == "crosstransformer.norm_in_t.bias")
             {
                 loaded_size = load_single_tensor1d(
-                    f, name, model->crosstransformer_norm_in_t_bias, ne,
+                    f, name, model->crosstransformer->crosstransformer_norm_in_t_bias, ne,
                     nelements);
             }
 
@@ -710,7 +737,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_matrix(
                                 f, name,
                                 model
-                                    ->crosstransformer_my_layers_self_attn_in_proj_weight
+                                    ->crosstransformer->crosstransformer_my_layers_self_attn_in_proj_weight
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -720,7 +747,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_vector(
                                 f, name,
                                 model
-                                    ->crosstransformer_my_layers_self_attn_in_proj_bias
+                                    ->crosstransformer->crosstransformer_my_layers_self_attn_in_proj_bias
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -730,7 +757,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_matrix(
                                 f, name,
                                 model
-                                    ->crosstransformer_my_layers_self_attn_out_proj_weight
+                                    ->crosstransformer->crosstransformer_my_layers_self_attn_out_proj_weight
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -740,7 +767,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_vector(
                                 f, name,
                                 model
-                                    ->crosstransformer_my_layers_self_attn_out_proj_bias
+                                    ->crosstransformer->crosstransformer_my_layers_self_attn_out_proj_bias
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -750,7 +777,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                         {
                             loaded_size = load_single_matrix(
                                 f, name,
-                                model->crosstransformer_my_layers_linear1_weight
+                                model->crosstransformer->crosstransformer_my_layers_linear1_weight
                                     [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -759,7 +786,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                         {
                             loaded_size = load_single_vector(
                                 f, name,
-                                model->crosstransformer_my_layers_linear1_bias
+                                model->crosstransformer->crosstransformer_my_layers_linear1_bias
                                     [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -768,7 +795,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                         {
                             loaded_size = load_single_matrix(
                                 f, name,
-                                model->crosstransformer_my_layers_linear2_weight
+                                model->crosstransformer->crosstransformer_my_layers_linear2_weight
                                     [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -777,7 +804,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                         {
                             loaded_size = load_single_vector(
                                 f, name,
-                                model->crosstransformer_my_layers_linear2_bias
+                                model->crosstransformer->crosstransformer_my_layers_linear2_bias
                                     [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -786,7 +813,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                         {
                             loaded_size = load_single_tensor1d(
                                 f, name,
-                                model->crosstransformer_my_layers_norm1_weight
+                                model->crosstransformer->crosstransformer_my_layers_norm1_weight
                                     [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -795,7 +822,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                         {
                             loaded_size = load_single_tensor1d(
                                 f, name,
-                                model->crosstransformer_my_layers_norm1_bias
+                                model->crosstransformer->crosstransformer_my_layers_norm1_bias
                                     [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -804,7 +831,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                         {
                             loaded_size = load_single_tensor1d(
                                 f, name,
-                                model->crosstransformer_my_layers_norm2_weight
+                                model->crosstransformer->crosstransformer_my_layers_norm2_weight
                                     [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -813,7 +840,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                         {
                             loaded_size = load_single_tensor1d(
                                 f, name,
-                                model->crosstransformer_my_layers_norm2_bias
+                                model->crosstransformer->crosstransformer_my_layers_norm2_bias
                                     [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -823,7 +850,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_tensor1d(
                                 f, name,
                                 model
-                                    ->crosstransformer_my_layers_norm_out_weight
+                                    ->crosstransformer->crosstransformer_my_layers_norm_out_weight
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -832,7 +859,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                         {
                             loaded_size = load_single_tensor1d(
                                 f, name,
-                                model->crosstransformer_my_layers_norm_out_bias
+                                model->crosstransformer->crosstransformer_my_layers_norm_out_bias
                                     [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -841,7 +868,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                         {
                             loaded_size = load_single_vector(
                                 f, name,
-                                model->crosstransformer_my_layers_gamma_1_scale
+                                model->crosstransformer->crosstransformer_my_layers_gamma_1_scale
                                     [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -850,7 +877,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                         {
                             loaded_size = load_single_vector(
                                 f, name,
-                                model->crosstransformer_my_layers_gamma_2_scale
+                                model->crosstransformer->crosstransformer_my_layers_gamma_2_scale
                                     [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -868,7 +895,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_matrix(
                                 f, name,
                                 model
-                                    ->crosstransformer_cross_layers_cross_attn_in_proj_weight
+                                    ->crosstransformer->crosstransformer_cross_layers_cross_attn_in_proj_weight
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -878,7 +905,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_vector(
                                 f, name,
                                 model
-                                    ->crosstransformer_cross_layers_cross_attn_in_proj_bias
+                                    ->crosstransformer->crosstransformer_cross_layers_cross_attn_in_proj_bias
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -888,7 +915,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_matrix(
                                 f, name,
                                 model
-                                    ->crosstransformer_cross_layers_cross_attn_out_proj_weight
+                                    ->crosstransformer->crosstransformer_cross_layers_cross_attn_out_proj_weight
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -898,7 +925,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_vector(
                                 f, name,
                                 model
-                                    ->crosstransformer_cross_layers_cross_attn_out_proj_bias
+                                    ->crosstransformer->crosstransformer_cross_layers_cross_attn_out_proj_bias
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -908,7 +935,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_matrix(
                                 f, name,
                                 model
-                                    ->crosstransformer_cross_layers_linear1_weight
+                                    ->crosstransformer->crosstransformer_cross_layers_linear1_weight
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -918,7 +945,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_vector(
                                 f, name,
                                 model
-                                    ->crosstransformer_cross_layers_linear1_bias
+                                    ->crosstransformer->crosstransformer_cross_layers_linear1_bias
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -928,7 +955,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_matrix(
                                 f, name,
                                 model
-                                    ->crosstransformer_cross_layers_linear2_weight
+                                    ->crosstransformer->crosstransformer_cross_layers_linear2_weight
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -938,7 +965,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_vector(
                                 f, name,
                                 model
-                                    ->crosstransformer_cross_layers_linear2_bias
+                                    ->crosstransformer->crosstransformer_cross_layers_linear2_bias
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -948,7 +975,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_tensor1d(
                                 f, name,
                                 model
-                                    ->crosstransformer_cross_layers_norm1_weight
+                                    ->crosstransformer->crosstransformer_cross_layers_norm1_weight
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -957,7 +984,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                         {
                             loaded_size = load_single_tensor1d(
                                 f, name,
-                                model->crosstransformer_cross_layers_norm1_bias
+                                model->crosstransformer->crosstransformer_cross_layers_norm1_bias
                                     [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -967,7 +994,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_tensor1d(
                                 f, name,
                                 model
-                                    ->crosstransformer_cross_layers_norm2_weight
+                                    ->crosstransformer->crosstransformer_cross_layers_norm2_weight
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -976,7 +1003,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                         {
                             loaded_size = load_single_tensor1d(
                                 f, name,
-                                model->crosstransformer_cross_layers_norm2_bias
+                                model->crosstransformer->crosstransformer_cross_layers_norm2_bias
                                     [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -986,7 +1013,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_tensor1d(
                                 f, name,
                                 model
-                                    ->crosstransformer_cross_layers_norm3_weight
+                                    ->crosstransformer->crosstransformer_cross_layers_norm3_weight
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -995,7 +1022,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                         {
                             loaded_size = load_single_tensor1d(
                                 f, name,
-                                model->crosstransformer_cross_layers_norm3_bias
+                                model->crosstransformer->crosstransformer_cross_layers_norm3_bias
                                     [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -1005,7 +1032,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_tensor1d(
                                 f, name,
                                 model
-                                    ->crosstransformer_cross_layers_norm_out_weight
+                                    ->crosstransformer->crosstransformer_cross_layers_norm_out_weight
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -1015,7 +1042,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_tensor1d(
                                 f, name,
                                 model
-                                    ->crosstransformer_cross_layers_norm_out_bias
+                                    ->crosstransformer->crosstransformer_cross_layers_norm_out_bias
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -1025,7 +1052,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_vector(
                                 f, name,
                                 model
-                                    ->crosstransformer_cross_layers_gamma_1_scale
+                                    ->crosstransformer->crosstransformer_cross_layers_gamma_1_scale
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }
@@ -1035,7 +1062,7 @@ bool demucscpp::load_demucs_model_4s(const std::string &model_file,
                             loaded_size = load_single_vector(
                                 f, name,
                                 model
-                                    ->crosstransformer_cross_layers_gamma_2_scale
+                                    ->crosstransformer->crosstransformer_cross_layers_gamma_2_scale
                                         [freq_or_time][layer_index],
                                 ne, nelements);
                         }

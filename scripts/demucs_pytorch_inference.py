@@ -20,6 +20,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Demucs')
     parser.add_argument('input_file', type=str, help='path to input wav file')
     parser.add_argument('--dest-dir', type=str, default=None, help='path to write output files')
+    parser.add_argument("--six-source", default=False, action="store_true", help="convert 6s model (default: 4s)")
 
     args = parser.parse_args()
 
@@ -29,8 +30,13 @@ if __name__ == '__main__':
     audio, rate = torchaudio.load(args.input_file)
     print(rate)
 
+    model_name = 'htdemucs'
+    if args.six_source:
+        model_name += '_6s'
+
     # demucs v4 hybrid transformer
-    model = get_model('htdemucs')
+    model = get_model(model_name)
+    nb_out_sources = 6 if args.six_source else 4
     print(model)
 
     debug_tensor_demucscpp(audio, "input audio")
@@ -55,4 +61,5 @@ if __name__ == '__main__':
             os.makedirs(args.dest_dir, exist_ok=True)
             torchaudio.save(os.path.join(args.dest_dir, f'target_{target_idx}.wav'), out_audio, sample_rate=44100)
 
+    print("Skipped 2 extra sources (guitar, piano)")
     print("Goodbye!")

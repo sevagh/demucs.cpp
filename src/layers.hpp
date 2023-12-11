@@ -11,7 +11,7 @@
 namespace demucscpp
 {
 
-void apply_dconv(struct demucscpp::demucs_model_4s &model, Eigen::Tensor3dXf &y,
+void apply_dconv(struct demucscpp::demucs_model &model, Eigen::Tensor3dXf &y,
                  int freq_idx, int encdec_idx, int layer_idx, int mid_crop);
 
 // used for implementing both self-attention and cross-attention
@@ -36,6 +36,13 @@ Eigen::Tensor3dXf group_norm(const Eigen::Tensor3dXf &x,
                              const Eigen::Tensor1dXf &w,
                              const Eigen::Tensor1dXf &b, int num_groups,
                              float eps);
+
+Eigen::Tensor3dXf group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
+                             const Eigen::Tensor1dXf &w,
+                             const Eigen::Tensor1dXf &b,
+                             float eps);
+
+
 
 Eigen::Tensor3dXf layer_norm(const Eigen::Tensor3dXf &x,
                              const Eigen::Tensor1dXf &weight,
@@ -69,6 +76,13 @@ inline Eigen::Tensor3dXf layer_scale(const Eigen::Tensor3dXf &x,
 }
 
 inline float calculate_variance(const Eigen::Tensor3dXf &tensor, float mean)
+{
+    Eigen::Tensor<float, 0> sum_squares = (tensor - mean).square().sum();
+    float variance = sum_squares(0) / (tensor.size() - 1);
+    return variance;
+}
+
+inline float calculate_variance(const Eigen::Tensor2dXf &tensor, float mean)
 {
     Eigen::Tensor<float, 0> sum_squares = (tensor - mean).square().sum();
     float variance = sum_squares(0) / (tensor.size() - 1);

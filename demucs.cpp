@@ -26,9 +26,9 @@ int main(int argc, const char **argv)
     // set eigen nb threads to physical cores minus 1
     // discover number of physical cores through C++ stdlib
     // https://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine
-     int nb_cores = std::thread::hardware_concurrency();
-     std::cout << "Number of physical cores: " << nb_cores << std::endl;
-     Eigen::setNbThreads(nb_cores - 1);
+    int nb_cores = std::thread::hardware_concurrency();
+    std::cout << "Number of physical cores: " << nb_cores << std::endl;
+    Eigen::setNbThreads(nb_cores - 1);
 
     std::cout << "demucs.cpp Main driver program" << std::endl;
 
@@ -44,14 +44,13 @@ int main(int argc, const char **argv)
     Eigen::MatrixXf audio = load_audio(wav_file);
     Eigen::Tensor3dXf out_targets;
 
-    std::cout << "Using 4s model" << std::endl;
-
     // initialize a struct demucs_model
-    struct demucs_model_4s model
+    struct demucs_model model
     {
     };
 
-    auto ret = load_demucs_model_4s(model_file, &model);
+    // debug some members of model
+    auto ret = load_demucs_model(model_file, &model);
     std::cout << "demucs_model_load returned " << (ret ? "true" : "false")
               << std::endl;
     if (!ret)
@@ -60,16 +59,20 @@ int main(int argc, const char **argv)
         exit(1);
     }
 
-    std::cout << "Starting demucs inference" << std::endl;
+    int nb_sources = model.is_4sources ? 4 : 6;
+
+    std::cout << "Starting Demucs (" << std::to_string(nb_sources) <<"-source) inference" << std::endl;
 
     // create 4 audio matrix same size, to hold output
     Eigen::Tensor3dXf audio_targets =
-        demucscpp::demucs_inference_4s(model, audio);
+        demucscpp::demucs_inference(model, audio);
     std::cout << "returned!" << std::endl;
 
     out_targets = audio_targets;
 
-    for (int target = 0; target < 4; ++target)
+    int nb_out_sources = model.is_4sources ? 4 : 6;
+
+    for (int target = 0; target < nb_out_sources; ++target)
     {
         // now write the 4 audio waveforms to files in the output dir
         // using libnyquist
