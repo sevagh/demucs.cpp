@@ -122,7 +122,9 @@ Eigen::Tensor3dXf conv2d_gemm(const Eigen::Tensor3dXf &x,
             {
                 int row_idx = h * out_width + w;
                 // Assign the value from the GEMM output to the output tensor
-                y_out(chout, h, w) = result(row_idx, chout);
+                if (row_idx < result.rows()) {
+                    y_out(chout, h, w) = result(row_idx, chout);
+                }
             }
         }
     }
