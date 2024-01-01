@@ -79,42 +79,59 @@ static Eigen::Tensor3dXf create_sin_embedding(int length, int dim,
     return pos_emb;
 }
 
-static void
-my_transformer_encoder_layer(struct demucscpp::demucs_model &model,
-                             Eigen::Tensor3dXf &x, int freq_or_time,
-                             int weight_idx, float eps = 1e-5)
+static void my_transformer_encoder_layer(struct demucscpp::demucs_model &model,
+                                         Eigen::Tensor3dXf &x, int freq_or_time,
+                                         int weight_idx, float eps = 1e-5)
 {
     demucscpp::common_encoder_layer(
         x, // pass x as q
         x, // pass x as k
-        model.crosstransformer->crosstransformer_my_layers_norm1_weight[freq_or_time][weight_idx],
-        model.crosstransformer->crosstransformer_my_layers_norm1_bias[freq_or_time][weight_idx],
-        model.crosstransformer->crosstransformer_my_layers_norm1_weight[freq_or_time][weight_idx],
-        model.crosstransformer->crosstransformer_my_layers_norm1_bias[freq_or_time][weight_idx],
-        model.crosstransformer->crosstransformer_my_layers_self_attn_in_proj_weight[freq_or_time]
+        model.crosstransformer
+            ->crosstransformer_my_layers_norm1_weight[freq_or_time][weight_idx],
+        model.crosstransformer
+            ->crosstransformer_my_layers_norm1_bias[freq_or_time][weight_idx],
+        model.crosstransformer
+            ->crosstransformer_my_layers_norm1_weight[freq_or_time][weight_idx],
+        model.crosstransformer
+            ->crosstransformer_my_layers_norm1_bias[freq_or_time][weight_idx],
+        model.crosstransformer
+            ->crosstransformer_my_layers_self_attn_in_proj_weight[freq_or_time]
                                                                  [weight_idx],
-        model.crosstransformer->crosstransformer_my_layers_self_attn_in_proj_bias[freq_or_time]
+        model.crosstransformer
+            ->crosstransformer_my_layers_self_attn_in_proj_bias[freq_or_time]
                                                                [weight_idx],
-        model.crosstransformer->crosstransformer_my_layers_self_attn_out_proj_weight[freq_or_time]
+        model.crosstransformer
+            ->crosstransformer_my_layers_self_attn_out_proj_weight[freq_or_time]
                                                                   [weight_idx],
-        model.crosstransformer->crosstransformer_my_layers_self_attn_out_proj_bias[freq_or_time]
+        model.crosstransformer
+            ->crosstransformer_my_layers_self_attn_out_proj_bias[freq_or_time]
                                                                 [weight_idx],
         model.crosstransformer
-            ->crosstransformer_my_layers_gamma_1_scale[freq_or_time][weight_idx],
-        model.crosstransformer->crosstransformer_my_layers_norm2_weight[freq_or_time][weight_idx],
-        model.crosstransformer->crosstransformer_my_layers_norm2_bias[freq_or_time][weight_idx],
-        model.crosstransformer->crosstransformer_my_layers_linear1_weight[freq_or_time]
-                                                       [weight_idx],
-        model.crosstransformer->crosstransformer_my_layers_linear1_bias[freq_or_time][weight_idx],
-        model.crosstransformer->crosstransformer_my_layers_linear2_weight[freq_or_time]
-                                                       [weight_idx],
-        model.crosstransformer->crosstransformer_my_layers_linear2_bias[freq_or_time][weight_idx],
+            ->crosstransformer_my_layers_gamma_1_scale[freq_or_time]
+                                                      [weight_idx],
         model.crosstransformer
-            ->crosstransformer_my_layers_gamma_2_scale[freq_or_time][weight_idx],
-        model.crosstransformer->crosstransformer_my_layers_norm_out_weight[freq_or_time]
+            ->crosstransformer_my_layers_norm2_weight[freq_or_time][weight_idx],
+        model.crosstransformer
+            ->crosstransformer_my_layers_norm2_bias[freq_or_time][weight_idx],
+        model.crosstransformer
+            ->crosstransformer_my_layers_linear1_weight[freq_or_time]
+                                                       [weight_idx],
+        model.crosstransformer
+            ->crosstransformer_my_layers_linear1_bias[freq_or_time][weight_idx],
+        model.crosstransformer
+            ->crosstransformer_my_layers_linear2_weight[freq_or_time]
+                                                       [weight_idx],
+        model.crosstransformer
+            ->crosstransformer_my_layers_linear2_bias[freq_or_time][weight_idx],
+        model.crosstransformer
+            ->crosstransformer_my_layers_gamma_2_scale[freq_or_time]
+                                                      [weight_idx],
+        model.crosstransformer
+            ->crosstransformer_my_layers_norm_out_weight[freq_or_time]
                                                         [weight_idx],
         model.crosstransformer
-            ->crosstransformer_my_layers_norm_out_bias[freq_or_time][weight_idx],
+            ->crosstransformer_my_layers_norm_out_bias[freq_or_time]
+                                                      [weight_idx],
         8, // num_heads
         eps,
         true); // define self_attention = true to skip norm2 recalculation
@@ -129,42 +146,59 @@ cross_transformer_encoder_layer(struct demucscpp::demucs_model &model,
 {
     demucscpp::common_encoder_layer(
         q, k,
-        model.crosstransformer->crosstransformer_cross_layers_norm1_weight[freq_or_time]
+        model.crosstransformer
+            ->crosstransformer_cross_layers_norm1_weight[freq_or_time]
                                                         [weight_idx],
         model.crosstransformer
-            ->crosstransformer_cross_layers_norm1_bias[freq_or_time][weight_idx],
-        model.crosstransformer->crosstransformer_cross_layers_norm2_weight[freq_or_time]
+            ->crosstransformer_cross_layers_norm1_bias[freq_or_time]
+                                                      [weight_idx],
+        model.crosstransformer
+            ->crosstransformer_cross_layers_norm2_weight[freq_or_time]
                                                         [weight_idx],
         model.crosstransformer
-            ->crosstransformer_cross_layers_norm2_bias[freq_or_time][weight_idx],
-        model.crosstransformer->crosstransformer_cross_layers_cross_attn_in_proj_weight
-            [freq_or_time][weight_idx],
+            ->crosstransformer_cross_layers_norm2_bias[freq_or_time]
+                                                      [weight_idx],
         model.crosstransformer
-            ->crosstransformer_cross_layers_cross_attn_in_proj_bias[freq_or_time]
-                                                                  [weight_idx],
-        model.crosstransformer->crosstransformer_cross_layers_cross_attn_out_proj_weight
-            [freq_or_time][weight_idx],
-        model.crosstransformer->crosstransformer_cross_layers_cross_attn_out_proj_bias
-            [freq_or_time][weight_idx],
-        model.crosstransformer->crosstransformer_cross_layers_gamma_1_scale[freq_or_time]
+            ->crosstransformer_cross_layers_cross_attn_in_proj_weight
+                [freq_or_time][weight_idx],
+        model.crosstransformer
+            ->crosstransformer_cross_layers_cross_attn_in_proj_bias
+                [freq_or_time][weight_idx],
+        model.crosstransformer
+            ->crosstransformer_cross_layers_cross_attn_out_proj_weight
+                [freq_or_time][weight_idx],
+        model.crosstransformer
+            ->crosstransformer_cross_layers_cross_attn_out_proj_bias
+                [freq_or_time][weight_idx],
+        model.crosstransformer
+            ->crosstransformer_cross_layers_gamma_1_scale[freq_or_time]
                                                          [weight_idx],
-        model.crosstransformer->crosstransformer_cross_layers_norm3_weight[freq_or_time]
+        model.crosstransformer
+            ->crosstransformer_cross_layers_norm3_weight[freq_or_time]
                                                         [weight_idx],
         model.crosstransformer
-            ->crosstransformer_cross_layers_norm3_bias[freq_or_time][weight_idx],
-        model.crosstransformer->crosstransformer_cross_layers_linear1_weight[freq_or_time]
+            ->crosstransformer_cross_layers_norm3_bias[freq_or_time]
+                                                      [weight_idx],
+        model.crosstransformer
+            ->crosstransformer_cross_layers_linear1_weight[freq_or_time]
                                                           [weight_idx],
-        model.crosstransformer->crosstransformer_cross_layers_linear1_bias[freq_or_time]
+        model.crosstransformer
+            ->crosstransformer_cross_layers_linear1_bias[freq_or_time]
                                                         [weight_idx],
-        model.crosstransformer->crosstransformer_cross_layers_linear2_weight[freq_or_time]
+        model.crosstransformer
+            ->crosstransformer_cross_layers_linear2_weight[freq_or_time]
                                                           [weight_idx],
-        model.crosstransformer->crosstransformer_cross_layers_linear2_bias[freq_or_time]
+        model.crosstransformer
+            ->crosstransformer_cross_layers_linear2_bias[freq_or_time]
                                                         [weight_idx],
-        model.crosstransformer->crosstransformer_cross_layers_gamma_2_scale[freq_or_time]
+        model.crosstransformer
+            ->crosstransformer_cross_layers_gamma_2_scale[freq_or_time]
                                                          [weight_idx],
-        model.crosstransformer->crosstransformer_cross_layers_norm_out_weight[freq_or_time]
+        model.crosstransformer
+            ->crosstransformer_cross_layers_norm_out_weight[freq_or_time]
                                                            [weight_idx],
-        model.crosstransformer->crosstransformer_cross_layers_norm_out_bias[freq_or_time]
+        model.crosstransformer
+            ->crosstransformer_cross_layers_norm_out_bias[freq_or_time]
                                                          [weight_idx],
         8, // num_heads
         eps);
@@ -206,8 +240,9 @@ void demucscpp::apply_crosstransformer(struct demucscpp::demucs_model &model,
 
     float eps = 1e-5;
 
-    x = demucscpp::layer_norm(x, model.crosstransformer->crosstransformer_norm_in_weight,
-                              model.crosstransformer->crosstransformer_norm_in_bias, eps) +
+    x = demucscpp::layer_norm(
+            x, model.crosstransformer->crosstransformer_norm_in_weight,
+            model.crosstransformer->crosstransformer_norm_in_bias, eps) +
         pos_embed_2d;
 
     std::cout << "Freq (crosstransformer): norm + pos_embed" << std::endl;
@@ -221,8 +256,9 @@ void demucscpp::apply_crosstransformer(struct demucscpp::demucs_model &model,
     // shuffle axes of xt from 0,1,2 to 0,2,1
     Eigen::Tensor3dXf xt_shuf = xt.shuffle(Eigen::array<int, 3>{0, 2, 1});
 
-    xt = demucscpp::layer_norm(xt_shuf, model.crosstransformer->crosstransformer_norm_in_t_weight,
-                               model.crosstransformer->crosstransformer_norm_in_t_bias, eps) +
+    xt = demucscpp::layer_norm(
+             xt_shuf, model.crosstransformer->crosstransformer_norm_in_t_weight,
+             model.crosstransformer->crosstransformer_norm_in_t_bias, eps) +
          pos_embed_1d;
 
     std::cout << "Time (crosstransformer): norm + pos_embed" << std::endl;

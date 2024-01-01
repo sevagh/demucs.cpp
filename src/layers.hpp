@@ -38,11 +38,8 @@ Eigen::Tensor3dXf group_norm(const Eigen::Tensor3dXf &x,
                              float eps);
 
 Eigen::Tensor3dXf group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
-                             const Eigen::Tensor1dXf &w,
-                             const Eigen::Tensor1dXf &b,
-                             float eps);
-
-
+                                        const Eigen::Tensor1dXf &w,
+                                        const Eigen::Tensor1dXf &b, float eps);
 
 Eigen::Tensor3dXf layer_norm(const Eigen::Tensor3dXf &x,
                              const Eigen::Tensor1dXf &weight,

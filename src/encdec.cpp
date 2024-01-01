@@ -42,7 +42,8 @@ void demucscpp::apply_freq_encoder(struct demucscpp::demucs_model &model,
 
     // reverse all dims
     Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({2, 1, 0}));
-    demucscpp::apply_dconv(model, y_shuff, 0, 0, encoder_idx, y_shuff.dimension(2));
+    demucscpp::apply_dconv(model, y_shuff, 0, 0, encoder_idx,
+                           y_shuff.dimension(2));
 
     // swap back from H,C,W to C,H,W
     // then put W in front to use conv1d function for width=1 conv2d
@@ -222,26 +223,32 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model &model,
     switch (decoder_idx)
     {
     case 0:
-        y = demucscpp::conv2d_tr_gemm_fused_gelu<384, 192, 8, 1, 4, 1, 0, 0, 1, 1>(
+        y = demucscpp::conv2d_tr_gemm_fused_gelu<384, 192, 8, 1, 4, 1, 0, 0, 1,
+                                                 1>(
             y_shuff_2, model.decoder_conv_tr_weight[decoder_idx],
             model.decoder_conv_tr_bias[decoder_idx]);
         break;
     case 1:
-        y = demucscpp::conv2d_tr_gemm_fused_gelu<192, 96, 8, 1, 4, 1, 0, 0, 1, 1>(
+        y = demucscpp::conv2d_tr_gemm_fused_gelu<192, 96, 8, 1, 4, 1, 0, 0, 1,
+                                                 1>(
             y_shuff_2, model.decoder_conv_tr_weight[decoder_idx],
             model.decoder_conv_tr_bias[decoder_idx]);
         break;
     case 2:
-        y = demucscpp::conv2d_tr_gemm_fused_gelu<96, 48, 8, 1, 4, 1, 0, 0, 1, 1>(
+        y = demucscpp::conv2d_tr_gemm_fused_gelu<96, 48, 8, 1, 4, 1, 0, 0, 1,
+                                                 1>(
             y_shuff_2, model.decoder_conv_tr_weight[decoder_idx],
             model.decoder_conv_tr_bias[decoder_idx]);
         break;
     case 3:
-        if (model.is_4sources) {
+        if (model.is_4sources)
+        {
             y = demucscpp::conv2d_tr<48, 16, 8, 1, 4, 1, 0, 0, 1, 1>(
                 y_shuff_2, model.decoder_conv_tr_weight[decoder_idx],
                 model.decoder_conv_tr_bias[decoder_idx]);
-        } else {
+        }
+        else
+        {
             y = demucscpp::conv2d_tr<48, 24, 8, 1, 4, 1, 0, 0, 1, 1>(
                 y_shuff_2, model.decoder_conv_tr_weight[decoder_idx],
                 model.decoder_conv_tr_bias[decoder_idx]);
@@ -252,10 +259,9 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model &model,
     int y_dim1_end = y.dimension(1) - 4;
 
     // remove 2 elements from begin and end of y along dimension 1 (0, 1, 2)
-    x_out =
-        y.slice(Eigen::array<Eigen::Index, 3>({0, y_dim1_begin, 0}),
-                Eigen::array<Eigen::Index, 3>(
-                    {y.dimension(0), y_dim1_end, y.dimension(2)}));
+    x_out = y.slice(Eigen::array<Eigen::Index, 3>({0, y_dim1_begin, 0}),
+                    Eigen::array<Eigen::Index, 3>(
+                        {y.dimension(0), y_dim1_end, y.dimension(2)}));
 }
 
 // forward declaration to apply a time decoder
@@ -343,11 +349,14 @@ void demucscpp::apply_time_decoder(struct demucscpp::demucs_model &model,
             model.tdecoder_conv_tr_bias[tdecoder_idx]);
         break;
     case 3:
-        if (model.is_4sources) {
+        if (model.is_4sources)
+        {
             yt_tmp = demucscpp::conv1d_tr<48, 8, 8, 4, 0, 1>(
                 yt, model.tdecoder_conv_tr_weight[tdecoder_idx],
                 model.tdecoder_conv_tr_bias[tdecoder_idx]);
-        } else {
+        }
+        else
+        {
             yt_tmp = demucscpp::conv1d_tr<48, 12, 8, 4, 0, 1>(
                 yt, model.tdecoder_conv_tr_weight[tdecoder_idx],
                 model.tdecoder_conv_tr_bias[tdecoder_idx]);
@@ -359,8 +368,7 @@ void demucscpp::apply_time_decoder(struct demucscpp::demucs_model &model,
 
     // remove padding
     // 2:2+length
-    xt_out =
-        yt.slice(Eigen::array<Eigen::Index, 3>({0, 0, 2}),
-                 Eigen::array<Eigen::Index, 3>(
-                     {yt.dimension(0), yt.dimension(1), out_length}));
+    xt_out = yt.slice(Eigen::array<Eigen::Index, 3>({0, 0, 2}),
+                      Eigen::array<Eigen::Index, 3>(
+                          {yt.dimension(0), yt.dimension(1), out_length}));
 }

@@ -6,14 +6,14 @@
 #include <cassert>
 #include <filesystem>
 #include <iostream>
+#include <libnyquist/Common.h>
+#include <libnyquist/Decoders.h>
+#include <libnyquist/Encoders.h>
 #include <sstream>
 #include <string>
 #include <thread>
 #include <unsupported/Eigen/FFT>
 #include <vector>
-#include <libnyquist/Common.h>
-#include <libnyquist/Decoders.h>
-#include <libnyquist/Encoders.h>
 
 using namespace demucscpp;
 using namespace nqr;
@@ -29,9 +29,9 @@ static Eigen::MatrixXf load_audio_file(std::string filename)
 
     if (fileData->sampleRate != demucscpp::SUPPORTED_SAMPLE_RATE)
     {
-        std::cerr
-            << "[ERROR] demucs.cpp only supports the following sample rate (Hz): "
-            << SUPPORTED_SAMPLE_RATE << std::endl;
+        std::cerr << "[ERROR] demucs.cpp only supports the following sample "
+                     "rate (Hz): "
+                  << SUPPORTED_SAMPLE_RATE << std::endl;
         exit(1);
     }
 
@@ -77,7 +77,7 @@ static Eigen::MatrixXf load_audio_file(std::string filename)
 
 // write a function to write a StereoWaveform to a wav file
 static void write_audio_file(const Eigen::MatrixXf &waveform,
-                                 std::string filename)
+                             std::string filename)
 {
     // create a struct to hold the audio data
     std::shared_ptr<AudioData> fileData = std::make_shared<AudioData>();
@@ -151,14 +151,11 @@ int main(int argc, const char **argv)
 
     int nb_sources = model.is_4sources ? 4 : 6;
 
-    std::cout << "Starting Demucs (" << std::to_string(nb_sources) <<"-source) inference" << std::endl;
+    std::cout << "Starting Demucs (" << std::to_string(nb_sources)
+              << "-source) inference" << std::endl;
 
-    demucscpp::ProgressCallback progressCallback =
-            [](float progress)
-        {
-            std::cout << "Progress: " << progress*100 << "%\n";
-        };
-
+    demucscpp::ProgressCallback progressCallback = [](float progress)
+    { std::cout << "Progress: " << progress * 100 << "%\n"; };
 
     // create 4 audio matrix same size, to hold output
     Eigen::Tensor3dXf audio_targets =

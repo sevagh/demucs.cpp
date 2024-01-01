@@ -1,14 +1,14 @@
 // use gtest to test the load_audio_for_kissfft function
 
 #include "dsp.hpp"
+#include "tensor.hpp"
+#include <Eigen/Core>
+#include <Eigen/Dense>
 #include <gtest/gtest.h>
-#include <random>
 #include <libnyquist/Common.h>
 #include <libnyquist/Decoders.h>
 #include <libnyquist/Encoders.h>
-#include <Eigen/Core>
-#include <Eigen/Dense>
-#include "tensor.hpp"
+#include <random>
 
 #define NEAR_TOLERANCE 1e-4
 
@@ -25,9 +25,9 @@ static Eigen::MatrixXf load_audio_file(std::string filename)
 
     if (fileData->sampleRate != demucscpp::SUPPORTED_SAMPLE_RATE)
     {
-        std::cerr
-            << "[ERROR] demucs.cpp only supports the following sample rate (Hz): "
-            << demucscpp::SUPPORTED_SAMPLE_RATE << std::endl;
+        std::cerr << "[ERROR] demucs.cpp only supports the following sample "
+                     "rate (Hz): "
+                  << demucscpp::SUPPORTED_SAMPLE_RATE << std::endl;
         exit(1);
     }
 
@@ -70,7 +70,6 @@ static Eigen::MatrixXf load_audio_file(std::string filename)
 
     return ret;
 }
-
 
 // write a basic test case for a mono file
 TEST(LoadAudioForKissfft, LoadMonoAudio)
@@ -162,8 +161,7 @@ TEST(DSP_STFT, STFTRoundtripRandWaveform)
 // with real gspi.wav
 TEST(DSP_STFT, STFTRoundtripGlockenspiel)
 {
-    Eigen::MatrixXf audio_in =
-        load_audio_file("../test/data/gspi_mono.wav");
+    Eigen::MatrixXf audio_in = load_audio_file("../test/data/gspi_mono.wav");
 
     // create buffers
     demucscpp::stft_buffers stft_buf(audio_in.cols());

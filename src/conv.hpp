@@ -122,7 +122,8 @@ Eigen::Tensor3dXf conv2d_gemm(const Eigen::Tensor3dXf &x,
             {
                 int row_idx = h * out_width + w;
                 // Assign the value from the GEMM output to the output tensor
-                if (row_idx < result.rows()) {
+                if (row_idx < result.rows())
+                {
                     y_out(chout, h, w) = result(row_idx, chout);
                 }
             }
@@ -136,8 +137,8 @@ template <int in_channels, int out_channels, int kernel_height,
           int kernel_width, int stride_height, int stride_width, int pad_height,
           int pad_width, int dilation_height, int dilation_width>
 Eigen::Tensor3dXf conv2d_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
-                              const Eigen::Tensor4dXf &w,
-                              const Eigen::Tensor1dXf &b)
+                                         const Eigen::Tensor4dXf &w,
+                                         const Eigen::Tensor1dXf &b)
 {
     int in_height = x.dimension(1);
     int in_width = x.dimension(2);
@@ -192,7 +193,8 @@ Eigen::Tensor3dXf conv2d_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
                 // Assign the value from the GEMM output to the output tensor
                 // with gelu
                 float value = result(row_idx, chout);
-                float activated_value = 0.5f * value * (1.0f + std::erf(value / std::sqrt(2.0f)));
+                float activated_value =
+                    0.5f * value * (1.0f + std::erf(value / std::sqrt(2.0f)));
                 // Assign the activated value to the output tensor
                 y_out(chout, h, w) = activated_value;
             }
@@ -239,8 +241,9 @@ Eigen::Tensor3dXf conv1d(const Eigen::Tensor3dXf &x, const Eigen::Tensor3dXf &w,
 
 template <int in_channels, int out_channels, int kernel_size, int stride,
           int pad, int dilation>
-Eigen::Tensor3dXf conv1d_fused_gelu(const Eigen::Tensor3dXf &x, const Eigen::Tensor3dXf &w,
-                         const Eigen::Tensor1dXf &b)
+Eigen::Tensor3dXf conv1d_fused_gelu(const Eigen::Tensor3dXf &x,
+                                    const Eigen::Tensor3dXf &w,
+                                    const Eigen::Tensor1dXf &b)
 {
     // copy w into a 4d tensor with trailing (,1) dimension
     Eigen::Tensor4dXf w_4d = w.reshape(Eigen::array<int, 4>{
@@ -252,8 +255,9 @@ Eigen::Tensor3dXf conv1d_fused_gelu(const Eigen::Tensor3dXf &x, const Eigen::Ten
     // do 2d convolution inference here
     // treating the in_freq dimension as a width dimension with a no-op kernel
     Eigen::Tensor3dXf y_out =
-        demucscpp::conv2d_gemm_fused_gelu<in_channels, out_channels, kernel_size, 1, stride, 1,
-                          pad, 0, dilation, 1>(x_shuff, w_4d, b);
+        demucscpp::conv2d_gemm_fused_gelu<in_channels, out_channels,
+                                          kernel_size, 1, stride, 1, pad, 0,
+                                          dilation, 1>(x_shuff, w_4d, b);
 
     // move end axis to the front
     Eigen::Tensor3dXf y_out_shuf =
@@ -395,8 +399,8 @@ template <int in_channels, int out_channels, int kernel_height,
           int kernel_width, int stride_height, int stride_width, int pad_height,
           int pad_width, int dilation_height, int dilation_width>
 Eigen::Tensor3dXf conv2d_tr_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
-                                 const Eigen::Tensor4dXf &w,
-                                 const Eigen::Tensor1dXf &b)
+                                            const Eigen::Tensor4dXf &w,
+                                            const Eigen::Tensor1dXf &b)
 {
     int in_height = x.dimension(1);
     int in_width = x.dimension(2);
@@ -462,7 +466,8 @@ Eigen::Tensor3dXf conv2d_tr_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
                 float value = result(gemm_row, gemm_col);
 
                 // Apply GeLU activation
-                float activated_value = 0.5f * value * (1.0f + std::erf(value / std::sqrt(2.0f)));
+                float activated_value =
+                    0.5f * value * (1.0f + std::erf(value / std::sqrt(2.0f)));
 
                 // Assign the activated value to the output tensor
                 y_out(ch, h, w) += activated_value;
@@ -514,8 +519,8 @@ Eigen::Tensor3dXf conv1d_tr(const Eigen::Tensor3dXf &x,
 template <int in_channels, int out_channels, int kernel_size, int stride,
           int pad, int dilation>
 Eigen::Tensor3dXf conv1d_tr_fused_gelu(const Eigen::Tensor3dXf &x,
-                            const Eigen::Tensor3dXf &w,
-                            const Eigen::Tensor1dXf &b)
+                                       const Eigen::Tensor3dXf &w,
+                                       const Eigen::Tensor1dXf &b)
 {
     // Convert 1D convolution to 2D convolution by adding an extra dimension
     Eigen::Tensor4dXf w_4d = w.reshape(Eigen::array<int, 4>{
@@ -526,8 +531,9 @@ Eigen::Tensor3dXf conv1d_tr_fused_gelu(const Eigen::Tensor3dXf &x,
 
     // Call the 2D transposed convolution function
     Eigen::Tensor3dXf y_out =
-        conv2d_tr_gemm_fused_gelu<in_channels, out_channels, kernel_size, 1, stride, 1,
-                       pad, 0, dilation, 1>(x_shuff, w_4d, b);
+        conv2d_tr_gemm_fused_gelu<in_channels, out_channels, kernel_size, 1,
+                                  stride, 1, pad, 0, dilation, 1>(x_shuff, w_4d,
+                                                                  b);
 
     // Move end axis to the front
     Eigen::Tensor3dXf y_out_shuf =
@@ -535,8 +541,6 @@ Eigen::Tensor3dXf conv1d_tr_fused_gelu(const Eigen::Tensor3dXf &x,
 
     return y_out_shuf;
 }
-
-
 
 } // namespace demucscpp
 

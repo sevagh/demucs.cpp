@@ -46,10 +46,10 @@ Eigen::Tensor3dXf demucscpp::group_norm(const Eigen::Tensor3dXf &x,
     return y_out;
 }
 
-Eigen::Tensor3dXf demucscpp::group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
-                                                   const Eigen::Tensor1dXf &weight,
-                                                   const Eigen::Tensor1dXf &bias,
-                                                   float eps)
+Eigen::Tensor3dXf
+demucscpp::group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
+                                 const Eigen::Tensor1dXf &weight,
+                                 const Eigen::Tensor1dXf &bias, float eps)
 {
     int freq = x.dimension(0);
     int channels = x.dimension(1);
@@ -78,7 +78,9 @@ Eigen::Tensor3dXf demucscpp::group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
                 norm_val = norm_val * weight(c) + bias(c);
 
                 // Apply GeLU activation
-                float activated_val = 0.5f * norm_val * (1.0f + std::erf(norm_val / std::sqrt(2.0f)));
+                float activated_val =
+                    0.5f * norm_val *
+                    (1.0f + std::erf(norm_val / std::sqrt(2.0f)));
 
                 // Assign the activated value back to the tensor
                 y_out(i, c, w) = activated_val;
