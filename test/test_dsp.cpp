@@ -3,15 +3,81 @@
 #include "dsp.hpp"
 #include <gtest/gtest.h>
 #include <random>
+#include <libnyquist/Common.h>
+#include <libnyquist/Decoders.h>
+#include <libnyquist/Encoders.h>
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include "tensor.hpp"
 
 #define NEAR_TOLERANCE 1e-4
+
+using namespace nqr;
+
+static Eigen::MatrixXf load_audio_file(std::string filename)
+{
+    // load a wav file with libnyquist
+    std::shared_ptr<AudioData> fileData = std::make_shared<AudioData>();
+
+    NyquistIO loader;
+
+    loader.Load(fileData.get(), filename);
+
+    if (fileData->sampleRate != demucscpp::SUPPORTED_SAMPLE_RATE)
+    {
+        std::cerr
+            << "[ERROR] demucs.cpp only supports the following sample rate (Hz): "
+            << demucscpp::SUPPORTED_SAMPLE_RATE << std::endl;
+        exit(1);
+    }
+
+    std::cout << "Input samples: "
+              << fileData->samples.size() / fileData->channelCount << std::endl;
+    std::cout << "Length in seconds: " << fileData->lengthSeconds << std::endl;
+    std::cout << "Number of channels: " << fileData->channelCount << std::endl;
+
+    if (fileData->channelCount != 2 && fileData->channelCount != 1)
+    {
+        std::cerr << "[ERROR] demucs.cpp only supports mono and stereo audio"
+                  << std::endl;
+        exit(1);
+    }
+
+    // number of samples per channel
+    size_t N = fileData->samples.size() / fileData->channelCount;
+
+    // create a struct to hold two float vectors for left and right channels
+    Eigen::MatrixXf ret(2, N);
+
+    if (fileData->channelCount == 1)
+    {
+        // Mono case
+        for (size_t i = 0; i < N; ++i)
+        {
+            ret(0, i) = fileData->samples[i]; // left channel
+            ret(1, i) = fileData->samples[i]; // right channel
+        }
+    }
+    else
+    {
+        // Stereo case
+        for (size_t i = 0; i < N; ++i)
+        {
+            ret(0, i) = fileData->samples[2 * i];     // left channel
+            ret(1, i) = fileData->samples[2 * i + 1]; // right channel
+        }
+    }
+
+    return ret;
+}
+
 
 // write a basic test case for a mono file
 TEST(LoadAudioForKissfft, LoadMonoAudio)
 {
     // load a wav file with libnyquist
     std::string filename = "../test/data/gspi_mono.wav";
-    Eigen::MatrixXf ret = demucscpp::load_audio(filename);
+    Eigen::MatrixXf ret = load_audio_file(filename);
 
     // check the number of samples
     EXPECT_EQ(ret.cols(), 262144);
@@ -27,7 +93,7 @@ TEST(LoadAudioForKissfft, LoadStereoAudio)
     // load a wav file with libnyquist
     std::string filename = "../test/data/gspi_stereo.wav";
 
-    Eigen::MatrixXf ret = demucscpp::load_audio(filename);
+    Eigen::MatrixXf ret = load_audio_file(filename);
 
     // check the number of samples
     EXPECT_EQ(ret.cols(), 262144);
@@ -97,7 +163,7 @@ TEST(DSP_STFT, STFTRoundtripRandWaveform)
 TEST(DSP_STFT, STFTRoundtripGlockenspiel)
 {
     Eigen::MatrixXf audio_in =
-        demucscpp::load_audio("../test/data/gspi_mono.wav");
+        load_audio_file("../test/data/gspi_mono.wav");
 
     // create buffers
     demucscpp::stft_buffers stft_buf(audio_in.cols());

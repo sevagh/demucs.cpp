@@ -5,12 +5,16 @@
 #include "tensor.hpp"
 #include <Eigen/Dense>
 #include <array>
+#include <functional>
 #include <iostream>
 #include <string>
 #include <vector>
 
 namespace demucscpp
 {
+
+// Define a type for your callback function
+using ProgressCallback = std::function<void(float)>;
 
 const int FREQ_BRANCH_LEN = 336;
 const int TIME_BRANCH_LEN_IN = 343980;
@@ -544,6 +548,9 @@ struct demucs_model
     Eigen::MatrixXf freq_emb_embedding_weight{Eigen::MatrixXf(512, 48)};
 
     std::unique_ptr<crosstransformer_base> crosstransformer;
+
+    float inference_progress;
+    float load_progress;
 };
 
 inline std::unique_ptr<crosstransformer_base> initialize_crosstransformer(bool is_4sources) {
@@ -658,7 +665,7 @@ const float OVERLAP = 0.25;              // overlap between segments
 const float TRANSITION_POWER = 1.0;      // transition between segments
 
 Eigen::Tensor3dXf demucs_inference(struct demucs_model &model,
-                                      Eigen::MatrixXf &full_audio);
+                                      Eigen::MatrixXf &full_audio, ProgressCallback cb);
 
 void model_inference(struct demucs_model &model,
                         struct demucscpp::demucs_segment_buffers &buffers,

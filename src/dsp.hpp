@@ -37,7 +37,6 @@ struct stft_buffers
     std::vector<std::vector<std::complex<float>>> complex_spec_mono;
 
     Eigen::Tensor3dXcf spec;
-    Eigen::FFT<float> cfg;
 
     // constructor for stft_buffers that takes some parameters
     // to hint at the sizes of the buffers
@@ -100,11 +99,6 @@ struct stft_buffers
         return normalized_window;
     }
 };
-
-// waveform = 2d: (channels, samples)
-Eigen::MatrixXf load_audio(std::string filename);
-
-void write_audio_file(const Eigen::MatrixXf &waveform, std::string filename);
 
 void stft(struct stft_buffers &stft_buf);
 void istft(struct stft_buffers &stft_buf);

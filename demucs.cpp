@@ -11,8 +11,98 @@
 #include <thread>
 #include <unsupported/Eigen/FFT>
 #include <vector>
+#include <libnyquist/Common.h>
+#include <libnyquist/Decoders.h>
+#include <libnyquist/Encoders.h>
 
 using namespace demucscpp;
+using namespace nqr;
+
+static Eigen::MatrixXf load_audio_file(std::string filename)
+{
+    // load a wav file with libnyquist
+    std::shared_ptr<AudioData> fileData = std::make_shared<AudioData>();
+
+    NyquistIO loader;
+
+    loader.Load(fileData.get(), filename);
+
+    if (fileData->sampleRate != demucscpp::SUPPORTED_SAMPLE_RATE)
+    {
+        std::cerr
+            << "[ERROR] demucs.cpp only supports the following sample rate (Hz): "
+            << SUPPORTED_SAMPLE_RATE << std::endl;
+        exit(1);
+    }
+
+    std::cout << "Input samples: "
+              << fileData->samples.size() / fileData->channelCount << std::endl;
+    std::cout << "Length in seconds: " << fileData->lengthSeconds << std::endl;
+    std::cout << "Number of channels: " << fileData->channelCount << std::endl;
+
+    if (fileData->channelCount != 2 && fileData->channelCount != 1)
+    {
+        std::cerr << "[ERROR] demucs.cpp only supports mono and stereo audio"
+                  << std::endl;
+        exit(1);
+    }
+
+    // number of samples per channel
+    size_t N = fileData->samples.size() / fileData->channelCount;
+
+    // create a struct to hold two float vectors for left and right channels
+    Eigen::MatrixXf ret(2, N);
+
+    if (fileData->channelCount == 1)
+    {
+        // Mono case
+        for (size_t i = 0; i < N; ++i)
+        {
+            ret(0, i) = fileData->samples[i]; // left channel
+            ret(1, i) = fileData->samples[i]; // right channel
+        }
+    }
+    else
+    {
+        // Stereo case
+        for (size_t i = 0; i < N; ++i)
+        {
+            ret(0, i) = fileData->samples[2 * i];     // left channel
+            ret(1, i) = fileData->samples[2 * i + 1]; // right channel
+        }
+    }
+
+    return ret;
+}
+
+// write a function to write a StereoWaveform to a wav file
+static void write_audio_file(const Eigen::MatrixXf &waveform,
+                                 std::string filename)
+{
+    // create a struct to hold the audio data
+    std::shared_ptr<AudioData> fileData = std::make_shared<AudioData>();
+
+    // set the sample rate
+    fileData->sampleRate = SUPPORTED_SAMPLE_RATE;
+
+    // set the number of channels
+    fileData->channelCount = 2;
+
+    // set the number of samples
+    fileData->samples.resize(waveform.cols() * 2);
+
+    // write the left channel
+    for (long int i = 0; i < waveform.cols(); ++i)
+    {
+        fileData->samples[2 * i] = waveform(0, i);
+        fileData->samples[2 * i + 1] = waveform(1, i);
+    }
+
+    int encoderStatus =
+        encode_wav_to_disk({fileData->channelCount, PCM_FLT, DITHER_TRIANGLE},
+                           fileData.get(), filename);
+    std::cout << "Encoder Status: " << encoderStatus << std::endl;
+}
 
 int main(int argc, const char **argv)
 {
@@ -41,7 +131,7 @@ int main(int argc, const char **argv)
     // output dir passed as argument
     std::string out_dir = argv[3];
 
-    Eigen::MatrixXf audio = load_audio(wav_file);
+    Eigen::MatrixXf audio = load_audio_file(wav_file);
     Eigen::Tensor3dXf out_targets;
 
     // initialize a struct demucs_model
@@ -63,9 +153,16 @@ int main(int argc, const char **argv)
 
     std::cout << "Starting Demucs (" << std::to_string(nb_sources) <<"-source) inference" << std::endl;
 
+    demucscpp::ProgressCallback progressCallback =
+            [](float progress)
+        {
+            std::cout << "Progress: " << progress*100 << "%\n";
+        };
+
+
     // create 4 audio matrix same size, to hold output
     Eigen::Tensor3dXf audio_targets =
-        demucscpp::demucs_inference(model, audio);
+        demucscpp::demucs_inference(model, audio, progressCallback);
     std::cout << "returned!" << std::endl;
 
     out_targets = audio_targets;
@@ -101,10 +198,6 @@ int main(int argc, const char **argv)
             }
         }
 
-        demucscppdebug::debug_matrix_xf(target_waveform,
-                                        "target_waveform for target " +
-                                            std::to_string(target));
-
-        demucscpp::write_audio_file(target_waveform, p_target);
+        write_audio_file(target_waveform, p_target);
     }
 }
