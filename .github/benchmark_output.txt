@@ -1,0 +1,261 @@
+(demucscpp) sevagh@pop-os:~/repos/demucs.cpp$ ./benchmarks/run_benchmarks.sh
+##########################################
+# gcc, Eigen, no BLAS, -mnative, -Ofast  #
+##########################################
+
+OMP threads: 1
+        Command being timed: "./build/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build/demucs-out-cpp"
+        User time (seconds): 29.08
+        System time (seconds): 9.58
+        Percent of CPU this job got: 99%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:38.67
+        Maximum resident set size (kbytes): 2351168
+
+OMP threads: 2
+        Command being timed: "./build/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build/demucs-out-cpp"
+        User time (seconds): 33.98
+        System time (seconds): 10.64
+        Percent of CPU this job got: 125%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:35.54
+        Maximum resident set size (kbytes): 2588052
+
+OMP threads: 4
+        Command being timed: "./build/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build/demucs-out-cpp"
+        User time (seconds): 42.19
+        System time (seconds): 10.79
+        Percent of CPU this job got: 160%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:33.09
+        Maximum resident set size (kbytes): 2587980
+
+OMP threads: 8
+        Command being timed: "./build/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build/demucs-out-cpp"
+        User time (seconds): 61.25
+        System time (seconds): 11.17
+        Percent of CPU this job got: 219%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:32.99
+        Maximum resident set size (kbytes): 2603056
+
+OMP threads: 16
+        Command being timed: "./build/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build/demucs-out-cpp"
+        User time (seconds): 109.61
+        System time (seconds): 11.68
+        Percent of CPU this job got: 356%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:34.07
+        Maximum resident set size (kbytes): 2574732
+
+OMP threads: 32
+        Command being timed: "./build/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build/demucs-out-cpp"
+        User time (seconds): 172.86
+        System time (seconds): 14.20
+        Percent of CPU this job got: 515%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:36.32
+        Maximum resident set size (kbytes): 2574068
+
+##########################################
+# gcc, Eigen, OpenBLAS, -mnative, -Ofast #
+##########################################
+
+OMP threads: 1
+        Command being timed: "./build-openblas/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build/demucs-out-cpp"
+        User time (seconds): 26.46
+        System time (seconds): 8.39
+        Percent of CPU this job got: 99%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:34.86
+        Maximum resident set size (kbytes): 1860840
+
+OMP threads: 2
+        Command being timed: "./build-openblas/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build/demucs-out-cpp"
+        User time (seconds): 31.24
+        System time (seconds): 9.24
+        Percent of CPU this job got: 121%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:33.25
+        Maximum resident set size (kbytes): 1861232
+
+OMP threads: 4
+        Command being timed: "./build-openblas/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build/demucs-out-cpp"
+        User time (seconds): 38.66
+        System time (seconds): 9.84
+        Percent of CPU this job got: 153%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:31.66
+        Maximum resident set size (kbytes): 1861756
+
+OMP threads: 8
+        Command being timed: "./build-openblas/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build/demucs-out-cpp"
+        User time (seconds): 55.29
+        System time (seconds): 10.57
+        Percent of CPU this job got: 212%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:30.97
+        Maximum resident set size (kbytes): 1862960
+
+OMP threads: 16
+        Command being timed: "./build-openblas/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build/demucs-out-cpp"
+        User time (seconds): 91.14
+        System time (seconds): 13.11
+        Percent of CPU this job got: 334%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:31.17
+        Maximum resident set size (kbytes): 1872052
+
+OMP threads: 32
+        Command being timed: "./build-openblas/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build/demucs-out-cpp"
+        User time (seconds): 177.36
+        System time (seconds): 16.71
+        Percent of CPU this job got: 602%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:32.23
+        Maximum resident set size (kbytes): 1874976
+
+#######################################################
+# gcc, Eigen, AOCL-BLIS (+ friends), -mnative, -Ofast #
+#######################################################
+
+OMP threads: 1
+        Command being timed: "./build-amd/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-amd/demucs-out-cpp"
+        User time (seconds): 27.18
+        System time (seconds): 7.14
+        Percent of CPU this job got: 99%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:34.33
+        Maximum resident set size (kbytes): 1914160
+
+OMP threads: 2
+        Command being timed: "./build-amd/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-amd/demucs-out-cpp"
+        User time (seconds): 31.43
+        System time (seconds): 7.13
+        Percent of CPU this job got: 122%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:31.42
+        Maximum resident set size (kbytes): 1915444
+
+OMP threads: 4
+        Command being timed: "./build-amd/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-amd/demucs-out-cpp"
+        User time (seconds): 38.77
+        System time (seconds): 7.12
+        Percent of CPU this job got: 154%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:29.63
+        Maximum resident set size (kbytes): 1960084
+
+OMP threads: 8
+        Command being timed: "./build-amd/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-amd/demucs-out-cpp"
+        User time (seconds): 53.39
+        System time (seconds): 7.54
+        Percent of CPU this job got: 210%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:28.89
+        Maximum resident set size (kbytes): 1915676
+
+OMP threads: 16
+        Command being timed: "./build-amd/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-amd/demucs-out-cpp"
+        User time (seconds): 86.28
+        System time (seconds): 7.29
+        Percent of CPU this job got: 326%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:28.66
+        Maximum resident set size (kbytes): 1961820
+
+OMP threads: 32
+        Command being timed: "./build-amd/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-amd/demucs-out-cpp"
+        User time (seconds): 170.35
+        System time (seconds): 7.88
+        Percent of CPU this job got: 588%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:30.26
+        Maximum resident set size (kbytes): 1917904
+
+#######################################################
+# gcc, Eigen, Intel-MKL (+ friends), -mnative, -Ofast #
+#######################################################
+
+OMP/MKL threads: 1
+        Command being timed: "./build-intel/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-intel/demucs-out-cpp"
+        User time (seconds): 26.73
+        System time (seconds): 8.54
+        Percent of CPU this job got: 99%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:35.29
+        Maximum resident set size (kbytes): 1902768
+
+OMP/MKL threads: 2
+        Command being timed: "./build-intel/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-intel/demucs-out-cpp"
+        User time (seconds): 48.94
+        System time (seconds): 9.89
+        Percent of CPU this job got: 175%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:33.45
+        Maximum resident set size (kbytes): 1920756
+
+OMP/MKL threads: 4
+        Command being timed: "./build-intel/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-intel/demucs-out-cpp"
+        User time (seconds): 90.06
+        System time (seconds): 12.08
+        Percent of CPU this job got: 321%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:31.79
+        Maximum resident set size (kbytes): 1912300
+
+OMP/MKL threads: 8
+        Command being timed: "./build-intel/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-intel/demucs-out-cpp"
+        User time (seconds): 173.75
+        System time (seconds): 16.98
+        Percent of CPU this job got: 617%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:30.88
+        Maximum resident set size (kbytes): 2023360
+
+OMP/MKL threads: 16
+        Command being timed: "./build-intel/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-intel/demucs-out-cpp"
+        User time (seconds): 354.39
+        System time (seconds): 26.79
+        Percent of CPU this job got: 1206%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:31.60
+        Maximum resident set size (kbytes): 2105164
+
+OMP/MKL threads: 32
+        Command being timed: "./build-intel/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-intel/demucs-out-cpp"
+        User time (seconds): 355.57
+        System time (seconds): 26.11
+        Percent of CPU this job got: 1204%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:31.68
+        Maximum resident set size (kbytes): 2106108
+
+#######################################################
+# gcc, Eigen, Intel-MKL (+ friends), -mnative, -Ofast #
+# with MKL_DEBUG_CPU_TYPE=5 to force avx2 for amd     #
+#######################################################
+
+OMP/MKL threads: 1
+        Command being timed: "./build-intel/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-intel/demucs-out-cpp"
+        User time (seconds): 27.57
+        System time (seconds): 8.70
+        Percent of CPU this job got: 99%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:36.29
+        Maximum resident set size (kbytes): 1902320
+
+OMP/MKL threads: 2
+        Command being timed: "./build-intel/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-intel/demucs-out-cpp"
+        User time (seconds): 49.56
+        System time (seconds): 9.74
+        Percent of CPU this job got: 175%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:33.74
+        Maximum resident set size (kbytes): 1921272
+
+OMP/MKL threads: 4
+        Command being timed: "./build-intel/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-intel/demucs-out-cpp"
+        User time (seconds): 90.10
+        System time (seconds): 12.53
+        Percent of CPU this job got: 320%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:32.07
+        Maximum resident set size (kbytes): 1912340
+
+OMP/MKL threads: 8
+        Command being timed: "./build-intel/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-intel/demucs-out-cpp"
+        User time (seconds): 176.89
+        System time (seconds): 16.82
+        Percent of CPU this job got: 615%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:31.45
+        Maximum resident set size (kbytes): 2023372
+
+OMP/MKL threads: 16
+        Command being timed: "./build-intel/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-intel/demucs-out-cpp"
+        User time (seconds): 361.14
+        System time (seconds): 27.24
+        Percent of CPU this job got: 1199%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:32.36
+        Maximum resident set size (kbytes): 2105588
+
+OMP/MKL threads: 32
+        Command being timed: "./build-intel/demucs.cpp.main ./ggml-demucs/ggml-model-htdemucs-4s-f16.bin ./test/data/gspi_stereo.wav ./build-intel/demucs-out-cpp"
+        User time (seconds): 363.09
+        System time (seconds): 27.87
+        Percent of CPU this job got: 1198%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 0:32.62
+        Maximum resident set size (kbytes): 2106064

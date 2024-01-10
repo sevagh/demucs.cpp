@@ -1,4 +1,4 @@
-/build/
+/build*/
 *.bin
 *.wav
 !/test/data/*.wav

@@ -12,6 +12,15 @@ total 133M
 -rw-rw-r--  1 sevagh sevagh  53M Dec  9 11:37 ggml-model-htdemucs-6s-f16.bin
 ```
 
+### Multi-core, OpenMP, BLAS, etc.
+
+:warning: `demucs.cpp` library code in `./src` **should not use any threading (e.g. pthread or OpenMP) except through the BLAS interface.** This is because demucs.cpp is compiled to a single-threaded WebAssembly module in <https://freemusicdemixer.com>.
+
+If you have OpenMP and OpenBLAS installed, OpenBLAS might automatically use all of the threads on your machine, which doesn't always run the fastest. Use the `OMP_NUM_THREADS` environment variable to limit this. On my 16c/32t machine, I found `OMP_NUM_THREADS=16` to be the fastest. This matches the [Eigen recommendation](https://eigen.tuxfamily.org/dox/TopicMultiThreading.html) to use the same number of threads as physical cores:
+>On most OS it is very important to limit the number of threads to the number of physical cores, otherwise significant slowdowns are expected, especially for operations involving dense matrices.
+
+See the [BLAS benchmarks](#blas-benchmarks) section below for more details.
+
 ### Performance of 4-source model
 
 Track 'Zeno - Signs' from MUSDB18-HQ test set
@@ -132,3 +141,13 @@ Note: I have only tested this on my Linux-based computer (Pop!\_OS 22.04), and y
 * make lint
 * Valgrind memory error test: `valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./demucs.cpp.main ../ggml-demucs/ggml-model-htdemucs-f16.bin ../test/data/gspi_stereo.wav  ./demucs-out-cpp/`
 * Callgrind + KCachegrind: `valgrind --tool=callgrind ./demucs.cpp.test --gtest_filter='*FreqDec*'`
+
+## BLAS benchmarks
+
+The benchmark plots below show the performance of different BLAS libraries (OpenBLAS, Intel MKL, AMD AOCL BLIS) with different numbers of threads on my Ryzen Zen3 5950X (16c/32t). In my case, 16 threads with OpenBLAS is a good blend of performance and memory usage.
+
+<img alt="bench-wall-time" src="./.github/wall_time_comparison.png" width="500"/>
+<img alt="bench-cpu-time" src="./.github/cpu_time_comparison.png" width="500"/>
+<img alt="bench-memory" src="./.github/memory_usage_comparison.png" width="500"/>
+
+I didn't include any GPU BLAS libraries (NVBLAS, cuBLAS, etc.) because the I'm limiting the scope of demucs.cpp to use only the CPU. The real PyTorch version of Demucs is suitable for GPU acceleration.
