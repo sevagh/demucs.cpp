@@ -673,7 +673,7 @@ const float OVERLAP = 0.25;              // overlap between segments
 const float TRANSITION_POWER = 1.0;      // transition between segments
 
 Eigen::Tensor3dXf demucs_inference(struct demucs_model &model,
-                                   Eigen::MatrixXf &full_audio,
+                                   const Eigen::MatrixXf &full_audio,
                                    ProgressCallback cb);
 
 void model_inference(struct demucs_model &model,

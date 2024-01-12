@@ -11,7 +11,6 @@
 #include <libnyquist/Encoders.h>
 #include <sstream>
 #include <string>
-#include <thread>
 #include <unsupported/Eigen/FFT>
 #include <vector>
 
@@ -113,13 +112,6 @@ int main(int argc, const char **argv)
         exit(1);
     }
 
-    // set eigen nb threads to physical cores minus 1
-    // discover number of physical cores through C++ stdlib
-    // https://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine
-    int nb_cores = std::thread::hardware_concurrency();
-    std::cout << "Number of physical cores: " << nb_cores << std::endl;
-    Eigen::setNbThreads(nb_cores - 1);
-
     std::cout << "demucs.cpp Main driver program" << std::endl;
 
     // load model passed as argument
@@ -178,8 +170,40 @@ int main(int argc, const char **argv)
         std::filesystem::create_directories(p);
 
         auto p_target = p / "target_0.wav";
-        // generate p_target = p / "target_{target}.wav"
-        p_target.replace_filename("target_" + std::to_string(target) + ".wav");
+
+        // target 0,1,2,3 map to drums,bass,other,vocals
+
+        std::string target_name;
+
+        switch (target)
+        {
+        case 0:
+            target_name = "drums";
+            break;
+        case 1:
+            target_name = "bass";
+            break;
+        case 2:
+            target_name = "other";
+            break;
+        case 3:
+            target_name = "vocals";
+            break;
+        case 4:
+            target_name = "guitar";
+            break;
+        case 5:
+            target_name = "piano";
+            break;
+        default:
+            std::cerr << "Error: target " << target << " not supported"
+                      << std::endl;
+            exit(1);
+        }
+
+        // insert target_name into the path after the digit
+        // e.g. target_name_0_drums.wav
+        p_target.replace_filename("target_" + std::to_string(target) + "_" + target_name + ".wav");
 
         std::cout << "Writing wav file " << p_target << std::endl;
 

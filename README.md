@@ -2,15 +2,15 @@
 
 C++17 implementation of the [Demucs v4 hybrid transformer](https://github.com/facebookresearch/demucs), a PyTorch neural network for music demixing. Similar project to [umx.cpp](https://github.com/sevagh/umx.cpp). This code powers my site <https://freemusicdemixer.com>.
 
-It uses [libnyquist](https://github.com/ddiakopoulos/libnyquist) to load audio files, the [ggml](https://github.com/ggerganov/ggml) file format to serialize the PyTorch weights of `htdemucs_4s` and `htdemucs_6s` (4-source, 6-source) to a binary file format, and [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) (+ OpenMP) to implement the inference.
+It uses [libnyquist](https://github.com/ddiakopoulos/libnyquist) to load audio files, the [ggml](https://github.com/ggerganov/ggml) file format to serialize the PyTorch weights of `htdemucs`, `htdemucs_6s`, and `htdemucs_ft` (4-source, 6-source, fine-tuned) to a binary file format, and [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) (+ OpenMP) to implement the inference.
 
-**Both 4- and 6-source variants are supported.** Simply export both models and use the model you want:
-```
-$ ls -latrh ../ggml-demucs/
-total 133M
--rw-rw-r--  1 sevagh sevagh  81M Dec  9 10:42 ggml-model-htdemucs-4s-f16.bin
--rw-rw-r--  1 sevagh sevagh  53M Dec  9 11:37 ggml-model-htdemucs-6s-f16.bin
-```
+**All Hybrid-Transformer weights** (4-source, 6-source, fine-tuned) are supported. See the [Convert weights](#convert-weights) section below. Demixing quality is nearly identical to PyTorch as shown in the [SDR scores doc](./.github/SDR_scores.md).
+
+### Directory structure
+
+`src` contains the library for Demucs inference, and `cli-apps` contains two driver programs, which compile to:
+1. `demucs.cpp.main`: run a single model (4s, 6s, or a single fine-tuned model)
+2. `demucs_ft.cpp.main`: run all 4 fine-tuned models for `htdemucs_ft` inference, same as the BagOfModels idea of PyTorch Demucs
 
 ### Multi-core, OpenMP, BLAS, etc.
 
@@ -19,61 +19,36 @@ total 133M
 If you have OpenMP and OpenBLAS installed, OpenBLAS might automatically use all of the threads on your machine, which doesn't always run the fastest. Use the `OMP_NUM_THREADS` environment variable to limit this. On my 16c/32t machine, I found `OMP_NUM_THREADS=16` to be the fastest. This matches the [Eigen recommendation](https://eigen.tuxfamily.org/dox/TopicMultiThreading.html) to use the same number of threads as physical cores:
 >On most OS it is very important to limit the number of threads to the number of physical cores, otherwise significant slowdowns are expected, especially for operations involving dense matrices.
 
-See the [BLAS benchmarks](#blas-benchmarks) section below for more details.
-
-### Performance of 4-source model
-
-Track 'Zeno - Signs' from MUSDB18-HQ test set
-
-PyTorch custom inference in [my script](./scripts/demucs_pytorch_inference.py):
-```
-vocals          ==> SDR:   8.339  SIR:  18.274  ISR:  15.835  SAR:   8.354
-drums           ==> SDR:  10.058  SIR:  18.598  ISR:  17.023  SAR:  10.812
-bass            ==> SDR:   3.926  SIR:  12.414  ISR:   6.941  SAR:   3.202
-other           ==> SDR:   7.421  SIR:  11.289  ISR:  14.241  SAR:   8.179
-```
-CPP inference (this codebase):
-```
-vocals          ==> SDR:   8.339  SIR:  18.276  ISR:  15.836  SAR:   8.346
-drums           ==> SDR:  10.058  SIR:  18.596  ISR:  17.019  SAR:  10.810
-bass            ==> SDR:   3.919  SIR:  12.436  ISR:   6.931  SAR:   3.182
-other           ==> SDR:   7.421  SIR:  11.286  ISR:  14.252  SAR:   8.183
-```
-*n.b.* for the above results, the random shift in the beginning of the song was fixed to 1337 in both PyTorch and C++.
-
-### Performance of 6-source model
-
-Track 'Zeno - Signs' from MUSDB18-HQ test set
-
-PyTorch custom inference in [my script](./scripts/demucs_pytorch_inference.py) with `--six-source` flag:
-```
-vocals          ==> SDR:   8.396  SIR:  18.695  ISR:  16.076  SAR:   8.580
-drums           ==> SDR:   9.928  SIR:  17.930  ISR:  17.523  SAR:  10.635
-bass            ==> SDR:   4.522  SIR:  10.447  ISR:   8.618  SAR:   4.374
-other           ==> SDR:   0.168  SIR:  11.449  ISR:   0.411  SAR:  -2.720
-```
-CPP inference (this codebase):
-```
-vocals          ==> SDR:   8.395  SIR:  18.699  ISR:  16.076  SAR:   8.576
-drums           ==> SDR:   9.927  SIR:  17.921  ISR:  17.518  SAR:  10.635
-bass            ==> SDR:   4.519  SIR:  10.458  ISR:   8.606  SAR:   4.370
-other           ==> SDR:   0.164  SIR:  11.443  ISR:   0.409  SAR:  -2.713
-```
-
-*n.b.* the "other" score will be artificially low because of the extra guitar + piano separation where there are no stems to compare to
+See the [BLAS benchmarks doc](./.github/BLAS_benchmarks.md) for more details.
 
 ## Instructions
 
-0. Clone the repo
+### Build C++ code
 
-Make sure you clone with submodules:
+Clone the repo
+
+Make sure you clone with submodules to get all vendored libraries (e.g. Eigen):
 ```
 $ git clone --recurse-submodules https://github.com/sevagh/demucs.cpp
 ```
 
-Eigen is vendored as a git submodule.
+Install C++ dependencies, e.g. CMake, gcc, C++/g++, OpenBLAS for your OS (my instructions are for Pop!\_OS 22.04):
+```
+$ sudo apt-get install gcc g++ cmake clang-tools libopenblas0-openmp libopenblas-openmp-dev
+```
 
-1. Set up Python
+Compile with CMake:
+```
+$ mkdir -p build && cd build && cmake .. && make -j16
+libdemucs.cpp.lib.a <--- library
+demucs.cpp.main     <--- single-model (4s, 6s, ft)
+demucs_ft.cpp.main  <--- bag of ft models
+demucs.cpp.test     <--- unit tests
+```
+
+### Convert weights
+
+Set up a Python env
 
 The first step is to create a Python environment (however you like; I'm a fan of [mamba](https://mamba.readthedocs.io/en/latest/user_guide/mamba.html)) and install the `requirements.txt` file:
 ```
@@ -82,7 +57,7 @@ $ mamba activate demucscpp
 $ python -m pip install -r ./scripts/requirements.txt
 ```
 
-2. Dump Demucs weights to ggml file, with flag `--six-source` for the 6-source variant:
+Dump Demucs weights to ggml file, with flag `--six-source` for the 6-source variant, and all of `--ft-drums, --ft-vocals, --ft-bass, --ft-other` for the fine-tuned models:
 ```
 $ python ./scripts/convert-pth-to-ggml.py ./ggml-demucs
 ...
@@ -94,19 +69,24 @@ Processing variable:  crosstransformer.layers_t.4.gamma_2.scale  with shape:  (5
 Done. Output file:  ggml-demucs/ggml-model-htdemucs-4s-f16.bin
 ```
 
-3. Install C++ dependencies, e.g. CMake, gcc, C++/g++, OpenMP for your OS - my instructions are for Pop!\_OS 22.04:
+All supported models would look like this:
 ```
-$ sudo apt-get install gcc g++ cmake clang-tools
+$ ls ../ggml-demucs/
+total 133M
+ 81M Jan 10 22:40 ggml-model-htdemucs-4s-f16.bin
+ 53M Jan 10 22:41 ggml-model-htdemucs-6s-f16.bin
+ 81M Jan 10 22:41 ggml-model-htdemucs_ft_drums-4s-f16.bin
+ 81M Jan 10 22:43 ggml-model-htdemucs_ft_bass-4s-f16.bin
+ 81M Jan 10 22:43 ggml-model-htdemucs_ft_other-4s-f16.bin
+ 81M Jan 10 22:43 ggml-model-htdemucs_ft_vocals-4s-f16.bin
 ```
 
-4. Compile with CMake:
-```
-$ mkdir -p build && cd build && cmake .. && make
-```
+### Run demucs.cpp
 
-5. Run inference on your track:
+Run C++ inference on your track with the built binaries:
 ```
-$ ./demucs.cpp.main ../ggml-demucs/ggml-model-htdemucs-4s-f16.bin /path/to/my/track.wav  ./demucs-out-cpp/
+# build is the cmake build dir from above
+$ ./build/demucs.cpp.main ../ggml-demucs/ggml-model-htdemucs-4s-f16.bin /path/to/my/track.wav  ./demucs-out-cpp/
 ...
 Loading tensor crosstransformer.layers_t.4.gamma_2.scale with shape [512, 1, 1, 1]
 crosstransformer.layers_t.4.gamma_2.scale: [  512], type = float,   0.00 MB
@@ -122,32 +102,20 @@ mix: 2, 343980
 mix: 2, 343980
 mix: 2, 343980
 returned!
-Writing wav file "./demucs-out-cpp/target_0.wav"
+Writing wav file "./demucs-out-cpp/target_0_drums.wav"
 Encoder Status: 0
-Writing wav file "./demucs-out-cpp/target_1.wav"
+Writing wav file "./demucs-out-cpp/target_1_bass.wav"
 Encoder Status: 0
-Writing wav file "./demucs-out-cpp/target_2.wav"
+Writing wav file "./demucs-out-cpp/target_2_other.wav"
 Encoder Status: 0
-Writing wav file "./demucs-out-cpp/target_3.wav"
+Writing wav file "./demucs-out-cpp/target_3_vocals.wav"
 Encoder Status: 0
 ```
 
 For the 6-source model, additional targets 4 and 5 correspond to guitar and piano.
-
-Note: I have only tested this on my Linux-based computer (Pop!\_OS 22.04), and you may need to figure out how to get the dependencies on your own.
 
 ## Dev tips
 
 * make lint
 * Valgrind memory error test: `valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./demucs.cpp.main ../ggml-demucs/ggml-model-htdemucs-f16.bin ../test/data/gspi_stereo.wav  ./demucs-out-cpp/`
 * Callgrind + KCachegrind: `valgrind --tool=callgrind ./demucs.cpp.test --gtest_filter='*FreqDec*'`
-
-## BLAS benchmarks
-
-The benchmark plots below show the performance of different BLAS libraries (OpenBLAS, Intel MKL, AMD AOCL BLIS) with different numbers of threads on my Ryzen Zen3 5950X (16c/32t). In my case, 16 threads with OpenBLAS is a good blend of performance and memory usage.
-
-<img alt="bench-wall-time" src="./.github/wall_time_comparison.png" width="500"/>
-<img alt="bench-cpu-time" src="./.github/cpu_time_comparison.png" width="500"/>
-<img alt="bench-memory" src="./.github/memory_usage_comparison.png" width="500"/>
-
-I didn't include any GPU BLAS libraries (NVBLAS, cuBLAS, etc.) because the I'm limiting the scope of demucs.cpp to use only the CPU. The real PyTorch version of Demucs is suitable for GPU acceleration.

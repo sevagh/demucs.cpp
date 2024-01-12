@@ -83,8 +83,12 @@ add_library(demucs.cpp.lib ${SOURCES})
 target_link_libraries(demucs.cpp.lib libnyquist ${LIBRARIES_TO_LINK})
 
 # Add target to compile demucs.cpp.main, the main driver program for demucs.cpp
-add_executable(demucs.cpp.main demucs.cpp)
+add_executable(demucs.cpp.main "cli-apps/demucs.cpp")
 target_link_libraries(demucs.cpp.main demucs.cpp.lib)
+
+# Add target to compile demucs_ft.cpp.main, the fine-tuned driver program for demucs.cpp
+add_executable(demucs_ft.cpp.main "cli-apps/demucs_ft.cpp")
+target_link_libraries(demucs_ft.cpp.main demucs.cpp.lib)
 
 file(GLOB SOURCES_TO_LINT "src/*.cpp" "src/*.hpp" "demucs.cpp" "test/*.cpp")
 

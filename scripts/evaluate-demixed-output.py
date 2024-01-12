@@ -28,16 +28,16 @@ if __name__ == '__main__':
 
     # load stems from input_dir
     est_targets = {}
-    for target in target_digit_map.keys():
+    for target, target_name in target_digit_map.items():
         # load target_{target_digit_map[target]}.wav
-        target_path = os.path.join(args.input_dir, f"target_{target}.wav")
-        print(f"loading path {target_path} for {target_digit_map[target]}")
+        target_path = os.path.join(args.input_dir, f"target_{target}_{target_name}.wav")
+        print(f"loading path {target_path} for {target_name}")
 
         # load wav file with numpy
         track_tensor, _ = torchaudio.load(target_path)
         track_tensor = track_tensor.T.cpu().numpy().astype(np.float32)
         print(f"{track_tensor.shape} {track_tensor.dtype}")
-        est_targets[target_digit_map[target]] = track_tensor
+        est_targets[target_name] = track_tensor
 
     # evaluate
     scores = museval.eval_mus_track(track, est_targets, output_dir=args.input_dir)

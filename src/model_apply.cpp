@@ -59,10 +59,13 @@ segment_inference(struct demucscpp::demucs_model &model, Eigen::MatrixXf chunk,
                   struct demucscpp::stft_buffers &stft_buf);
 
 Eigen::Tensor3dXf demucscpp::demucs_inference(struct demucs_model &model,
-                                              Eigen::MatrixXf &full_audio,
+                                              const Eigen::MatrixXf &audio,
                                               demucscpp::ProgressCallback cb)
 {
     std::cout << std::fixed << std::setprecision(20) << std::endl;
+
+    // working copy to modify
+    Eigen::MatrixXf full_audio = audio;
 
     // first, normalize the audio to mean and std
     // ref = wav.mean(0)
