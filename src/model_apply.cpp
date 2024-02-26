@@ -135,7 +135,7 @@ static Eigen::Tensor3dXf shift_inference(struct demucscpp::demucs_model &model,
     Eigen::Tensor3dXf trimmed_waveform_outputs =
         waveform_outputs
             .reshape(Eigen::array<int, 3>(
-                {nb_out_sources, 2, waveform_outputs.dimension(2)}))
+                {nb_out_sources, 2, (int) waveform_outputs.dimension(2)}))
             .slice(Eigen::array<int, 3>({0, 0, max_shift - offset}),
                    Eigen::array<int, 3>({nb_out_sources, 2, length}));
 
