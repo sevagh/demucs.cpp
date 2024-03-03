@@ -34,9 +34,10 @@ In the single-threaded programs:
 * Segments are processed sequentially, where each segment inference can use >1 core with `OMP_NUM_THREADS`
 
 In the multi-threaded programs:
-* User supplies a waveform of length N seconds and a `num-threads` argument
-* Waveform is split into N sub-waveforms to process in parallel (with a 0.75-second overlap)
-* N threads are launched to perform Demucs inference on the N sub-waveforms in parallel
+* User supplies a waveform of length N seconds and a `num_threads` argument
+* Waveform is split into `num_threads` sub-waveforms (of length M < N) to process in parallel with a 0.75-second overlap
+    * We always need overlapping when doing audio processing on waveform segments [for boundary artifacts](https://freemusicdemixer.com/under-the-hood/2024/02/23/Demucs-segmentation#boundary-artifacts-and-the-overlap-add-method)
+* `num_threads` threads are launched to perform Demucs inference on the sub-waveforms in parallel
 * Within each thread, the sub-waveform is split into 7.8-second segments
 * Segments within a thread are still processed sequentially, where each segment inference can use >1 core with `OMP_NUM_THREADS`
 
