@@ -118,13 +118,13 @@ Eigen::Tensor3dXf conv2d_gemm(const Eigen::Tensor3dXf &x,
     {
         for (int h = 0; h < out_height; ++h)
         {
-            for (int w = 0; w < out_width; ++w)
+            for (int w_ = 0; w_ < out_width; ++w_)
             {
-                int row_idx = h * out_width + w;
+                int row_idx = h * out_width + w_;
                 // Assign the value from the GEMM output to the output tensor
                 if (row_idx < result.rows())
                 {
-                    y_out(chout, h, w) = result(row_idx, chout);
+                    y_out(chout, h, w_) = result(row_idx, chout);
                 }
             }
         }
@@ -187,16 +187,16 @@ Eigen::Tensor3dXf conv2d_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
     {
         for (int h = 0; h < out_height; ++h)
         {
-            for (int w = 0; w < out_width; ++w)
+            for (int w_ = 0; w_ < out_width; ++w_)
             {
-                int row_idx = h * out_width + w;
+                int row_idx = h * out_width + w_;
                 // Assign the value from the GEMM output to the output tensor
                 // with gelu
                 float value = result(row_idx, chout);
                 float activated_value =
                     0.5f * value * (1.0f + std::erf(value / std::sqrt(2.0f)));
                 // Assign the activated value to the output tensor
-                y_out(chout, h, w) = activated_value;
+                y_out(chout, h, w_) = activated_value;
             }
         }
     }
@@ -378,15 +378,15 @@ Eigen::Tensor3dXf conv2d_tr_gemm(const Eigen::Tensor3dXf &x,
     {
         for (int h = 0; h < out_height; ++h)
         {
-            for (int w = 0; w < out_width; ++w)
+            for (int w_ = 0; w_ < out_width; ++w_)
             {
                 // Calculate the linear index in the GEMM result corresponding
                 // to this output location
-                int gemm_row = h * out_width + w;
+                int gemm_row = h * out_width + w_;
                 int gemm_col = ch;
 
                 // Assign the value from the GEMM result to the output tensor
-                y_out(ch, h, w) += result(gemm_row, gemm_col);
+                y_out(ch, h, w_) += result(gemm_row, gemm_col);
             }
         }
     }
@@ -455,11 +455,11 @@ Eigen::Tensor3dXf conv2d_tr_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
     {
         for (int h = 0; h < out_height; ++h)
         {
-            for (int w = 0; w < out_width; ++w)
+            for (int w_ = 0; w_ < out_width; ++w_)
             {
                 // Calculate the linear index in the GEMM result corresponding
                 // to this output location
-                int gemm_row = h * out_width + w;
+                int gemm_row = h * out_width + w_;
                 int gemm_col = ch;
 
                 // Compute the value from the GEMM result
@@ -470,7 +470,7 @@ Eigen::Tensor3dXf conv2d_tr_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
                     0.5f * value * (1.0f + std::erf(value / std::sqrt(2.0f)));
 
                 // Assign the activated value to the output tensor
-                y_out(ch, h, w) += activated_value;
+                y_out(ch, h, w_) += activated_value;
             }
         }
     }

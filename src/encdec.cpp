@@ -101,9 +101,6 @@ void demucscpp::apply_time_encoder(struct demucscpp::demucs_model &model,
     case 3:
         crop = demucscpp::TIME_BRANCH_LEN_3;
         break;
-    default:
-        std::cout << "invalid tencoder_idx" << std::endl;
-        break;
     }
 
     // now implement the forward pass
@@ -289,9 +286,6 @@ void demucscpp::apply_time_decoder(struct demucscpp::demucs_model &model,
     case 3:
         crop = demucscpp::TIME_BRANCH_LEN_0;
         out_length = demucscpp::TIME_BRANCH_LEN_IN;
-        break;
-    default:
-        std::cout << "invalid tdecoder_idx" << std::endl;
         break;
     }
 

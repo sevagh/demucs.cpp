@@ -868,11 +868,11 @@ TEST(DemucsCPPLayers, GemmConv)
 
     // fill x with values
     // int counter = 0;
-    for (size_t i = 0; i < x.dimension(0); ++i)
+    for (long int i = 0; i < x.dimension(0); ++i)
     {
-        for (size_t j = 0; j < x.dimension(1); ++j)
+        for (long int j = 0; j < x.dimension(1); ++j)
         {
-            for (size_t k = 0; k < x.dimension(2); ++k)
+            for (long int k = 0; k < x.dimension(2); ++k)
             {
                 if (k % 2 == 0)
                 {
@@ -890,13 +890,13 @@ TEST(DemucsCPPLayers, GemmConv)
     Eigen::Tensor4dXf w(out_channels, in_channels, kernel_height, kernel_width);
 
     int counter = 1;
-    for (size_t i = 0; i < w.dimension(0); ++i)
+    for (long int i = 0; i < w.dimension(0); ++i)
     {
-        for (size_t j = 0; j < w.dimension(1); ++j)
+        for (long int j = 0; j < w.dimension(1); ++j)
         {
-            for (size_t k = 0; k < w.dimension(2); ++k)
+            for (long int k = 0; k < w.dimension(2); ++k)
             {
-                for (size_t l = 0; l < w.dimension(3); ++l)
+                for (long int l = 0; l < w.dimension(3); ++l)
                 {
                     w(i, j, k, l) = 0.1f * ((float)counter);
                     if (j % 2 == 0)
@@ -931,7 +931,7 @@ TEST(DemucsCPPLayers, GemmConv)
     Eigen::Tensor1dXf b(out_channels);
 
     // set bias to be 0.75 or -0.25 alternating
-    for (size_t i = 0; i < out_channels; ++i)
+    for (long int i = 0; i < out_channels; ++i)
     {
         b(i) = 0.0f;
         // if (i % 2 == 0)
@@ -962,12 +962,12 @@ TEST(DemucsCPPLayers, GemmConv)
     std::cout << std::fixed << std::setprecision(4) << std::endl;
 
     std::cout << "x (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < x.dimension(0); ++i)
+    for (long int i = 0; i < x.dimension(0); ++i)
     {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < x.dimension(1); ++j)
+        for (long int j = 0; j < x.dimension(1); ++j)
         {
-            for (size_t k = 0; k < x.dimension(2); ++k)
+            for (long int k = 0; k < x.dimension(2); ++k)
             {
                 std::cout << x(i, j, k) << "\t";
             }
@@ -976,15 +976,15 @@ TEST(DemucsCPPLayers, GemmConv)
         std::cout << std::endl; // Extra line to separate channels
     }
     std::cout << "w (Out Channel, In Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < w.dimension(0); ++i)
+    for (long int i = 0; i < w.dimension(0); ++i)
     {
-        for (size_t j = 0; j < w.dimension(1); ++j)
+        for (long int j = 0; j < w.dimension(1); ++j)
         {
             std::cout << "Out Channel " << i << ", In Channel " << j << ":"
                       << std::endl;
-            for (size_t k = 0; k < w.dimension(2); ++k)
+            for (long int k = 0; k < w.dimension(2); ++k)
             {
-                for (size_t l = 0; l < w.dimension(3); ++l)
+                for (long int l = 0; l < w.dimension(3); ++l)
                 {
                     std::cout << w(i, j, k, l) << "\t";
                 }
@@ -995,19 +995,19 @@ TEST(DemucsCPPLayers, GemmConv)
     }
 
     std::cout << "b (Bias):" << std::endl;
-    for (size_t i = 0; i < b.dimension(0); ++i)
+    for (long int i = 0; i < b.dimension(0); ++i)
     {
         std::cout << b(i) << "\t";
     }
     std::cout << std::endl << std::endl; // New line after printing all biases
 
     std::cout << "y_gemm (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < y_gemm.dimension(0); ++i)
+    for (long int i = 0; i < y_gemm.dimension(0); ++i)
     {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < y_gemm.dimension(1); ++j)
+        for (long int j = 0; j < y_gemm.dimension(1); ++j)
         {
-            for (size_t k = 0; k < y_gemm.dimension(2); ++k)
+            for (long int k = 0; k < y_gemm.dimension(2); ++k)
             {
                 std::cout << y_gemm(i, j, k) << "\t";
             }
@@ -1017,12 +1017,12 @@ TEST(DemucsCPPLayers, GemmConv)
     }
 
     std::cout << "y_conv2d (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < y_conv2d.dimension(0); ++i)
+    for (long int i = 0; i < y_conv2d.dimension(0); ++i)
     {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < y_conv2d.dimension(1); ++j)
+        for (long int j = 0; j < y_conv2d.dimension(1); ++j)
         {
-            for (size_t k = 0; k < y_conv2d.dimension(2); ++k)
+            for (long int k = 0; k < y_conv2d.dimension(2); ++k)
             {
                 std::cout << y_conv2d(i, j, k) << "\t";
             }
@@ -1051,11 +1051,11 @@ TEST(DemucsCPPLayers, GemmConv2)
 
     // fill x with values
     // int counter = 0;
-    for (size_t i = 0; i < x.dimension(0); ++i)
+    for (long int i = 0; i < x.dimension(0); ++i)
     {
-        for (size_t j = 0; j < x.dimension(1); ++j)
+        for (long int j = 0; j < x.dimension(1); ++j)
         {
-            for (size_t k = 0; k < x.dimension(2); ++k)
+            for (long int k = 0; k < x.dimension(2); ++k)
             {
                 if (k % 2 == 0)
                 {
@@ -1073,13 +1073,13 @@ TEST(DemucsCPPLayers, GemmConv2)
     Eigen::Tensor4dXf w(out_channels, in_channels, kernel_height, kernel_width);
 
     int counter = 1;
-    for (size_t i = 0; i < w.dimension(0); ++i)
+    for (long int i = 0; i < w.dimension(0); ++i)
     {
-        for (size_t j = 0; j < w.dimension(1); ++j)
+        for (long int j = 0; j < w.dimension(1); ++j)
         {
-            for (size_t k = 0; k < w.dimension(2); ++k)
+            for (long int k = 0; k < w.dimension(2); ++k)
             {
-                for (size_t l = 0; l < w.dimension(3); ++l)
+                for (long int l = 0; l < w.dimension(3); ++l)
                 {
                     w(i, j, k, l) = 0.1f * ((float)counter);
                     if (j % 2 == 0)
@@ -1114,7 +1114,7 @@ TEST(DemucsCPPLayers, GemmConv2)
     Eigen::Tensor1dXf b(out_channels);
 
     // set bias to be 0.75 or -0.25 alternating
-    for (size_t i = 0; i < out_channels; ++i)
+    for (long int i = 0; i < out_channels; ++i)
     {
         b(i) = 0.0f;
         // if (i % 2 == 0)
@@ -1145,12 +1145,12 @@ TEST(DemucsCPPLayers, GemmConv2)
     std::cout << std::fixed << std::setprecision(4) << std::endl;
 
     std::cout << "x (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < x.dimension(0); ++i)
+    for (long int i = 0; i < x.dimension(0); ++i)
     {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < x.dimension(1); ++j)
+        for (long int j = 0; j < x.dimension(1); ++j)
         {
-            for (size_t k = 0; k < x.dimension(2); ++k)
+            for (long int k = 0; k < x.dimension(2); ++k)
             {
                 std::cout << x(i, j, k) << "\t";
             }
@@ -1159,15 +1159,15 @@ TEST(DemucsCPPLayers, GemmConv2)
         std::cout << std::endl; // Extra line to separate channels
     }
     std::cout << "w (Out Channel, In Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < w.dimension(0); ++i)
+    for (long int i = 0; i < w.dimension(0); ++i)
     {
-        for (size_t j = 0; j < w.dimension(1); ++j)
+        for (long int j = 0; j < w.dimension(1); ++j)
         {
             std::cout << "Out Channel " << i << ", In Channel " << j << ":"
                       << std::endl;
-            for (size_t k = 0; k < w.dimension(2); ++k)
+            for (long int k = 0; k < w.dimension(2); ++k)
             {
-                for (size_t l = 0; l < w.dimension(3); ++l)
+                for (long int l = 0; l < w.dimension(3); ++l)
                 {
                     std::cout << w(i, j, k, l) << "\t";
                 }
@@ -1178,19 +1178,19 @@ TEST(DemucsCPPLayers, GemmConv2)
     }
 
     std::cout << "b (Bias):" << std::endl;
-    for (size_t i = 0; i < b.dimension(0); ++i)
+    for (long int i = 0; i < b.dimension(0); ++i)
     {
         std::cout << b(i) << "\t";
     }
     std::cout << std::endl << std::endl; // New line after printing all biases
 
     std::cout << "y_gemm (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < y_gemm.dimension(0); ++i)
+    for (long int i = 0; i < y_gemm.dimension(0); ++i)
     {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < y_gemm.dimension(1); ++j)
+        for (long int j = 0; j < y_gemm.dimension(1); ++j)
         {
-            for (size_t k = 0; k < y_gemm.dimension(2); ++k)
+            for (long int k = 0; k < y_gemm.dimension(2); ++k)
             {
                 std::cout << y_gemm(i, j, k) << "\t";
             }
@@ -1200,12 +1200,12 @@ TEST(DemucsCPPLayers, GemmConv2)
     }
 
     std::cout << "y_conv2d (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < y_conv2d.dimension(0); ++i)
+    for (long int i = 0; i < y_conv2d.dimension(0); ++i)
     {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < y_conv2d.dimension(1); ++j)
+        for (long int j = 0; j < y_conv2d.dimension(1); ++j)
         {
-            for (size_t k = 0; k < y_conv2d.dimension(2); ++k)
+            for (long int k = 0; k < y_conv2d.dimension(2); ++k)
             {
                 std::cout << y_conv2d(i, j, k) << "\t";
             }
@@ -1234,11 +1234,11 @@ TEST(DemucsCPPLayers, GemmTrConv)
 
     // fill x with values
     // int counter = 0;
-    for (size_t i = 0; i < x.dimension(0); ++i)
+    for (long int i = 0; i < x.dimension(0); ++i)
     {
-        for (size_t j = 0; j < x.dimension(1); ++j)
+        for (long int j = 0; j < x.dimension(1); ++j)
         {
-            for (size_t k = 0; k < x.dimension(2); ++k)
+            for (long int k = 0; k < x.dimension(2); ++k)
             {
                 if (k % 2 == 0)
                 {
@@ -1256,13 +1256,13 @@ TEST(DemucsCPPLayers, GemmTrConv)
     Eigen::Tensor4dXf w(in_channels, out_channels, kernel_height, kernel_width);
 
     int counter = 1;
-    for (size_t i = 0; i < w.dimension(0); ++i)
+    for (long int i = 0; i < w.dimension(0); ++i)
     {
-        for (size_t j = 0; j < w.dimension(1); ++j)
+        for (long int j = 0; j < w.dimension(1); ++j)
         {
-            for (size_t k = 0; k < w.dimension(2); ++k)
+            for (long int k = 0; k < w.dimension(2); ++k)
             {
-                for (size_t l = 0; l < w.dimension(3); ++l)
+                for (long int l = 0; l < w.dimension(3); ++l)
                 {
                     w(i, j, k, l) = 0.1f * ((float)counter);
                     if (i % 2 == 0)
@@ -1297,7 +1297,7 @@ TEST(DemucsCPPLayers, GemmTrConv)
     Eigen::Tensor1dXf b(out_channels);
 
     // set bias to be 0.75 or -0.25 alternating
-    for (size_t i = 0; i < out_channels; ++i)
+    for (long int i = 0; i < out_channels; ++i)
     {
         b(i) = 0.0f;
         // if (i % 2 == 0)
@@ -1327,12 +1327,12 @@ TEST(DemucsCPPLayers, GemmTrConv)
     std::cout << std::fixed << std::setprecision(4) << std::endl;
 
     std::cout << "x (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < x.dimension(0); ++i)
+    for (long int i = 0; i < x.dimension(0); ++i)
     {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < x.dimension(1); ++j)
+        for (long int j = 0; j < x.dimension(1); ++j)
         {
-            for (size_t k = 0; k < x.dimension(2); ++k)
+            for (long int k = 0; k < x.dimension(2); ++k)
             {
                 std::cout << x(i, j, k) << "\t";
             }
@@ -1341,15 +1341,15 @@ TEST(DemucsCPPLayers, GemmTrConv)
         std::cout << std::endl; // Extra line to separate channels
     }
     std::cout << "w (Out Channel, In Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < w.dimension(0); ++i)
+    for (long int i = 0; i < w.dimension(0); ++i)
     {
-        for (size_t j = 0; j < w.dimension(1); ++j)
+        for (long int j = 0; j < w.dimension(1); ++j)
         {
             std::cout << "Out Channel " << i << ", In Channel " << j << ":"
                       << std::endl;
-            for (size_t k = 0; k < w.dimension(2); ++k)
+            for (long int k = 0; k < w.dimension(2); ++k)
             {
-                for (size_t l = 0; l < w.dimension(3); ++l)
+                for (long int l = 0; l < w.dimension(3); ++l)
                 {
                     std::cout << w(i, j, k, l) << "\t";
                 }
@@ -1360,19 +1360,19 @@ TEST(DemucsCPPLayers, GemmTrConv)
     }
 
     std::cout << "b (Bias):" << std::endl;
-    for (size_t i = 0; i < b.dimension(0); ++i)
+    for (long int i = 0; i < b.dimension(0); ++i)
     {
         std::cout << b(i) << "\t";
     }
     std::cout << std::endl << std::endl; // New line after printing all biases
 
     std::cout << "y_gemm (Channel, Height, Width):" << std::endl;
-    for (size_t i = 0; i < y_gemm.dimension(0); ++i)
+    for (long int i = 0; i < y_gemm.dimension(0); ++i)
     {
         std::cout << "Channel " << i << ":" << std::endl;
-        for (size_t j = 0; j < y_gemm.dimension(1); ++j)
+        for (long int j = 0; j < y_gemm.dimension(1); ++j)
         {
-            for (size_t k = 0; k < y_gemm.dimension(2); ++k)
+            for (long int k = 0; k < y_gemm.dimension(2); ++k)
             {
                 std::cout << y_gemm(i, j, k) << "\t";
             }
@@ -1380,18 +1380,6 @@ TEST(DemucsCPPLayers, GemmTrConv)
         }
         std::cout << std::endl;
     }
-
-    // std::cout << "y_conv2d (Channel, Height, Width):" << std::endl;
-    // for (size_t i = 0; i < y_conv2d.dimension(0); ++i) {
-    //     std::cout << "Channel " << i << ":" << std::endl;
-    //     for (size_t j = 0; j < y_conv2d.dimension(1); ++j) {
-    //         for (size_t k = 0; k < y_conv2d.dimension(2); ++k) {
-    //             std::cout << y_conv2d(i, j, k) << "\t";
-    //         }
-    //         std::cout << std::endl;
-    //     }
-    //     std::cout << std::endl;
-    // }
 
     // compare y_gemm and y_conv2d
     demucscppdebug::debug_tensor_3dxf(y_gemm, "y_gemm");
@@ -1795,8 +1783,9 @@ TEST(DemucsCPPLayers, CrossTransformer)
     /*************************/
     /*  CROSS-TRANSFORMER!  */
     /************************/
+    demucscpp::ProgressCallback callback = [](float progress, const std::string &msg) {};
     demucscpp::apply_crosstransformer(model, x_fake_upsampled,
-                                      xt_fake_upsampled);
+                                      xt_fake_upsampled, callback, 0.0f, 0.0f);
 
     // reshape buffers.x_3_channel_upsampled into 1, 512, 2688
     // when skipping the crosstransformer
@@ -1875,7 +1864,8 @@ TEST(DemucsCPPLayers, CrossTransformerNoUpsamp)
     /*************************/
     /*  CROSS-TRANSFORMER!  */
     /************************/
-    demucscpp::apply_crosstransformer(model, x_fake, xt_fake);
+    demucscpp::ProgressCallback callback = [](float progress, const std::string &msg) {};
+    demucscpp::apply_crosstransformer(model, x_fake, xt_fake, callback, 0.0f, 0.0f);
 
     demucscppdebug::debug_tensor_3dxf(x_fake, "x post-crosstransformer");
     demucscppdebug::debug_tensor_3dxf(xt_fake, "xt post-crosstransformer");

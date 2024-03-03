@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-static void my_fprintf(std::FILE *stream, const char *format, ...)
+static void my_fprintf(const std::FILE *stream, const char *format, ...)
 {
     char buffer[1024];
     va_list args;

@@ -5,6 +5,7 @@
 #include <Eigen/Dense>
 #include <cassert>
 #include <filesystem>
+#include <iomanip>
 #include <iostream>
 #include <libnyquist/Common.h>
 #include <libnyquist/Decoders.h>
@@ -146,13 +147,19 @@ int main(int argc, const char **argv)
     std::cout << "Starting Demucs (" << std::to_string(nb_sources)
               << "-source) inference" << std::endl;
 
-    demucscpp::ProgressCallback progressCallback = [](float progress)
-    { std::cout << "Progress: " << progress * 100 << "%\n"; };
+    // set output precision to 3 decimal places
+    std::cout << std::fixed << std::setprecision(3);
+
+    demucscpp::ProgressCallback progressCallback =
+        [](float progress, const std::string &log_message)
+    {
+        std::cout << "(" << std::setw(3) << std::setfill(' ')
+                  << progress * 100.0f << "%) " << log_message << std::endl;
+    };
 
     // create 4 audio matrix same size, to hold output
     Eigen::Tensor3dXf audio_targets =
         demucscpp::demucs_inference(model, audio, progressCallback);
-    std::cout << "returned!" << std::endl;
 
     out_targets = audio_targets;
 
@@ -203,7 +210,8 @@ int main(int argc, const char **argv)
 
         // insert target_name into the path after the digit
         // e.g. target_name_0_drums.wav
-        p_target.replace_filename("target_" + std::to_string(target) + "_" + target_name + ".wav");
+        p_target.replace_filename("target_" + std::to_string(target) + "_" +
+                                  target_name + ".wav");
 
         std::cout << "Writing wav file " << p_target << std::endl;
 

@@ -9,7 +9,6 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <random>
 #include <sstream>
@@ -52,18 +51,16 @@ static Eigen::Tensor3dXf split_inference(struct demucscpp::demucs_model &model,
                                          Eigen::MatrixXf &full_audio,
                                          demucscpp::ProgressCallback cb);
 
-static Eigen::Tensor3dXf
-segment_inference(struct demucscpp::demucs_model &model, Eigen::MatrixXf chunk,
-                  int segment_sample,
-                  struct demucscpp::demucs_segment_buffers &buffers,
-                  struct demucscpp::stft_buffers &stft_buf);
+static Eigen::Tensor3dXf segment_inference(
+    struct demucscpp::demucs_model &model, Eigen::MatrixXf chunk,
+    int segment_sample, struct demucscpp::demucs_segment_buffers &buffers,
+    struct demucscpp::stft_buffers &stft_buf, demucscpp::ProgressCallback cb,
+    float current_progress, float segment_progress);
 
 Eigen::Tensor3dXf demucscpp::demucs_inference(struct demucs_model &model,
                                               const Eigen::MatrixXf &audio,
                                               demucscpp::ProgressCallback cb)
 {
-    std::cout << std::fixed << std::setprecision(20) << std::endl;
-
     // working copy to modify
     Eigen::MatrixXf full_audio = audio;
 
@@ -84,7 +81,6 @@ Eigen::Tensor3dXf demucscpp::demucs_inference(struct demucs_model &model,
 
     full_audio = normalized_audio;
 
-    int length = full_audio.cols();
     Eigen::Tensor3dXf waveform_outputs = shift_inference(model, full_audio, cb);
 
     // now inverse the normalization in Eigen C++
@@ -123,8 +119,6 @@ static Eigen::Tensor3dXf shift_inference(struct demucscpp::demucs_model &model,
     Eigen::MatrixXf shifted_audio =
         padded_mix.block(0, offset, 2, length + max_shift - offset);
 
-    int shifted_length = shifted_audio.cols();
-
     Eigen::Tensor3dXf waveform_outputs =
         split_inference(model, shifted_audio, cb);
 
@@ -135,7 +129,8 @@ static Eigen::Tensor3dXf shift_inference(struct demucscpp::demucs_model &model,
     Eigen::Tensor3dXf trimmed_waveform_outputs =
         waveform_outputs
             .reshape(Eigen::array<int, 3>(
-                {nb_out_sources, 2, static_cast<int>(waveform_outputs.dimension(2))}))
+                {nb_out_sources, 2,
+                 static_cast<int>(waveform_outputs.dimension(2))}))
             .slice(Eigen::array<int, 3>({0, 0, max_shift - offset}),
                    Eigen::array<int, 3>({nb_out_sources, 2, length}));
 
@@ -203,8 +198,9 @@ static Eigen::Tensor3dXf split_inference(struct demucscpp::demucs_model &model,
                   << ", chunk shape: (" << chunk.rows() << ", " << chunk.cols()
                   << ")" << std::endl;
 
-        Eigen::Tensor3dXf chunk_out =
-            segment_inference(model, chunk, segment_samples, buffers, stft_buf);
+        Eigen::Tensor3dXf chunk_out = segment_inference(
+            model, chunk, segment_samples, buffers, stft_buf, cb,
+            model.inference_progress, increment_per_chunk);
 
         // add the weighted chunk to the output
         // out[..., offset:offset + segment] += (weight[:chunk_length] *
@@ -237,7 +233,6 @@ static Eigen::Tensor3dXf split_inference(struct demucscpp::demucs_model &model,
         }
 
         model.inference_progress += increment_per_chunk;
-        cb(model.inference_progress);
     }
 
     for (int i = 0; i < nb_out_sources; ++i)
@@ -253,11 +248,11 @@ static Eigen::Tensor3dXf split_inference(struct demucscpp::demucs_model &model,
     return out;
 }
 
-static Eigen::Tensor3dXf
-segment_inference(struct demucscpp::demucs_model &model, Eigen::MatrixXf chunk,
-                  int segment_samples,
-                  struct demucscpp::demucs_segment_buffers &buffers,
-                  struct demucscpp::stft_buffers &stft_buf)
+static Eigen::Tensor3dXf segment_inference(
+    struct demucscpp::demucs_model &model, Eigen::MatrixXf chunk,
+    int segment_samples, struct demucscpp::demucs_segment_buffers &buffers,
+    struct demucscpp::stft_buffers &stft_buf, demucscpp::ProgressCallback cb,
+    float current_progress, float segment_progress)
 {
     std::cout << "in segment inference!" << std::endl;
 
@@ -269,7 +264,8 @@ segment_inference(struct demucscpp::demucs_model &model, Eigen::MatrixXf chunk,
         buffers.mix, chunk, segment_samples - chunk_length);
 
     // apply demucs inference
-    demucscpp::model_inference(model, buffers, stft_buf);
+    demucscpp::model_inference(model, buffers, stft_buf, cb, current_progress,
+                               segment_progress);
 
     int nb_out_sources = model.is_4sources ? 4 : 6;
 
