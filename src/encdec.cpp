@@ -6,7 +6,7 @@
 #include <cmath>
 
 // forward declaration to apply a frequency encoder
-void demucscpp::apply_freq_encoder(struct demucscpp::demucs_model &model,
+void demucscpp::apply_freq_encoder(const struct demucscpp::demucs_model &model,
                                    int encoder_idx,
                                    const Eigen::Tensor3dXf &x_in,
                                    Eigen::Tensor3dXf &x_out)
@@ -81,7 +81,7 @@ void demucscpp::apply_freq_encoder(struct demucscpp::demucs_model &model,
 }
 
 // forward declaration to apply a time encoder
-void demucscpp::apply_time_encoder(struct demucscpp::demucs_model &model,
+void demucscpp::apply_time_encoder(const struct demucscpp::demucs_model &model,
                                    int tencoder_idx,
                                    const Eigen::Tensor3dXf &xt_in,
                                    Eigen::Tensor3dXf &xt_out)
@@ -166,7 +166,7 @@ void demucscpp::apply_time_encoder(struct demucscpp::demucs_model &model,
 }
 
 // forward declaration to apply a frequency decoder
-void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model &model,
+void demucscpp::apply_freq_decoder(const struct demucscpp::demucs_model &model,
                                    int decoder_idx,
                                    const Eigen::Tensor3dXf &x_in,
                                    Eigen::Tensor3dXf &x_out,
@@ -262,7 +262,7 @@ void demucscpp::apply_freq_decoder(struct demucscpp::demucs_model &model,
 }
 
 // forward declaration to apply a time decoder
-void demucscpp::apply_time_decoder(struct demucscpp::demucs_model &model,
+void demucscpp::apply_time_decoder(const struct demucscpp::demucs_model &model,
                                    int tdecoder_idx,
                                    const Eigen::Tensor3dXf &xt_in,
                                    Eigen::Tensor3dXf &xt_out,

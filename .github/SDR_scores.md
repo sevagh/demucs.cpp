@@ -59,3 +59,11 @@ drums           ==> SDR:  10.463  SIR:  19.782  ISR:  17.144  SAR:  11.132
 bass            ==> SDR:   4.584  SIR:   9.359  ISR:   9.068  SAR:   4.885
 other           ==> SDR:   7.426  SIR:  12.793  ISR:  12.975  SAR:   7.830
 ```
+
+### Performance of multi-threaded inference
+
+Zeno - Signs, Demucs 4s multi-threaded. This should be identical in SDR but still worth testing since multi-threaded large waveform segmentation may still impact demixing quality:
+```
+```
+
+Same strategy used by <https://freemusicdemixer.com>.

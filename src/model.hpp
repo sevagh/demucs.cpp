@@ -551,9 +551,6 @@ struct demucs_model
     Eigen::MatrixXf freq_emb_embedding_weight{Eigen::MatrixXf(512, 48)};
 
     std::unique_ptr<crosstransformer_base> crosstransformer;
-
-    float inference_progress;
-    float load_progress;
 };
 
 inline std::unique_ptr<crosstransformer_base>
@@ -660,11 +657,11 @@ const float MAX_SHIFT_SECS = 0.5;        // max shift
 const float OVERLAP = 0.25;              // overlap between segments
 const float TRANSITION_POWER = 1.0;      // transition between segments
 
-Eigen::Tensor3dXf demucs_inference(struct demucs_model &model,
+Eigen::Tensor3dXf demucs_inference(const struct demucs_model &model,
                                    const Eigen::MatrixXf &full_audio,
                                    ProgressCallback cb);
 
-void model_inference(struct demucs_model &model,
+void model_inference(const struct demucs_model &model,
                      struct demucscpp::demucs_segment_buffers &buffers,
                      struct demucscpp::stft_buffers &stft_buf,
                      ProgressCallback cb, float current_progress,
