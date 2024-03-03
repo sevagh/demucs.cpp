@@ -68,9 +68,8 @@ Optimal performance: `export OMP_NUM_THREADS=4` + 4 threads via cli args for a t
 
 This should be identical in SDR but still worth testing since multi-threaded large waveform segmentation may still impact demixing quality:
 ```
-vocals          ==> SDR:   5.136  SIR:  17.729  ISR:   9.721  SAR:   5.208
-drums           ==> SDR:   8.162  SIR:  20.325  ISR:  13.546  SAR:   9.120
-bass            ==> SDR:   4.003  SIR:  12.484  ISR:   6.928  SAR:   3.104
-other           ==> SDR:   6.015  SIR:  11.716  ISR:   8.684  SAR:   6.460
+vocals          ==> SDR:   8.317  SIR:  18.089  ISR:  15.887  SAR:   8.391
+drums           ==> SDR:   9.987  SIR:  18.579  ISR:  16.997  SAR:  10.755
+bass            ==> SDR:   4.039  SIR:  12.531  ISR:   6.822  SAR:   3.090
+other           ==> SDR:   7.405  SIR:  11.246  ISR:  14.186  SAR:   8.099
 ```
-Big impact, must be buggy.

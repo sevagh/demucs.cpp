@@ -27,7 +27,8 @@ namespace demucscppthreaded {
 
     Eigen::Tensor3dXf threaded_inference(const struct demucscpp::demucs_model &model,
                                    const Eigen::MatrixXf &full_audio,
-                                   int num_threads) {
+                                   int num_threads,
+                                   const std::string prefix = "") {
         // set output precision to 3 decimal places
         std::cout << std::fixed << std::setprecision(3);
 
@@ -35,10 +36,10 @@ namespace demucscppthreaded {
         std::vector<demucscpp::ProgressCallback> cbs;
         for (int i = 0; i < num_threads; ++i) {
             cbs.push_back(
-                [i]
+                [i, prefix]
                 (float progress, const std::string &log_message)
             {
-                std::cout << "[WORKER " << i << "] (" << std::setw(3) << std::setfill(' ')
+                std::cout << prefix << "[WORKER " << i << "] (" << std::setw(3) << std::setfill(' ')
                         << progress * 100.0f << "%) " << log_message << std::endl;
             });
         }
