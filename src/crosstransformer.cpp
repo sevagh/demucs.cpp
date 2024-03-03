@@ -76,9 +76,10 @@ static Eigen::Tensor3dXf create_sin_embedding(int length, int dim,
     return pos_emb;
 }
 
-static void my_transformer_encoder_layer(struct demucscpp::demucs_model &model,
-                                         Eigen::Tensor3dXf &x, int freq_or_time,
-                                         int weight_idx, float eps = 1e-5)
+static void
+my_transformer_encoder_layer(const struct demucscpp::demucs_model &model,
+                             Eigen::Tensor3dXf &x, int freq_or_time,
+                             int weight_idx, float eps = 1e-5)
 {
     demucscpp::common_encoder_layer(
         x, // pass x as q
@@ -135,7 +136,7 @@ static void my_transformer_encoder_layer(struct demucscpp::demucs_model &model,
 }
 
 static void
-cross_transformer_encoder_layer(struct demucscpp::demucs_model &model,
+cross_transformer_encoder_layer(const struct demucscpp::demucs_model &model,
                                 Eigen::Tensor3dXf &q,       // q = x = frequency
                                 const Eigen::Tensor3dXf &k, // k = xt = time
                                 int freq_or_time, int weight_idx,
@@ -201,12 +202,12 @@ cross_transformer_encoder_layer(struct demucscpp::demucs_model &model,
         eps);
 }
 
-void demucscpp::apply_crosstransformer(struct demucscpp::demucs_model &model,
-                                       Eigen::Tensor3dXf &x, // frequency branch
-                                       Eigen::Tensor3dXf &xt, // time branch
-                                       demucscpp::ProgressCallback cb,
-                                       float current_progress,
-                                       float segment_progress)
+void demucscpp::apply_crosstransformer(
+    const struct demucscpp::demucs_model &model,
+    Eigen::Tensor3dXf &x,  // frequency branch
+    Eigen::Tensor3dXf &xt, // time branch
+    demucscpp::ProgressCallback cb, float current_progress,
+    float segment_progress)
 {
     cb(current_progress + segment_progress * 8.0f / 26.0f,
        "Applying crosstransformer");

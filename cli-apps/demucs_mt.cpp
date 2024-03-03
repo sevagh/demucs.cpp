@@ -1,6 +1,7 @@
 #include "dsp.hpp"
 #include "model.hpp"
 #include "tensor.hpp"
+#include "threaded_inference.hpp"
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <cassert>
@@ -12,6 +13,7 @@
 #include <libnyquist/Encoders.h>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <unsupported/Eigen/FFT>
 #include <vector>
 
@@ -29,7 +31,7 @@ static Eigen::MatrixXf load_audio_file(std::string filename)
 
     if (fileData->sampleRate != demucscpp::SUPPORTED_SAMPLE_RATE)
     {
-        std::cerr << "[ERROR] demucs.cpp only supports the following sample "
+        std::cerr << "[ERROR] demucs_mt.cpp only supports the following sample "
                      "rate (Hz): "
                   << SUPPORTED_SAMPLE_RATE << std::endl;
         exit(1);
@@ -42,7 +44,7 @@ static Eigen::MatrixXf load_audio_file(std::string filename)
 
     if (fileData->channelCount != 2 && fileData->channelCount != 1)
     {
-        std::cerr << "[ERROR] demucs.cpp only supports mono and stereo audio"
+        std::cerr << "[ERROR] demucs_mt.cpp only supports mono and stereo audio"
                   << std::endl;
         exit(1);
     }
@@ -106,17 +108,18 @@ static void write_audio_file(const Eigen::MatrixXf &waveform,
 
 int main(int argc, const char **argv)
 {
-    if (argc != 4)
+    if (argc != 5)
     {
-        std::cerr << "Usage: " << argv[0] << " <model dir> <wav file> <out dir>"
+        std::cerr << "Usage: " << argv[0]
+                  << " <model file> <wav file> <out dir> <num threads>"
                   << std::endl;
         exit(1);
     }
 
-    std::cout << "demucs_ft.cpp Main (fine-tuned) driver program" << std::endl;
+    std::cout << "demucs_mt.cpp (Multi-threaded) driver program" << std::endl;
 
     // load model passed as argument
-    std::string model_dir = argv[1];
+    std::string model_file = argv[1];
 
     // load audio passed as argument
     std::string wav_file = argv[2];
@@ -124,123 +127,40 @@ int main(int argc, const char **argv)
     // output dir passed as argument
     std::string out_dir = argv[3];
 
+    // get num threads from user parameter argv[4]
+    // cast it to int
+    int num_threads = std::stoi(argv[4]);
+
     Eigen::MatrixXf audio = load_audio_file(wav_file);
     Eigen::Tensor3dXf out_targets;
 
-    // initialize nested 4 fine-tuned struct demucs_model
-    std::array<struct demucs_model, 4> models = {
-        demucs_model(), demucs_model(), demucs_model(), demucs_model()};
-
-    // iterate over all files in model_dir
-    // and load the model
-    for (const auto &entry : std::filesystem::directory_iterator(model_dir))
+    // initialize a struct demucs_model
+    struct demucs_model model
     {
-        bool ret = false;
+    };
 
-        // check if entry contains the name "htdemucs_ft_drums"
-        if (entry.path().string().find("htdemucs_ft_drums") !=
-            std::string::npos)
-        {
-            ret = load_demucs_model(entry.path().string(), &models[0]);
-            std::cout << "Loading ft model " << entry.path().string()
-                      << " for drums" << std::endl;
-        }
-        else if (entry.path().string().find("htdemucs_ft_bass") !=
-                 std::string::npos)
-        {
-            ret = load_demucs_model(entry.path().string(), &models[1]);
-            std::cout << "Loading ft model " << entry.path().string()
-                      << " for bass" << std::endl;
-        }
-        else if (entry.path().string().find("htdemucs_ft_other") !=
-                 std::string::npos)
-        {
-            ret = load_demucs_model(entry.path().string(), &models[2]);
-            std::cout << "Loading ft model " << entry.path().string()
-                      << " for other" << std::endl;
-        }
-        else if (entry.path().string().find("htdemucs_ft_vocals") !=
-                 std::string::npos)
-        {
-            ret = load_demucs_model(entry.path().string(), &models[3]);
-            std::cout << "Loading ft model " << entry.path().string()
-                      << " for vocals" << std::endl;
-        }
-        else
-        {
-            continue;
-        }
-
-        // debug some members of model
-        std::cout << "demucs_model_load returned " << (ret ? "true" : "false")
-                  << std::endl;
-        if (!ret)
-        {
-            std::cerr << "Error loading model" << std::endl;
-            exit(1);
-        }
+    // debug some members of model
+    auto ret = load_demucs_model(model_file, &model);
+    std::cout << "demucs_model_load returned " << (ret ? "true" : "false")
+              << std::endl;
+    if (!ret)
+    {
+        std::cerr << "Error loading model" << std::endl;
+        exit(1);
     }
 
-    const int nb_sources = 4;
+    int nb_sources = model.is_4sources ? 4 : 6;
 
-    std::cout << "Starting Demucs fine-tuned (" << std::to_string(nb_sources)
+    std::cout << "Starting Demucs (" << std::to_string(nb_sources)
               << "-source) inference" << std::endl;
 
-    // set output precision to 3 decimal places
-    std::cout << std::fixed << std::setprecision(3);
-
-    demucscpp::ProgressCallback progressCallback1 =
-        [](float progress, const std::string &log_message)
-    {
-        std::cout << "[DRUMS] \t(" << std::setw(3) << std::setfill(' ')
-                  << progress * 25.0f << "%) " << log_message << std::endl;
-    };
-    demucscpp::ProgressCallback progressCallback2 =
-        [](float progress, const std::string &log_message)
-    {
-        std::cout << "[BASS] \t(" << std::setw(3) << std::setfill(' ')
-                  << 25.0f + progress * 25.0f << "%) " << log_message
-                  << std::endl;
-    };
-    demucscpp::ProgressCallback progressCallback3 =
-        [](float progress, const std::string &log_message)
-    {
-        std::cout << "[OTHER] \t(" << std::setw(3) << std::setfill(' ')
-                  << 50.0f + progress * 25.0f << "%) " << log_message
-                  << std::endl;
-    };
-    demucscpp::ProgressCallback progressCallback4 =
-        [](float progress, const std::string &log_message)
-    {
-        std::cout << "[VOCALS] \t(" << std::setw(3) << std::setfill(' ')
-                  << 75.0f + progress * 25.0f << "%) " << log_message
-                  << std::endl;
-    };
-
     // create 4 audio matrix same size, to hold output
-    Eigen::Tensor3dXf drums_targets =
-        demucscpp::demucs_inference(models[0], audio, progressCallback1);
+    Eigen::Tensor3dXf audio_targets =
+        demucscppthreaded::threaded_inference(model, audio, num_threads);
 
-    Eigen::Tensor3dXf bass_targets =
-        demucscpp::demucs_inference(models[1], audio, progressCallback2);
+    out_targets = audio_targets;
 
-    Eigen::Tensor3dXf other_targets =
-        demucscpp::demucs_inference(models[2], audio, progressCallback3);
-
-    Eigen::Tensor3dXf vocals_targets =
-        demucscpp::demucs_inference(models[3], audio, progressCallback4);
-
-    out_targets = Eigen::Tensor3dXf(drums_targets.dimension(0),
-                                    drums_targets.dimension(1),
-                                    drums_targets.dimension(2));
-
-    // simply use the respective stem from each independent fine-tuned model
-    out_targets.chip<0>(0) = drums_targets.chip<0>(0);
-    out_targets.chip<0>(1) = bass_targets.chip<0>(1);
-    out_targets.chip<0>(2) = other_targets.chip<0>(2);
-    out_targets.chip<0>(3) = vocals_targets.chip<0>(3);
-
-    const int nb_out_sources = 4;
+    int nb_out_sources = model.is_4sources ? 4 : 6;
 
     for (int target = 0; target < nb_out_sources; ++target)
     {

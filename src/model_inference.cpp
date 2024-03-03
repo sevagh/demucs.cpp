@@ -46,7 +46,7 @@ static void reflect_padding(Eigen::MatrixXf &padded_mix,
 }
 
 void demucscpp::model_inference(
-    struct demucscpp::demucs_model &model,
+    const struct demucscpp::demucs_model &model,
     struct demucscpp::demucs_segment_buffers &buffers,
     struct demucscpp::stft_buffers &stft_buf, demucscpp::ProgressCallback cb,
     float current_progress, float segment_progress)

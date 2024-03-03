@@ -16,7 +16,7 @@ endif()
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -DEIGEN_FAST_MATH=0 -O0")
 
-set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -march=native -fno-unsafe-math-optimizations -fassociative-math -freciprocal-math -fno-signed-zeros")
+set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -march=native -fno-unsafe-math-optimizations -freciprocal-math -fno-signed-zeros")
 
 # define a macro NDEBUG for Eigen3 release builds
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG")
@@ -91,14 +91,24 @@ add_executable(demucs_ft.cpp.main "cli-apps/demucs_ft.cpp")
 target_include_directories(demucs_ft.cpp.main PRIVATE vendor/libnyquist/include)
 target_link_libraries(demucs_ft.cpp.main demucs.cpp.lib libnyquist)
 
-file(GLOB SOURCES_TO_LINT "src/*.cpp" "src/*.hpp" "cli-apps/*.cpp")
+add_executable(demucs_mt.cpp.main "cli-apps/demucs_mt.cpp")
+target_include_directories(demucs_mt.cpp.main PRIVATE vendor/libnyquist/include)
+target_include_directories(demucs_mt.cpp.main PRIVATE cli-apps)
+target_link_libraries(demucs_mt.cpp.main demucs.cpp.lib libnyquist)
+
+add_executable(demucs_ft_mt.cpp.main "cli-apps/demucs_ft_mt.cpp")
+target_include_directories(demucs_ft_mt.cpp.main PRIVATE vendor/libnyquist/include)
+target_include_directories(demucs_ft_mt.cpp.main PRIVATE cli-apps)
+target_link_libraries(demucs_ft_mt.cpp.main demucs.cpp.lib libnyquist)
+
+file(GLOB SOURCES_TO_LINT "src/*.cpp" "src/*.hpp" "cli-apps/*.cpp" "cli-apps/*.hpp")
 
 # add target to run standard lints and formatters
 add_custom_target(lint
     COMMAND clang-format -i ${SOURCES_TO_LINT} --style=file
     # add clang-tidy command
     # add include dirs to clang-tidy
-    COMMAND cppcheck --enable=all --suppress=missingIncludeSystem ${SOURCES_TO_LINT} --std=c++17
+    COMMAND cppcheck -I"src/" -I"cli-apps/" --enable=all --suppress=missingIncludeSystem ${SOURCES_TO_LINT} --std=c++17
     COMMAND scan-build -o ${CMAKE_BINARY_DIR}/scan-build-report make -C ${CMAKE_BINARY_DIR}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )

@@ -8,7 +8,7 @@
 namespace demucscpp
 {
 void apply_crosstransformer(
-    struct demucscpp::demucs_model &model,
+    const struct demucscpp::demucs_model &model,
     Eigen::Tensor3dXf &x,  // frequency branch
     Eigen::Tensor3dXf &xt, // time branch with leading dim (1, ...)
     ProgressCallback cb, float current_progress, float segment_progress);
