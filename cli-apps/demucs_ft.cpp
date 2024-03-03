@@ -5,6 +5,7 @@
 #include <Eigen/Dense>
 #include <cassert>
 #include <filesystem>
+#include <iomanip>
 #include <iostream>
 #include <libnyquist/Common.h>
 #include <libnyquist/Decoders.h>
@@ -107,8 +108,8 @@ int main(int argc, const char **argv)
 {
     if (argc != 4)
     {
-        std::cerr << "Usage: " << argv[0]
-                  << " <model dir> <wav file> <out dir>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <model dir> <wav file> <out dir>"
+                  << std::endl;
         exit(1);
     }
 
@@ -135,40 +136,46 @@ int main(int argc, const char **argv)
     std::string model_file;
     for (const auto &entry : std::filesystem::directory_iterator(model_dir))
     {
-        bool ret;
+        bool ret = false;
 
         // check if entry contains the name "htdemucs_ft_drums"
         if (entry.path().string().find("htdemucs_ft_drums") !=
             std::string::npos)
         {
-            ret =  load_demucs_model(entry.path().string(), &models[0]);
-            std::cout << "Loading ft model " << entry.path().string() << " for drums" << std::endl;
-        } else if (entry.path().string().find("htdemucs_ft_bass") !=
-            std::string::npos)
+            ret = load_demucs_model(entry.path().string(), &models[0]);
+            std::cout << "Loading ft model " << entry.path().string()
+                      << " for drums" << std::endl;
+        }
+        else if (entry.path().string().find("htdemucs_ft_bass") !=
+                 std::string::npos)
         {
-            ret =  load_demucs_model(entry.path().string(), &models[1]);
-            std::cout << "Loading ft model " << entry.path().string() << " for bass" << std::endl;
-        } else if (entry.path().string().find("htdemucs_ft_other") !=
-            std::string::npos)
+            ret = load_demucs_model(entry.path().string(), &models[1]);
+            std::cout << "Loading ft model " << entry.path().string()
+                      << " for bass" << std::endl;
+        }
+        else if (entry.path().string().find("htdemucs_ft_other") !=
+                 std::string::npos)
         {
-            ret =  load_demucs_model(entry.path().string(), &models[2]);
-            std::cout << "Loading ft model " << entry.path().string() << " for other" << std::endl;
-        } else if (entry.path().string().find("htdemucs_ft_vocals") !=
-            std::string::npos)
+            ret = load_demucs_model(entry.path().string(), &models[2]);
+            std::cout << "Loading ft model " << entry.path().string()
+                      << " for other" << std::endl;
+        }
+        else if (entry.path().string().find("htdemucs_ft_vocals") !=
+                 std::string::npos)
         {
-            ret =  load_demucs_model(entry.path().string(), &models[3]);
-            std::cout << "Loading ft model " << entry.path().string() << " for vocals" << std::endl;
+            ret = load_demucs_model(entry.path().string(), &models[3]);
+            std::cout << "Loading ft model " << entry.path().string()
+                      << " for vocals" << std::endl;
         }
 
         // debug some members of model
         std::cout << "demucs_model_load returned " << (ret ? "true" : "false")
-                << std::endl;
+                  << std::endl;
         if (!ret)
         {
             std::cerr << "Error loading model" << std::endl;
             exit(1);
         }
-
     }
 
     const int nb_sources = 4;
@@ -176,22 +183,53 @@ int main(int argc, const char **argv)
     std::cout << "Starting Demucs fine-tuned (" << std::to_string(nb_sources)
               << "-source) inference" << std::endl;
 
-    demucscpp::ProgressCallback progressCallback = [](float progress)
-    { std::cout << "Progress: " << progress * 100 << "%\n"; };
+    // set output precision to 3 decimal places
+    std::cout << std::fixed << std::setprecision(3);
+
+    demucscpp::ProgressCallback progressCallback1 =
+        [](float progress, const std::string &log_message)
+    {
+        std::cout << "[DRUMS] \t(" << std::setw(3) << std::setfill(' ')
+                  << progress * 25.0f << "%) " << log_message << std::endl;
+    };
+    demucscpp::ProgressCallback progressCallback2 =
+        [](float progress, const std::string &log_message)
+    {
+        std::cout << "[BASS] \t(" << std::setw(3) << std::setfill(' ')
+                  << 25.0f + progress * 25.0f << "%) " << log_message
+                  << std::endl;
+    };
+    demucscpp::ProgressCallback progressCallback3 =
+        [](float progress, const std::string &log_message)
+    {
+        std::cout << "[OTHER] \t(" << std::setw(3) << std::setfill(' ')
+                  << 50.0f + progress * 25.0f << "%) " << log_message
+                  << std::endl;
+    };
+    demucscpp::ProgressCallback progressCallback4 =
+        [](float progress, const std::string &log_message)
+    {
+        std::cout << "[VOCALS] \t(" << std::setw(3) << std::setfill(' ')
+                  << 75.0f + progress * 25.0f << "%) " << log_message
+                  << std::endl;
+    };
 
     // create 4 audio matrix same size, to hold output
     Eigen::Tensor3dXf drums_targets =
-        demucscpp::demucs_inference(models[0], audio, progressCallback);
+        demucscpp::demucs_inference(models[0], audio, progressCallback1);
+
     Eigen::Tensor3dXf bass_targets =
-        demucscpp::demucs_inference(models[1], audio, progressCallback);
+        demucscpp::demucs_inference(models[1], audio, progressCallback2);
+
     Eigen::Tensor3dXf other_targets =
-        demucscpp::demucs_inference(models[2], audio, progressCallback);
+        demucscpp::demucs_inference(models[2], audio, progressCallback3);
+
     Eigen::Tensor3dXf vocals_targets =
-        demucscpp::demucs_inference(models[3], audio, progressCallback);
+        demucscpp::demucs_inference(models[3], audio, progressCallback4);
 
     out_targets = Eigen::Tensor3dXf(drums_targets.dimension(0),
-                                     drums_targets.dimension(1),
-                                     drums_targets.dimension(2));
+                                    drums_targets.dimension(1),
+                                    drums_targets.dimension(2));
 
     // simply use the respective stem from each independent fine-tuned model
     out_targets.chip<0>(0) = drums_targets.chip<0>(0);
@@ -246,7 +284,8 @@ int main(int argc, const char **argv)
 
         // insert target_name into the path after the digit
         // e.g. target_name_0_drums.wav
-        p_target.replace_filename("target_" + std::to_string(target) + "_" + target_name + ".wav");
+        p_target.replace_filename("target_" + std::to_string(target) + "_" +
+                                  target_name + ".wav");
 
         std::cout << "Writing wav file " << p_target << std::endl;
 

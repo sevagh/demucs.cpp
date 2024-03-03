@@ -29,7 +29,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # compile vendored submodule libnyquist
-set(LIBNYQUIST_BUILD_EXAMPLE OFF CACHE BOOL "Disable libnyquist example")
+set(LIBNYQUIST_BUILD_EXAMPLE OFF CACHE BOOL "Disable libnyquist example" FORCE)
 add_subdirectory(vendor/libnyquist)
 
 # add library Eigen3
@@ -90,7 +90,7 @@ target_link_libraries(demucs.cpp.main demucs.cpp.lib)
 add_executable(demucs_ft.cpp.main "cli-apps/demucs_ft.cpp")
 target_link_libraries(demucs_ft.cpp.main demucs.cpp.lib)
 
-file(GLOB SOURCES_TO_LINT "src/*.cpp" "src/*.hpp" "demucs.cpp" "test/*.cpp")
+file(GLOB SOURCES_TO_LINT "src/*.cpp" "src/*.hpp" "cli-apps/*.cpp")
 
 # add target to run standard lints and formatters
 add_custom_target(lint
@@ -103,6 +103,10 @@ add_custom_target(lint
 )
 
 # add target to run cpp tests in test/ directory with gtest
+
+# get gtest from vendor/googletest
+set(BUILD_GMOCK OFF CACHE BOOL "Disable gmock in googletest" FORCE)
+add_subdirectory(vendor/googletest)
 
 # include test/*.cpp as test files
 file(GLOB TEST_SOURCES "test/*.cpp")
