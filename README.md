@@ -2,15 +2,17 @@
 
 C++17 implementation of the [Demucs v4 hybrid transformer](https://github.com/facebookresearch/demucs), a PyTorch neural network for music demixing. Similar project to [umx.cpp](https://github.com/sevagh/umx.cpp). This code powers my site <https://freemusicdemixer.com>.
 
-It uses [libnyquist](https://github.com/ddiakopoulos/libnyquist) to load audio files, the [ggml](https://github.com/ggerganov/ggml) file format to serialize the PyTorch weights of `htdemucs`, `htdemucs_6s`, and `htdemucs_ft` (4-source, 6-source, fine-tuned) to a binary file format, and [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) (+ OpenMP) to implement the inference.
+It uses [libnyquist](https://github.com/ddiakopoulos/libnyquist) to load audio files, the [ggml](https://github.com/ggerganov/ggml) file format to serialize the PyTorch weights of `htdemucs`, `htdemucs_6s`, and `htdemucs_ft` (4-source, 6-source, fine-tuned) to a binary file format, and [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) (+ OpenMP) to implement the inference. There are also programs for multi-threaded Demucs inference using C++11's `std::thread`.
 
 **All Hybrid-Transformer weights** (4-source, 6-source, fine-tuned) are supported. See the [Convert weights](#convert-weights) section below. Demixing quality is nearly identical to PyTorch as shown in the [SDR scores doc](./.github/SDR_scores.md).
 
 ### Directory structure
 
-`src` contains the library for Demucs inference, and `cli-apps` contains two driver programs, which compile to:
+`src` contains the library for Demucs inference, and `cli-apps` contains four driver programs, which compile to:
 1. `demucs.cpp.main`: run a single model (4s, 6s, or a single fine-tuned model)
-2. `demucs_ft.cpp.main`: run all 4 fine-tuned models for `htdemucs_ft` inference, same as the BagOfModels idea of PyTorch Demucs
+1. `demucs_ft.cpp.main`: run all four fine-tuned models for `htdemucs_ft` inference, same as the BagOfModels idea of PyTorch Demucs
+1. `demucs_mt.cpp.main`: run a single model, multi-threaded
+1. `demucs_ft_mt.cpp.main`: run all four fine-tuned models, multi-threaded
 
 ### Multi-core, OpenMP, BLAS, etc.
 
@@ -21,7 +23,7 @@ If you have OpenMP and OpenBLAS installed, OpenBLAS might automatically use all 
 
 See the [BLAS benchmarks doc](./.github/BLAS_benchmarks.md) for more details.
 
-### Multi-threaded Demucs
+### Multi-threading
 
 There are two new programs, `demucs_mt.cpp.main` and `demucs_ft_mt.cpp.main` that use C++11 [std::threads](https://en.cppreference.com/w/cpp/thread/thread).
 
