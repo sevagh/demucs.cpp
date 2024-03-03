@@ -76,6 +76,10 @@ other           ==> SDR:   7.405  SIR:  11.246  ISR:  14.186  SAR:   8.099
 
 Multi-threaded fine-tuned:
 ```
+vocals          ==> SDR:   8.636  SIR:  18.914  ISR:  16.525  SAR:   8.678
+drums           ==> SDR:  10.509  SIR:  19.882  ISR:  17.154  SAR:  11.095
+bass            ==> SDR:   4.683  SIR:   9.565  ISR:   9.077  SAR:   4.806
+other           ==> SDR:   7.374  SIR:  12.824  ISR:  12.938  SAR:   7.878
 ```
 
 ### Time measurements
