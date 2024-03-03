@@ -73,3 +73,39 @@ drums           ==> SDR:   9.987  SIR:  18.579  ISR:  16.997  SAR:  10.755
 bass            ==> SDR:   4.039  SIR:  12.531  ISR:   6.822  SAR:   3.090
 other           ==> SDR:   7.405  SIR:  11.246  ISR:  14.186  SAR:   8.099
 ```
+
+Multi-threaded fine-tuned:
+```
+```
+
+### Time measurements
+
+Regular, big threads = 1, OMP threads = 16:
+```
+real    10m23.201s
+user    29m42.190s
+sys     4m17.248s
+```
+
+Fine-tuned, big threads = 1, OMP threads = 16: probably 4x the above, since it's just tautologically 4 Demucs models.
+
+Mt, big threads = 4, OMP threads = 4 (4x4 = 16):
+```
+real    4m9.331s
+user    18m59.731s
+sys     3m28.465s
+```
+
+Ft Mt, big threads = 4, OMP threads = 4 (4x4 = 16):
+```
+real    16m30.252s
+user    74m27.250s
+sys     14m40.643s
+```
+
+Mt, big threads = 8, OMP threads = 16:
+```
+real    4m9.304s
+user    43m21.830s
+sys     10m15.712s
+```

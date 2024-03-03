@@ -101,14 +101,14 @@ target_include_directories(demucs_ft_mt.cpp.main PRIVATE vendor/libnyquist/inclu
 target_include_directories(demucs_ft_mt.cpp.main PRIVATE cli-apps)
 target_link_libraries(demucs_ft_mt.cpp.main demucs.cpp.lib libnyquist)
 
-file(GLOB SOURCES_TO_LINT "src/*.cpp" "src/*.hpp" "cli-apps/*.cpp")
+file(GLOB SOURCES_TO_LINT "src/*.cpp" "src/*.hpp" "cli-apps/*.cpp" "cli-apps/*.hpp")
 
 # add target to run standard lints and formatters
 add_custom_target(lint
     COMMAND clang-format -i ${SOURCES_TO_LINT} --style=file
     # add clang-tidy command
     # add include dirs to clang-tidy
-    COMMAND cppcheck --enable=all --suppress=missingIncludeSystem ${SOURCES_TO_LINT} --std=c++17
+    COMMAND cppcheck -I"src/" -I"cli-apps/" --enable=all --suppress=missingIncludeSystem ${SOURCES_TO_LINT} --std=c++17
     COMMAND scan-build -o ${CMAKE_BINARY_DIR}/scan-build-report make -C ${CMAKE_BINARY_DIR}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )

@@ -11,8 +11,9 @@
 namespace demucscpp
 {
 
-void apply_dconv(const struct demucscpp::demucs_model &model, Eigen::Tensor3dXf &y,
-                 int freq_idx, int encdec_idx, int layer_idx, int mid_crop);
+void apply_dconv(const struct demucscpp::demucs_model &model,
+                 Eigen::Tensor3dXf &y, int freq_idx, int encdec_idx,
+                 int layer_idx, int mid_crop);
 
 // used for implementing both self-attention and cross-attention
 // let's not modify the second argument

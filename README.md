@@ -21,6 +21,39 @@ If you have OpenMP and OpenBLAS installed, OpenBLAS might automatically use all 
 
 See the [BLAS benchmarks doc](./.github/BLAS_benchmarks.md) for more details.
 
+### Multi-threaded Demucs
+
+There are two new programs, `demucs_mt.cpp.main` and `demucs_ft_mt.cpp.main` that use C++11 [std::threads](https://en.cppreference.com/w/cpp/thread/thread).
+
+In the single-threaded programs:
+
+* User supplies a waveform of length N seconds
+* Waveform is split into 7.8-second segments for Demucs inference
+* Segments are processed sequentially, where each segment inference can use >1 core with `OMP_NUM_THREADS`
+
+In the multi-threaded programs:
+* User supplies a waveform of length N seconds and a `num-threads` argument
+* Waveform is split into N sub-waveforms to process in parallel (with a 0.75-second overlap)
+* N threads are launched to perform Demucs inference on the N sub-waveforms in parallel
+* Within each thread, the sub-waveform is split into 7.8-second segments
+* Segments within a thread are still processed sequentially, where each segment inference can use >1 core with `OMP_NUM_THREADS`
+
+For the single-threaded `demucs.cpp.main`, my suggestion is `OMP_NUM_THREADS=$num_physical_cores`. On my 5950X system with 16 cores, execution time for a 4-minute song:
+```
+real    10m23.201s
+user    29m42.190s
+sys     4m17.248s
+```
+
+For the multi-threaded `demucs_mt.cpp.main`, using 4 `std::thread` and OMP threads = 4 (4x4 = 16 physical cores):
+```
+real    4m9.331s
+user    18m59.731s
+sys     3m28.465s
+```
+
+More than 2x faster for 4 threads. This is inspired by the parallelism strategy used in <https://freemusicdemixer.com>.
+
 ## Instructions
 
 ### Build C++ code

@@ -1,6 +1,7 @@
 #include "dsp.hpp"
 #include "model.hpp"
 #include "tensor.hpp"
+#include "threaded_inference.hpp"
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <cassert>
@@ -12,10 +13,9 @@
 #include <libnyquist/Encoders.h>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <unsupported/Eigen/FFT>
 #include <vector>
-#include <thread>
-#include "threaded_inference.hpp"
 
 using namespace demucscpp;
 using namespace nqr;
@@ -111,7 +111,8 @@ int main(int argc, const char **argv)
     if (argc != 5)
     {
         std::cerr << "Usage: " << argv[0]
-                  << " <model file> <wav file> <out dir> <num threads>" << std::endl;
+                  << " <model file> <wav file> <out dir> <num threads>"
+                  << std::endl;
         exit(1);
     }
 

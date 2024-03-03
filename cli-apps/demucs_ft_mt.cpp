@@ -1,6 +1,7 @@
 #include "dsp.hpp"
 #include "model.hpp"
 #include "tensor.hpp"
+#include "threaded_inference.hpp"
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <cassert>
@@ -12,10 +13,9 @@
 #include <libnyquist/Encoders.h>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <unsupported/Eigen/FFT>
 #include <vector>
-#include <thread>
-#include "threaded_inference.hpp"
 
 using namespace demucscpp;
 using namespace nqr;
@@ -108,14 +108,16 @@ static void write_audio_file(const Eigen::MatrixXf &waveform,
 
 int main(int argc, const char **argv)
 {
-    if (argc != 4)
+    if (argc != 5)
     {
-        std::cerr << "Usage: " << argv[0] << " <model dir> <wav file> <out dir> <num threads>"
+        std::cerr << "Usage: " << argv[0]
+                  << " <model dir> <wav file> <out dir> <num threads>"
                   << std::endl;
         exit(1);
     }
 
-    std::cout << "demucs_ft_mt.cpp (Multi-threaded Fine-tuned) driver program" << std::endl;
+    std::cout << "demucs_ft_mt.cpp (Multi-threaded Fine-tuned) driver program"
+              << std::endl;
 
     // load model passed as argument
     std::string model_dir = argv[1];
@@ -139,7 +141,6 @@ int main(int argc, const char **argv)
 
     // iterate over all files in model_dir
     // and load the model
-    std::string model_file;
     for (const auto &entry : std::filesystem::directory_iterator(model_dir))
     {
         bool ret = false;
@@ -173,6 +174,10 @@ int main(int argc, const char **argv)
             std::cout << "Loading ft model " << entry.path().string()
                       << " for vocals" << std::endl;
         }
+        else
+        {
+            continue;
+        }
 
         // debug some members of model
         std::cout << "demucs_model_load returned " << (ret ? "true" : "false")
@@ -190,17 +195,17 @@ int main(int argc, const char **argv)
               << "-source) inference" << std::endl;
 
     // create 4 audio matrix same size, to hold output
-    Eigen::Tensor3dXf drums_targets =
-        demucscppthreaded::threaded_inference(models[0], audio, num_threads, "DRUMS\t ");
+    Eigen::Tensor3dXf drums_targets = demucscppthreaded::threaded_inference(
+        models[0], audio, num_threads, "DRUMS\t ");
 
-    Eigen::Tensor3dXf bass_targets =
-        demucscppthreaded::threaded_inference(models[1], audio, num_threads, "BASS\t ");
+    Eigen::Tensor3dXf bass_targets = demucscppthreaded::threaded_inference(
+        models[1], audio, num_threads, "BASS\t ");
 
-    Eigen::Tensor3dXf other_targets =
-        demucscppthreaded::threaded_inference(models[2], audio, num_threads, "OTHER\t ");
+    Eigen::Tensor3dXf other_targets = demucscppthreaded::threaded_inference(
+        models[2], audio, num_threads, "OTHER\t ");
 
-    Eigen::Tensor3dXf vocals_targets =
-        demucscppthreaded::threaded_inference(models[3], audio, num_threads, "VOCALS\t ");
+    Eigen::Tensor3dXf vocals_targets = demucscppthreaded::threaded_inference(
+        models[3], audio, num_threads, "VOCALS\t ");
 
     out_targets = Eigen::Tensor3dXf(drums_targets.dimension(0),
                                     drums_targets.dimension(1),

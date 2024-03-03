@@ -43,13 +43,13 @@ symmetric_zero_padding(Eigen::MatrixXf &padded, const Eigen::MatrixXf &original,
 }
 
 // forward declaration of inner fns
-static Eigen::Tensor3dXf shift_inference(const struct demucscpp::demucs_model &model,
-                                         Eigen::MatrixXf &full_audio,
-                                         demucscpp::ProgressCallback cb);
+static Eigen::Tensor3dXf
+shift_inference(const struct demucscpp::demucs_model &model,
+                Eigen::MatrixXf &full_audio, demucscpp::ProgressCallback cb);
 
-static Eigen::Tensor3dXf split_inference(const struct demucscpp::demucs_model &model,
-                                         Eigen::MatrixXf &full_audio,
-                                         demucscpp::ProgressCallback cb);
+static Eigen::Tensor3dXf
+split_inference(const struct demucscpp::demucs_model &model,
+                Eigen::MatrixXf &full_audio, demucscpp::ProgressCallback cb);
 
 static Eigen::Tensor3dXf segment_inference(
     const struct demucscpp::demucs_model &model, Eigen::MatrixXf chunk,
@@ -90,9 +90,9 @@ Eigen::Tensor3dXf demucscpp::demucs_inference(const struct demucs_model &model,
     return waveform_outputs;
 }
 
-static Eigen::Tensor3dXf shift_inference(const struct demucscpp::demucs_model &model,
-                                         Eigen::MatrixXf &full_audio,
-                                         demucscpp::ProgressCallback cb)
+static Eigen::Tensor3dXf
+shift_inference(const struct demucscpp::demucs_model &model,
+                Eigen::MatrixXf &full_audio, demucscpp::ProgressCallback cb)
 {
     // first, apply shifts for time invariance
     // we simply only support shift=1, the demucs default
@@ -137,9 +137,9 @@ static Eigen::Tensor3dXf shift_inference(const struct demucscpp::demucs_model &m
     return trimmed_waveform_outputs;
 }
 
-static Eigen::Tensor3dXf split_inference(const struct demucscpp::demucs_model &model,
-                                         Eigen::MatrixXf &full_audio,
-                                         demucscpp::ProgressCallback cb)
+static Eigen::Tensor3dXf
+split_inference(const struct demucscpp::demucs_model &model,
+                Eigen::MatrixXf &full_audio, demucscpp::ProgressCallback cb)
 {
     // calculate segment in samples
     int segment_samples =
@@ -197,9 +197,9 @@ static Eigen::Tensor3dXf split_inference(const struct demucscpp::demucs_model &m
                   << ", chunk shape: (" << chunk.rows() << ", " << chunk.cols()
                   << ")" << std::endl;
 
-        Eigen::Tensor3dXf chunk_out = segment_inference(
-            model, chunk, segment_samples, buffers, stft_buf, cb,
-            inference_progress, increment_per_chunk);
+        Eigen::Tensor3dXf chunk_out =
+            segment_inference(model, chunk, segment_samples, buffers, stft_buf,
+                              cb, inference_progress, increment_per_chunk);
 
         // add the weighted chunk to the output
         // out[..., offset:offset + segment] += (weight[:chunk_length] *

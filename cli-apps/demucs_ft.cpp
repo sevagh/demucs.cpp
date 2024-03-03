@@ -133,7 +133,6 @@ int main(int argc, const char **argv)
 
     // iterate over all files in model_dir
     // and load the model
-    std::string model_file;
     for (const auto &entry : std::filesystem::directory_iterator(model_dir))
     {
         bool ret = false;
@@ -166,6 +165,10 @@ int main(int argc, const char **argv)
             ret = load_demucs_model(entry.path().string(), &models[3]);
             std::cout << "Loading ft model " << entry.path().string()
                       << " for vocals" << std::endl;
+        }
+        else
+        {
+            continue;
         }
 
         // debug some members of model
