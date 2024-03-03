@@ -48,22 +48,32 @@ namespace demucscppthreaded {
         int segment_length = ::ceilf((float)total_length / (float)num_threads);
 
         std::vector<Eigen::MatrixXf> segments;
-
         // split the full audio into segments
         for (int i = 0; i < num_threads; ++i) {
             int start = i * segment_length;
             int end = std::min(total_length, start + segment_length);
-            int padded_start = std::max(0, start - OVERLAP_SAMPLES);
-            int padded_end = std::min(total_length, end + OVERLAP_SAMPLES);
-
-            // Adjust the start and end to include overlap, ensuring we don't go out of bounds
-            int segment_size = padded_end - padded_start;
 
             // Create a new segment with padding for overlap
-            Eigen::MatrixXf segment = Eigen::MatrixXf::Zero(2, segment_size);
+            Eigen::MatrixXf segment = Eigen::MatrixXf::Zero(2, end - start + 2 * OVERLAP_SAMPLES);
 
-            // Copy the relevant portion of the full_audio into this segment, considering stereo channels
-            segment.block(0, 0, 2, segment_size) = full_audio.block(0, padded_start, 2, segment_size);
+            // Overlap-padding for the left and right channels
+            // For the first segment, no padding at the start
+            if (i == 0) {
+                segment.block(0, 0, 2, OVERLAP_SAMPLES).colwise() = full_audio.col(0);
+            } else {
+                segment.block(0, 0, 2, OVERLAP_SAMPLES) = full_audio.block(0, start - OVERLAP_SAMPLES, 2, OVERLAP_SAMPLES);
+            }
+
+            // For the last segment, no padding at the end
+            if (i == num_threads - 1) {
+                int remaining_samples = total_length - end;
+                segment.block(0, end - start + OVERLAP_SAMPLES, 2, remaining_samples) = full_audio.block(0, end, 2, remaining_samples);
+            } else {
+                segment.block(0, end - start + OVERLAP_SAMPLES, 2, OVERLAP_SAMPLES) = full_audio.block(0, end, 2, OVERLAP_SAMPLES);
+            }
+
+            // Assign the original segment data
+            segment.block(0, OVERLAP_SAMPLES, 2, end - start) = full_audio.block(0, start, 2, end - start);
             segments.push_back(segment);
         }
 
@@ -102,36 +112,19 @@ namespace demucscppthreaded {
 
         Eigen::VectorXf sum_weight = Eigen::VectorXf::Zero(total_length);
 
-        //for (size_t i = 0; i < segment_outs.size(); ++i) {
-        //    int start = i * (segment_length - OVERLAP_SAMPLES);
-
-        //    for (int t = 0; t < 4; ++t) { // assuming 4 targets
-        //        for (int ch = 0; ch < 2; ++ch) { // stereo channels
-        //            for (int j = OVERLAP_SAMPLES; j < segment_length + OVERLAP_SAMPLES; ++j) {
-        //                int idx = start + j - OVERLAP_SAMPLES;
-        //                if (idx >= 0 && idx < total_length) {
-        //                    float weight = ramp(j - OVERLAP_SAMPLES);
-        //                    final_output(t, ch, idx) += segment_outs[i](t, ch, j) * weight;
-        //                    sum_weight(idx) += weight;
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
-
         for (size_t i = 0; i < segment_outs.size(); ++i) {
-            int segment_start = i * segment_length - i * OVERLAP_SAMPLES; // Corrected start index calculation for overlap
+            int segment_start = i * segment_length;
             for (int t = 0; t < 4; ++t) { // For each target
                 for (int ch = 0; ch < 2; ++ch) { // For each channel
-                    for (int j = 0; j < segment_length + 2 * OVERLAP_SAMPLES; ++j) { // Apply ramp across segment including overlaps
-                        int global_idx = segment_start + j - OVERLAP_SAMPLES; // Global index in the final output
+                    for (int j = 0; j < segment_length + 2 * OVERLAP_SAMPLES; ++j) {
+                        int global_idx = segment_start + j - OVERLAP_SAMPLES;
                         if (global_idx >= 0 && global_idx < total_length) {
-                            float weight = 1.0; // Default weight
+                            float weight = 1.0;
                             // Apply ramp weights at the beginning and end of the segment
-                            if (j < OVERLAP_SAMPLES) { // Start ramp
-                                weight = ramp(j); // Ascending part of the ramp
-                            } else if (j >= segment_length) { // End ramp
-                                weight = ramp(segment_length + 2 * OVERLAP_SAMPLES - j - 1); // Descending part of the ramp
+                            if (j < OVERLAP_SAMPLES) {
+                                weight = ramp(j);
+                            } else if (j >= segment_length) {
+                                weight = ramp(segment_length + 2 * OVERLAP_SAMPLES - j - 1);
                             }
                             final_output(t, ch, global_idx) += segment_outs[i](t, ch, j) * weight;
                             sum_weight(global_idx) += weight;
@@ -141,14 +134,13 @@ namespace demucscppthreaded {
             }
         }
 
-
         // Normalize the output by the sum of weights
         for (int t = 0; t < 4; ++t) {
             for (int ch = 0; ch < 2; ++ch) {
                 for (int i = 0; i < total_length; ++i) {
                     if (sum_weight(i) > 0) {
                         // account for summing per-target by dividing by n targets, 2 channels
-                        final_output(t, ch, i) /= (sum_weight(i)/8.0f);
+                        final_output(t, ch, i) /= (sum_weight(i)/(2.0f * 4.0f));
                     }
                 }
             }

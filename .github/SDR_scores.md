@@ -62,8 +62,15 @@ other           ==> SDR:   7.426  SIR:  12.793  ISR:  12.975  SAR:   7.830
 
 ### Performance of multi-threaded inference
 
-Zeno - Signs, Demucs 4s multi-threaded. This should be identical in SDR but still worth testing since multi-threaded large waveform segmentation may still impact demixing quality:
-```
-```
+Zeno - Signs, Demucs 4s multi-threaded using the same strategy used in <https://freemusicdemixer.com>.
 
-Same strategy used by <https://freemusicdemixer.com>.
+Optimal performance: `export OMP_NUM_THREADS=4` + 4 threads via cli args for a total of 16 physical cores on my 5950X.
+
+This should be identical in SDR but still worth testing since multi-threaded large waveform segmentation may still impact demixing quality:
+```
+vocals          ==> SDR:   5.136  SIR:  17.729  ISR:   9.721  SAR:   5.208
+drums           ==> SDR:   8.162  SIR:  20.325  ISR:  13.546  SAR:   9.120
+bass            ==> SDR:   4.003  SIR:  12.484  ISR:   6.928  SAR:   3.104
+other           ==> SDR:   6.015  SIR:  11.716  ISR:   8.684  SAR:   6.460
+```
+Big impact, must be buggy.
