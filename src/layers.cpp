@@ -147,7 +147,7 @@ Eigen::Tensor3dXf demucscpp::layer_norm(const Eigen::Tensor3dXf &x,
     return y_out;
 }
 
-void demucscpp::apply_dconv(struct demucscpp::demucs_model &model,
+void demucscpp::apply_dconv(const struct demucscpp::demucs_model &model,
                             Eigen::Tensor3dXf &y, int freq_idx, int encdec_idx,
                             int layer_idx, int mid_crop)
 {
@@ -410,9 +410,7 @@ void demucscpp::common_encoder_layer(
     int T = q.dimension(1);
     int C = q.dimension(2);
 
-    int B_k = k.dimension(0);
     int S = k.dimension(1);
-    int C_k = k.dimension(2);
 
     // Reshape q, k to 2D matrix of dimensions (T*B, C)
 

@@ -59,3 +59,57 @@ drums           ==> SDR:  10.463  SIR:  19.782  ISR:  17.144  SAR:  11.132
 bass            ==> SDR:   4.584  SIR:   9.359  ISR:   9.068  SAR:   4.885
 other           ==> SDR:   7.426  SIR:  12.793  ISR:  12.975  SAR:   7.830
 ```
+
+### Performance of multi-threaded inference
+
+Zeno - Signs, Demucs 4s multi-threaded using the same strategy used in <https://freemusicdemixer.com>.
+
+Optimal performance: `export OMP_NUM_THREADS=4` + 4 threads via cli args for a total of 16 physical cores on my 5950X.
+
+This should be identical in SDR but still worth testing since multi-threaded large waveform segmentation may still impact demixing quality:
+```
+vocals          ==> SDR:   8.317  SIR:  18.089  ISR:  15.887  SAR:   8.391
+drums           ==> SDR:   9.987  SIR:  18.579  ISR:  16.997  SAR:  10.755
+bass            ==> SDR:   4.039  SIR:  12.531  ISR:   6.822  SAR:   3.090
+other           ==> SDR:   7.405  SIR:  11.246  ISR:  14.186  SAR:   8.099
+```
+
+Multi-threaded fine-tuned:
+```
+vocals          ==> SDR:   8.636  SIR:  18.914  ISR:  16.525  SAR:   8.678
+drums           ==> SDR:  10.509  SIR:  19.882  ISR:  17.154  SAR:  11.095
+bass            ==> SDR:   4.683  SIR:   9.565  ISR:   9.077  SAR:   4.806
+other           ==> SDR:   7.374  SIR:  12.824  ISR:  12.938  SAR:   7.878
+```
+
+### Time measurements
+
+Regular, big threads = 1, OMP threads = 16:
+```
+real    10m23.201s
+user    29m42.190s
+sys     4m17.248s
+```
+
+Fine-tuned, big threads = 1, OMP threads = 16: probably 4x the above, since it's just tautologically 4 Demucs models.
+
+Mt, big threads = 4, OMP threads = 4 (4x4 = 16):
+```
+real    4m9.331s
+user    18m59.731s
+sys     3m28.465s
+```
+
+Ft Mt, big threads = 4, OMP threads = 4 (4x4 = 16):
+```
+real    16m30.252s
+user    74m27.250s
+sys     14m40.643s
+```
+
+Mt, big threads = 8, OMP threads = 16:
+```
+real    4m9.304s
+user    43m21.830s
+sys     10m15.712s
+```

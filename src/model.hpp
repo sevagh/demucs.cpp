@@ -14,7 +14,7 @@ namespace demucscpp
 {
 
 // Define a type for your callback function
-using ProgressCallback = std::function<void(float)>;
+using ProgressCallback = std::function<void(float, const std::string &)>;
 
 const int FREQ_BRANCH_LEN = 336;
 const int TIME_BRANCH_LEN_IN = 343980;
@@ -551,9 +551,6 @@ struct demucs_model
     Eigen::MatrixXf freq_emb_embedding_weight{Eigen::MatrixXf(512, 48)};
 
     std::unique_ptr<crosstransformer_base> crosstransformer;
-
-    float inference_progress;
-    float load_progress;
 };
 
 inline std::unique_ptr<crosstransformer_base>
@@ -648,19 +645,7 @@ struct demucs_segment_buffers
           savedt_0(1, 48, TIME_BRANCH_LEN_0),
           savedt_1(1, 96, TIME_BRANCH_LEN_1),
           savedt_2(1, 192, TIME_BRANCH_LEN_2),
-          savedt_3(1, 384, TIME_BRANCH_LEN_3)
-    {
-        std::cout << "segment_samples: " << segment_samples << std::endl;
-        std::cout << "padded segment_samples: " << padded_segment_samples
-                  << std::endl;
-        std::cout << "pad_begin: " << pad << std::endl;
-        std::cout << "pad_end: " << pad_end << std::endl;
-        std::cout << "le: " << le << std::endl;
-
-        std::cout << "pad: " << pad
-                  << " plus le * FFT_HOP_SIZE: " << le * FFT_HOP_SIZE
-                  << " minus segment_samples: " << segment_samples << std::endl;
-    };
+          savedt_3(1, 384, TIME_BRANCH_LEN_3){};
 };
 
 bool load_demucs_model(const std::string &model_dir,
@@ -672,13 +657,15 @@ const float MAX_SHIFT_SECS = 0.5;        // max shift
 const float OVERLAP = 0.25;              // overlap between segments
 const float TRANSITION_POWER = 1.0;      // transition between segments
 
-Eigen::Tensor3dXf demucs_inference(struct demucs_model &model,
+Eigen::Tensor3dXf demucs_inference(const struct demucs_model &model,
                                    const Eigen::MatrixXf &full_audio,
                                    ProgressCallback cb);
 
-void model_inference(struct demucs_model &model,
+void model_inference(const struct demucs_model &model,
                      struct demucscpp::demucs_segment_buffers &buffers,
-                     struct demucscpp::stft_buffers &stft_buf);
+                     struct demucscpp::stft_buffers &stft_buf,
+                     ProgressCallback cb, float current_progress,
+                     float segment_progress);
 } // namespace demucscpp
 
 #endif // MODEL_HPP

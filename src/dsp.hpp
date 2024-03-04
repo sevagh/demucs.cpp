@@ -40,7 +40,7 @@ struct stft_buffers
 
     // constructor for stft_buffers that takes some parameters
     // to hint at the sizes of the buffers
-    stft_buffers(int n_samples)
+    explicit stft_buffers(int n_samples)
         : nb_frames(n_samples / FFT_HOP_SIZE + 1),
           nb_bins(FFT_WINDOW_SIZE / 2 + 1), pad(FFT_WINDOW_SIZE / 2),
           waveform(Eigen::MatrixXf(2, n_samples)),

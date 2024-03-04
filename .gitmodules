@@ -8,3 +8,6 @@
 [submodule "vendor/libnyquist"]
 	path = vendor/libnyquist
 	url = https://github.com/ddiakopoulos/libnyquist
+[submodule "vendor/googletest"]
+	path = vendor/googletest
+	url = https://github.com/google/googletest

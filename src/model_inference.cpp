@@ -46,13 +46,17 @@ static void reflect_padding(Eigen::MatrixXf &padded_mix,
 }
 
 void demucscpp::model_inference(
-    struct demucscpp::demucs_model &model,
+    const struct demucscpp::demucs_model &model,
     struct demucscpp::demucs_segment_buffers &buffers,
-    struct demucscpp::stft_buffers &stft_buf)
+    struct demucscpp::stft_buffers &stft_buf, demucscpp::ProgressCallback cb,
+    float current_progress, float segment_progress)
 {
     // apply demucs inference
-    std::cout << "3., apply_model mix shape: (" << buffers.mix.rows() << ", "
-              << buffers.mix.cols() << ")" << std::endl;
+    std::ostringstream ss;
+    ss << "3., apply_model mix shape: (" << buffers.mix.rows() << ", "
+       << buffers.mix.cols() << ")";
+    cb(current_progress + 0.0f, ss.str());
+    ss.str("");
 
     // pad buffers.pad on the left, reflect
     // pad buffers.pad_end on the right, reflect
@@ -74,9 +78,10 @@ void demucscpp::model_inference(
                              (int)stft_buf.spec.dimension(2) - 4});
 
     // print z shape
-    std::cout << "buffers.z: " << buffers.z.dimension(0) << ", "
-              << buffers.z.dimension(1) << ", " << buffers.z.dimension(2)
-              << std::endl;
+    ss << "buffers.z: " << buffers.z.dimension(0) << ", "
+       << buffers.z.dimension(1) << ", " << buffers.z.dimension(2);
+    cb(current_progress + 0.0f, ss.str());
+    ss.str("");
 
     // x = mag = z.abs(), but for CaC we're simply stacking the complex
     // spectrogram along the channel dimension
@@ -96,9 +101,10 @@ void demucscpp::model_inference(
     // x shape is complex*chan, nb_frames, nb_bins (2048)
     // using CaC (complex-as-channels)
     // print x shape
-    std::cout << "buffers.x: " << buffers.x.dimension(0) << ", "
-              << buffers.x.dimension(1) << ", " << buffers.x.dimension(2)
-              << std::endl;
+    ss << "buffers.x: " << buffers.x.dimension(0) << ", "
+       << buffers.x.dimension(1) << ", " << buffers.x.dimension(2);
+    cb(current_progress + 0.0f, ss.str());
+    ss.str("");
 
     // apply following pytorch operations to buffers.x in Eigen C++ code:
     //  mean = x.mean(dim=(1, 2, 3), keepdim=True)
@@ -126,7 +132,7 @@ void demucscpp::model_inference(
         }
     }
 
-    std::cout << "Freq branch: normalized" << std::endl;
+    cb(current_progress + 0.0f, "Freq branch: normalized");
 
     // apply similar mean, std normalization as above using 2d mean, std
     Eigen::Tensor<float, 0> meant_tensor = buffers.xt.mean();
@@ -137,7 +143,7 @@ void demucscpp::model_inference(
     // Normalize x
     buffers.xt = (buffers.xt - meant) / (stdt + epsilon);
 
-    std::cout << "Time branch: normalized" << std::endl;
+    cb(current_progress + 0.0f, "Time branch: normalized");
 
     // buffers.xt will be the time branch input
 
@@ -147,10 +153,10 @@ void demucscpp::model_inference(
     // apply tenc, enc
 
     demucscpp::apply_time_encoder(model, 0, buffers.xt, buffers.xt_0);
-    std::cout << "Time encoder 0" << std::endl;
+    cb(current_progress + segment_progress * 1.0f / 26.0f, "Time encoder 0");
 
     demucscpp::apply_freq_encoder(model, 0, buffers.x, buffers.x_0);
-    std::cout << "Freq encoder 0" << std::endl;
+    cb(current_progress + segment_progress * 2.0f / 26.0f, "Freq encoder 0");
 
     // absorb both scaling factors in one expression
     //   i.e. eliminate const float freq_emb_scale = 0.2f;
@@ -175,31 +181,32 @@ void demucscpp::model_inference(
     buffers.saved_0 = buffers.x_0;
     buffers.savedt_0 = buffers.xt_0;
 
-    std::cout << "Freq branch: applied frequency embedding" << std::endl;
+    cb(current_progress + segment_progress * 2.0f / 26.0f,
+       "Freq branch: applied frequency embedding");
 
     apply_time_encoder(model, 1, buffers.xt_0, buffers.xt_1);
-    std::cout << "Time encoder 1" << std::endl;
+    cb(current_progress + segment_progress * 3.0f / 26.0f, "Time encoder 1");
 
     apply_freq_encoder(model, 1, buffers.x_0, buffers.x_1);
-    std::cout << "Freq encoder 1" << std::endl;
+    cb(current_progress + segment_progress * 4.0f / 26.0f, "Freq encoder 1");
 
     buffers.saved_1 = buffers.x_1;
     buffers.savedt_1 = buffers.xt_1;
 
     apply_time_encoder(model, 2, buffers.xt_1, buffers.xt_2);
-    std::cout << "Time encoder 2" << std::endl;
+    cb(current_progress + segment_progress * 5.0f / 26.0f, "Time encoder 2");
 
     apply_freq_encoder(model, 2, buffers.x_1, buffers.x_2);
-    std::cout << "Freq encoder 2" << std::endl;
+    cb(current_progress + segment_progress * 6.0f / 26.0f, "Freq encoder 2");
 
     buffers.saved_2 = buffers.x_2;
     buffers.savedt_2 = buffers.xt_2;
 
     apply_time_encoder(model, 3, buffers.xt_2, buffers.xt_3);
-    std::cout << "Time encoder 3" << std::endl;
+    cb(current_progress + segment_progress * 7.0f / 26.0f, "Time encoder 3");
 
     apply_freq_encoder(model, 3, buffers.x_2, buffers.x_3);
-    std::cout << "Freq encoder 3" << std::endl;
+    cb(current_progress + segment_progress * 8.0f / 26.0f, "Freq encoder 3");
 
     buffers.saved_3 = buffers.x_3;
     buffers.savedt_3 = buffers.xt_3;
@@ -227,7 +234,8 @@ void demucscpp::model_inference(
         buffers.x_3_channel_upsampled = x_3_reshaped_upsampled.reshape(
             Eigen::array<int, 3>({512, 8, n_stft_frames}));
 
-        std::cout << "Freq: channels upsampled" << std::endl;
+        cb(current_progress + segment_progress * 8.0f / 26.0f,
+           "Freq channels upsampled");
 
         /*****************************/
         /*  TIME CHANNEL UPSAMPLING  */
@@ -240,15 +248,17 @@ void demucscpp::model_inference(
                 buffers.xt_3, ct_4s->channel_upsampler_t_weight,
                 ct_4s->channel_upsampler_t_bias);
 
-        std::cout << "Time: channels upsampled" << std::endl;
+        cb(current_progress + segment_progress * 8.0f / 26.0f,
+           "Time channels upsampled");
 
         /*************************/
         /*  CROSS-TRANSFORMER!  */
         /************************/
         demucscpp::apply_crosstransformer(model, buffers.x_3_channel_upsampled,
-                                          buffers.xt_3_channel_upsampled);
-
-        std::cout << "Crosstransformer: finished" << std::endl;
+                                          buffers.xt_3_channel_upsampled, cb,
+                                          current_progress, segment_progress);
+        cb(current_progress + segment_progress * 18.0f / 26.0f,
+           "Crosstransformer finished");
 
         // reshape buffers.x_3_channel_upsampled into 1, 512, 2688
         // when skipping the crosstransformer
@@ -265,21 +275,23 @@ void demucscpp::model_inference(
                 ct_4s->channel_downsampler_bias);
         buffers.x_3 = x_3_reshaped_downsampled.reshape(
             Eigen::array<int, 3>({384, 8, n_stft_frames}));
-        std::cout << "Freq: channels downsampled" << std::endl;
+        cb(current_progress + segment_progress * 18.0f / 26.0f,
+           "Freq channels downsampled");
 
         // apply upsampler directly to xt_3
         buffers.xt_3 = demucscpp::conv1d<512, 384, 1, 1, 0, 0>(
             buffers.xt_3_channel_upsampled, ct_4s->channel_downsampler_t_weight,
             ct_4s->channel_downsampler_t_bias);
-
-        std::cout << "Time: channels downsampled" << std::endl;
+        cb(current_progress + segment_progress * 18.0f / 26.0f,
+           "Time channels downsampled");
     }
     else
     {
         /*************************/
         /*  CROSS-TRANSFORMER!  */
         /************************/
-        demucscpp::apply_crosstransformer(model, buffers.x_3, buffers.xt_3);
+        demucscpp::apply_crosstransformer(model, buffers.x_3, buffers.xt_3, cb,
+                                          current_progress, segment_progress);
         // we need to swap axis and reshape into 384, 8, 336
 
         // swap axis
@@ -292,7 +304,8 @@ void demucscpp::model_inference(
 
         buffers.x_3 = x_3_reshaped;
 
-        std::cout << "Crosstransformer: finished" << std::endl;
+        cb(current_progress + segment_progress * 18.0f / 26.0f,
+           "Crosstransformer finished");
     }
 
     // now decoder time!
@@ -300,37 +313,37 @@ void demucscpp::model_inference(
     // skip == saved_3
     demucscpp::apply_freq_decoder(model, 0, buffers.x_3, buffers.x_2,
                                   buffers.saved_3);
-    std::cout << "Freq: decoder 0" << std::endl;
+    cb(current_progress + segment_progress * 19.0f / 26.0f, "Freq: decoder 0");
 
     demucscpp::apply_time_decoder(model, 0, buffers.xt_3, buffers.xt_2,
                                   buffers.savedt_3);
-    std::cout << "Time: decoder 0" << std::endl;
+    cb(current_progress + segment_progress * 20.0f / 26.0f, "Time: decoder 0");
 
     demucscpp::apply_freq_decoder(model, 1, buffers.x_2, buffers.x_1,
                                   buffers.saved_2);
-    std::cout << "Freq: decoder 1" << std::endl;
+    cb(current_progress + segment_progress * 21.0f / 26.0f, "Freq: decoder 1");
 
     demucscpp::apply_time_decoder(model, 1, buffers.xt_2, buffers.xt_1,
                                   buffers.savedt_2);
-    std::cout << "Time: decoder 1" << std::endl;
+    cb(current_progress + segment_progress * 22.0f / 26.0f, "Time: decoder 1");
 
     demucscpp::apply_freq_decoder(model, 2, buffers.x_1, buffers.x_0,
                                   buffers.saved_1);
-    std::cout << "Freq: decoder 2" << std::endl;
+    cb(current_progress + segment_progress * 23.0f / 26.0f, "Freq: decoder 2");
 
     demucscpp::apply_time_decoder(model, 2, buffers.xt_1, buffers.xt_0,
                                   buffers.savedt_1);
-    std::cout << "Time: decoder 2" << std::endl;
+    cb(current_progress + segment_progress * 24.0f / 26.0f, "Time: decoder 2");
 
     demucscpp::apply_freq_decoder(model, 3, buffers.x_0, buffers.x_out,
                                   buffers.saved_0);
-    std::cout << "Freq: decoder 3" << std::endl;
+    cb(current_progress + segment_progress * 25.0f / 26.0f, "Freq: decoder 3");
 
     demucscpp::apply_time_decoder(model, 3, buffers.xt_0, buffers.xt_out,
                                   buffers.savedt_0);
-    std::cout << "Time: decoder 3" << std::endl;
+    cb(current_progress + segment_progress * 26.0f / 26.0f, "Time: decoder 3");
 
-    std::cout << "Mask + istft" << std::endl;
+    cb(current_progress + segment_progress, "Mask + istft");
 
     // xt dim 1 is a fake dim of 1
     // so we could have symmetry between the tensor3dxf of the freq and time
@@ -446,8 +459,9 @@ void demucscpp::model_inference(
         // they're in different orders...
         unpadded_waveform += xt_3d[source];
 
-        std::cout << "mix: " << buffers.mix.rows() << ", " << buffers.mix.cols()
-                  << std::endl;
+        ss << "mix: " << buffers.mix.rows() << ", " << buffers.mix.cols();
+        cb(current_progress + segment_progress, ss.str());
+        ss.str("");
 
         // copy target waveform into all 4 dims of targets_out
         for (int j = 0; j < 2; ++j)

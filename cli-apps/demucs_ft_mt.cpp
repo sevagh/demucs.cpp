@@ -1,6 +1,7 @@
 #include "dsp.hpp"
 #include "model.hpp"
 #include "tensor.hpp"
+#include "threaded_inference.hpp"
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <cassert>
@@ -12,6 +13,7 @@
 #include <libnyquist/Encoders.h>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <unsupported/Eigen/FFT>
 #include <vector>
 
@@ -106,14 +108,16 @@ static void write_audio_file(const Eigen::MatrixXf &waveform,
 
 int main(int argc, const char **argv)
 {
-    if (argc != 4)
+    if (argc != 5)
     {
-        std::cerr << "Usage: " << argv[0] << " <model dir> <wav file> <out dir>"
+        std::cerr << "Usage: " << argv[0]
+                  << " <model dir> <wav file> <out dir> <num threads>"
                   << std::endl;
         exit(1);
     }
 
-    std::cout << "demucs_ft.cpp Main (fine-tuned) driver program" << std::endl;
+    std::cout << "demucs_ft_mt.cpp (Multi-threaded Fine-tuned) driver program"
+              << std::endl;
 
     // load model passed as argument
     std::string model_dir = argv[1];
@@ -123,6 +127,10 @@ int main(int argc, const char **argv)
 
     // output dir passed as argument
     std::string out_dir = argv[3];
+
+    // get num threads from user parameter argv[4]
+    // cast it to int
+    int num_threads = std::stoi(argv[4]);
 
     Eigen::MatrixXf audio = load_audio_file(wav_file);
     Eigen::Tensor3dXf out_targets;
@@ -186,49 +194,18 @@ int main(int argc, const char **argv)
     std::cout << "Starting Demucs fine-tuned (" << std::to_string(nb_sources)
               << "-source) inference" << std::endl;
 
-    // set output precision to 3 decimal places
-    std::cout << std::fixed << std::setprecision(3);
-
-    demucscpp::ProgressCallback progressCallback1 =
-        [](float progress, const std::string &log_message)
-    {
-        std::cout << "[DRUMS] \t(" << std::setw(3) << std::setfill(' ')
-                  << progress * 25.0f << "%) " << log_message << std::endl;
-    };
-    demucscpp::ProgressCallback progressCallback2 =
-        [](float progress, const std::string &log_message)
-    {
-        std::cout << "[BASS] \t(" << std::setw(3) << std::setfill(' ')
-                  << 25.0f + progress * 25.0f << "%) " << log_message
-                  << std::endl;
-    };
-    demucscpp::ProgressCallback progressCallback3 =
-        [](float progress, const std::string &log_message)
-    {
-        std::cout << "[OTHER] \t(" << std::setw(3) << std::setfill(' ')
-                  << 50.0f + progress * 25.0f << "%) " << log_message
-                  << std::endl;
-    };
-    demucscpp::ProgressCallback progressCallback4 =
-        [](float progress, const std::string &log_message)
-    {
-        std::cout << "[VOCALS] \t(" << std::setw(3) << std::setfill(' ')
-                  << 75.0f + progress * 25.0f << "%) " << log_message
-                  << std::endl;
-    };
-
     // create 4 audio matrix same size, to hold output
-    Eigen::Tensor3dXf drums_targets =
-        demucscpp::demucs_inference(models[0], audio, progressCallback1);
+    Eigen::Tensor3dXf drums_targets = demucscppthreaded::threaded_inference(
+        models[0], audio, num_threads, "DRUMS\t ");
 
-    Eigen::Tensor3dXf bass_targets =
-        demucscpp::demucs_inference(models[1], audio, progressCallback2);
+    Eigen::Tensor3dXf bass_targets = demucscppthreaded::threaded_inference(
+        models[1], audio, num_threads, "BASS\t ");
 
-    Eigen::Tensor3dXf other_targets =
-        demucscpp::demucs_inference(models[2], audio, progressCallback3);
+    Eigen::Tensor3dXf other_targets = demucscppthreaded::threaded_inference(
+        models[2], audio, num_threads, "OTHER\t ");
 
-    Eigen::Tensor3dXf vocals_targets =
-        demucscpp::demucs_inference(models[3], audio, progressCallback4);
+    Eigen::Tensor3dXf vocals_targets = demucscppthreaded::threaded_inference(
+        models[3], audio, num_threads, "VOCALS\t ");
 
     out_targets = Eigen::Tensor3dXf(drums_targets.dimension(0),
                                     drums_targets.dimension(1),

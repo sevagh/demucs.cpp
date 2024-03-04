@@ -3,9 +3,6 @@
 #include "model.hpp"
 #include "tensor.hpp"
 #include <Eigen/Dense>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
 
 static Eigen::Tensor3dXf create_2d_sin_embedding(int d_model, int height,
                                                  int width,
@@ -79,9 +76,10 @@ static Eigen::Tensor3dXf create_sin_embedding(int length, int dim,
     return pos_emb;
 }
 
-static void my_transformer_encoder_layer(struct demucscpp::demucs_model &model,
-                                         Eigen::Tensor3dXf &x, int freq_or_time,
-                                         int weight_idx, float eps = 1e-5)
+static void
+my_transformer_encoder_layer(const struct demucscpp::demucs_model &model,
+                             Eigen::Tensor3dXf &x, int freq_or_time,
+                             int weight_idx, float eps = 1e-5)
 {
     demucscpp::common_encoder_layer(
         x, // pass x as q
@@ -138,7 +136,7 @@ static void my_transformer_encoder_layer(struct demucscpp::demucs_model &model,
 }
 
 static void
-cross_transformer_encoder_layer(struct demucscpp::demucs_model &model,
+cross_transformer_encoder_layer(const struct demucscpp::demucs_model &model,
                                 Eigen::Tensor3dXf &q,       // q = x = frequency
                                 const Eigen::Tensor3dXf &k, // k = xt = time
                                 int freq_or_time, int weight_idx,
@@ -204,12 +202,15 @@ cross_transformer_encoder_layer(struct demucscpp::demucs_model &model,
         eps);
 }
 
-void demucscpp::apply_crosstransformer(struct demucscpp::demucs_model &model,
-                                       Eigen::Tensor3dXf &x, // frequency branch
-                                       Eigen::Tensor3dXf &xt // time branch
-)
+void demucscpp::apply_crosstransformer(
+    const struct demucscpp::demucs_model &model,
+    Eigen::Tensor3dXf &x,  // frequency branch
+    Eigen::Tensor3dXf &xt, // time branch
+    demucscpp::ProgressCallback cb, float current_progress,
+    float segment_progress)
 {
-    std::cout << "apply_crosstransformer" << std::endl;
+    cb(current_progress + segment_progress * 8.0f / 26.0f,
+       "Applying crosstransformer");
 
     Eigen::Tensor3dXf pos_embed_2d_pre_reshape =
         create_2d_sin_embedding(x.dimension(0), x.dimension(1), x.dimension(2));
@@ -244,8 +245,8 @@ void demucscpp::apply_crosstransformer(struct demucscpp::demucs_model &model,
             x, model.crosstransformer->crosstransformer_norm_in_weight,
             model.crosstransformer->crosstransformer_norm_in_bias, eps) +
         pos_embed_2d;
-
-    std::cout << "Freq (crosstransformer): norm + pos_embed" << std::endl;
+    cb(current_progress + segment_progress * 8.0f / 26.0f,
+       "Freq (crosstransformer): norm + pos_embed");
 
     // (B, C, T2) = xt.shape
     int C = xt.dimension(1);
@@ -261,7 +262,8 @@ void demucscpp::apply_crosstransformer(struct demucscpp::demucs_model &model,
              model.crosstransformer->crosstransformer_norm_in_t_bias, eps) +
          pos_embed_1d;
 
-    std::cout << "Time (crosstransformer): norm + pos_embed" << std::endl;
+    cb(current_progress + segment_progress * 8.0f / 26.0f,
+       "Time (crosstransformer): norm + pos_embed");
 
     // actual crosstransformer layers here
 
@@ -273,10 +275,12 @@ void demucscpp::apply_crosstransformer(struct demucscpp::demucs_model &model,
     // x = self.layers[0](x)
     // xt = self.layers_t[0](xt)
     my_transformer_encoder_layer(model, x, 0, 0);
-    std::cout << "Freq (crosstransformer): layer 0" << std::endl;
+    cb(current_progress + segment_progress * 9.0f / 26.0f,
+       "Freq (crosstransformer): layer 0");
 
     my_transformer_encoder_layer(model, xt, 1, 0);
-    std::cout << "Time (crosstransformer): layer 0" << std::endl;
+    cb(current_progress + segment_progress * 10.0f / 26.0f,
+       "Time (crosstransformer): layer 0");
 
     // make a copy of x
     Eigen::Tensor3dXf old_x = x;
@@ -284,34 +288,42 @@ void demucscpp::apply_crosstransformer(struct demucscpp::demucs_model &model,
     // x is modified in-place and is the final value of x
     // xt is not modified (const)
     cross_transformer_encoder_layer(model, x, xt, 0, 0);
-    std::cout << "Freq (crosstransformer): layer 1" << std::endl;
+    cb(current_progress + segment_progress * 11.0f / 26.0f,
+       "Freq (crosstransformer): layer 1");
 
     // xt is modified in-place and is the final value of xt
     cross_transformer_encoder_layer(model, xt, old_x, 1, 0);
-    std::cout << "Time (crosstransformer): layer 1" << std::endl;
+    cb(current_progress + segment_progress * 12.0f / 26.0f,
+       "Time (crosstransformer): layer 1");
 
     my_transformer_encoder_layer(model, x, 0, 1);
-    std::cout << "Freq (crosstransformer): layer 2" << std::endl;
+    cb(current_progress + segment_progress * 13.0f / 26.0f,
+       "Freq (crosstransformer): layer 2");
 
     my_transformer_encoder_layer(model, xt, 1, 1);
-    std::cout << "Time (crosstransformer): layer 2" << std::endl;
+    cb(current_progress + segment_progress * 14.0f / 26.0f,
+       "Time (crosstransformer): layer 2");
 
     // make a copy of x
     old_x = x;
 
     // x is modified in-place and is the final value of x
     cross_transformer_encoder_layer(model, x, xt, 0, 1);
-    std::cout << "Freq (crosstransformer): layer 3" << std::endl;
+    cb(current_progress + segment_progress * 15.0f / 26.0f,
+       "Freq (crosstransformer): layer 3");
 
     // old_xt is modified in-place and is the final value of xt
     cross_transformer_encoder_layer(model, xt, old_x, 1, 1);
-    std::cout << "Time (crosstransformer): layer 3" << std::endl;
+    cb(current_progress + segment_progress * 16.0f / 26.0f,
+       "Time (crosstransformer): layer 3");
 
     my_transformer_encoder_layer(model, x, 0, 2);
-    std::cout << "Freq (crosstransformer): layer 4" << std::endl;
+    cb(current_progress + segment_progress * 17.0f / 26.0f,
+       "Freq (crosstransformer): layer 4");
 
     my_transformer_encoder_layer(model, xt, 1, 2);
-    std::cout << "Time (crosstransformer): layer 4" << std::endl;
+    cb(current_progress + segment_progress * 18.0f / 26.0f,
+       "Time (crosstransformer): layer 4");
 
     // permute last two dims of xt
     Eigen::array<int, 3> permute_dims = {0, 2, 1};

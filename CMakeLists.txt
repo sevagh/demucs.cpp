@@ -16,7 +16,7 @@ endif()
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -DEIGEN_FAST_MATH=0 -O0")
 
-set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -march=native -fno-unsafe-math-optimizations -fassociative-math -freciprocal-math -fno-signed-zeros")
+set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -march=native -fno-unsafe-math-optimizations -freciprocal-math -fno-signed-zeros")
 
 # define a macro NDEBUG for Eigen3 release builds
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG")
@@ -28,9 +28,9 @@ enable_testing()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# compile vendored submodule libnyquist
-set(LIBNYQUIST_BUILD_EXAMPLE OFF CACHE BOOL "Disable libnyquist example")
-add_subdirectory(vendor/libnyquist)
+# add library Eigen3
+include_directories(vendor/eigen)
+include_directories(src)
 
 if (USE_AMD_AOCL)
     set(AOCL_ROOT "/home/sevagh/AMD_AOCL/aocl-linux-gcc-4.1.0")
@@ -77,35 +77,54 @@ add_library(demucs.cpp.lib ${SOURCES})
 
 # add library Eigen3
 # expose source files to project linking to this one
-target_include_directories(demucs.cpp.lib PUBLIC
+target_include_directories(demucs.cpp.lib INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/vendor/eigen
-    ${CMAKE_CURRENT_SOURCE_DIR}/vendor/libnyquist/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(demucs.cpp.lib libnyquist ${LIBRARIES_TO_LINK})
+target_link_libraries(demucs.cpp.lib ${LIBRARIES_TO_LINK})
+
+# compile vendored submodule libnyquist for driver programs
+set(LIBNYQUIST_BUILD_EXAMPLE OFF CACHE BOOL "Disable libnyquist example" FORCE)
+add_subdirectory(vendor/libnyquist)
 
 # Add target to compile demucs.cpp.main, the main driver program for demucs.cpp
 add_executable(demucs.cpp.main "cli-apps/demucs.cpp")
-target_link_libraries(demucs.cpp.main demucs.cpp.lib)
+target_include_directories(demucs.cpp.main PRIVATE vendor/libnyquist/include)
+target_link_libraries(demucs.cpp.main demucs.cpp.lib libnyquist)
 
 # Add target to compile demucs_ft.cpp.main, the fine-tuned driver program for demucs.cpp
 add_executable(demucs_ft.cpp.main "cli-apps/demucs_ft.cpp")
-target_link_libraries(demucs_ft.cpp.main demucs.cpp.lib)
+target_include_directories(demucs_ft.cpp.main PRIVATE vendor/libnyquist/include)
+target_link_libraries(demucs_ft.cpp.main demucs.cpp.lib libnyquist)
 
-file(GLOB SOURCES_TO_LINT "src/*.cpp" "src/*.hpp" "demucs.cpp" "test/*.cpp")
+add_executable(demucs_mt.cpp.main "cli-apps/demucs_mt.cpp")
+target_include_directories(demucs_mt.cpp.main PRIVATE vendor/libnyquist/include)
+target_include_directories(demucs_mt.cpp.main PRIVATE cli-apps)
+target_link_libraries(demucs_mt.cpp.main demucs.cpp.lib libnyquist)
+
+add_executable(demucs_ft_mt.cpp.main "cli-apps/demucs_ft_mt.cpp")
+target_include_directories(demucs_ft_mt.cpp.main PRIVATE vendor/libnyquist/include)
+target_include_directories(demucs_ft_mt.cpp.main PRIVATE cli-apps)
+target_link_libraries(demucs_ft_mt.cpp.main demucs.cpp.lib libnyquist)
+
+file(GLOB SOURCES_TO_LINT "src/*.cpp" "src/*.hpp" "cli-apps/*.cpp" "cli-apps/*.hpp")
 
 # add target to run standard lints and formatters
 add_custom_target(lint
     COMMAND clang-format -i ${SOURCES_TO_LINT} --style=file
     # add clang-tidy command
     # add include dirs to clang-tidy
-    COMMAND cppcheck --enable=all --suppress=missingIncludeSystem ${SOURCES_TO_LINT} --std=c++17
+    COMMAND cppcheck -I"src/" -I"cli-apps/" --enable=all --suppress=missingIncludeSystem ${SOURCES_TO_LINT} --std=c++17
     COMMAND scan-build -o ${CMAKE_BINARY_DIR}/scan-build-report make -C ${CMAKE_BINARY_DIR}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
 # add target to run cpp tests in test/ directory with gtest
+
+# get gtest from vendor/googletest
+set(BUILD_GMOCK OFF CACHE BOOL "Disable gmock in googletest" FORCE)
+add_subdirectory(vendor/googletest)
 
 # include test/*.cpp as test files
 file(GLOB TEST_SOURCES "test/*.cpp")
