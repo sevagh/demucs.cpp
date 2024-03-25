@@ -28,10 +28,6 @@ enable_testing()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# add library Eigen3
-include_directories(vendor/eigen)
-include_directories(src)
-
 if (USE_AMD_AOCL)
     set(AOCL_ROOT "/home/sevagh/AMD_AOCL/aocl-linux-gcc-4.1.0")
     set(BLIS_PATH "${AOCL_ROOT}/aocl-blis-linux-gcc-4.1.0/amd-blis")
@@ -74,6 +70,13 @@ endif()
 file(GLOB SOURCES "src/*.cpp")
 
 add_library(demucs.cpp.lib ${SOURCES})
+
+# add library Eigen3
+# expose source files to project linking to this one
+target_include_directories(demucs.cpp.lib INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/vendor/eigen
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 
 target_link_libraries(demucs.cpp.lib ${LIBRARIES_TO_LINK})
 
