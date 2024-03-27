@@ -73,7 +73,7 @@ add_library(demucs.cpp.lib ${SOURCES})
 
 # add library Eigen3
 # expose source files to project linking to this one
-target_include_directories(demucs.cpp.lib INTERFACE
+target_include_directories(demucs.cpp.lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/vendor/eigen
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
