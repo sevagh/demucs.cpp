@@ -122,8 +122,10 @@ threaded_inference(const struct demucscpp::demucs_model &model,
         thread.join();
     }
 
+    int nb_out_sources = model.is_4sources ? 4 : 6;
+
     // Calculate total output size and create the output tensor
-    Eigen::Tensor3dXf final_output(4, 2, total_length);
+    Eigen::Tensor3dXf final_output(nb_out_sources, 2, total_length);
     final_output.setZero();
 
     Eigen::VectorXf ramp(segment_length);
@@ -138,7 +140,7 @@ threaded_inference(const struct demucscpp::demucs_model &model,
     for (size_t i = 0; i < segment_outs.size(); ++i)
     {
         int segment_start = i * segment_length;
-        for (int t = 0; t < 4; ++t)
+        for (int t = 0; t < nb_out_sources; ++t)
         { // For each target
             for (int ch = 0; ch < 2; ++ch)
             { // For each channel
@@ -169,7 +171,7 @@ threaded_inference(const struct demucscpp::demucs_model &model,
     }
 
     // Normalize the output by the sum of weights
-    for (int t = 0; t < 4; ++t)
+    for (int t = 0; t < nb_out_sources; ++t)
     {
         for (int ch = 0; ch < 2; ++ch)
         {
@@ -179,7 +181,7 @@ threaded_inference(const struct demucscpp::demucs_model &model,
                 {
                     // account for summing per-target by dividing by n targets,
                     // 2 channels
-                    final_output(t, ch, i) /= (sum_weight(i) / (2.0f * 4.0f));
+                    final_output(t, ch, i) /= (sum_weight(i) / (2.0f * static_cast<float>(nb_out_sources)));
                 }
             }
         }
