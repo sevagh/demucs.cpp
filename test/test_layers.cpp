@@ -1396,11 +1396,11 @@ TEST(DemucsCPPLayers, FreqEncoders)
     Eigen::Tensor3dXf x_fake(4, 2048, 336);
 
     // fill with -1, 1 alternating
-    for (size_t i = 0; i < 4; ++i)
+    for (long i = 0; i < 4; ++i)
     {
-        for (size_t j = 0; j < 2048; ++j)
+        for (long j = 0; j < 2048; ++j)
         {
-            for (size_t k = 0; k < 336; ++k)
+            for (long k = 0; k < 336; ++k)
             {
                 if (k % 2 == 0)
                 {
@@ -1452,11 +1452,11 @@ TEST(DemucsCPPLayers, FreqDecoders)
     Eigen::Tensor3dXf x_fake_dec_4(4, 2048, 336);
 
     // fill with -1, 1 alternating
-    for (size_t i = 0; i < 384; ++i)
+    for (long i = 0; i < 384; ++i)
     {
-        for (size_t j = 0; j < 8; ++j)
+        for (long j = 0; j < 8; ++j)
         {
-            for (size_t k = 0; k < 336; ++k)
+            for (long k = 0; k < 336; ++k)
             {
                 if (k % 2 == 0)
                 {
@@ -1471,11 +1471,11 @@ TEST(DemucsCPPLayers, FreqDecoders)
             }
         }
     }
-    for (size_t i = 0; i < 192; ++i)
+    for (long i = 0; i < 192; ++i)
     {
-        for (size_t j = 0; j < 32; ++j)
+        for (long j = 0; j < 32; ++j)
         {
-            for (size_t k = 0; k < 336; ++k)
+            for (long k = 0; k < 336; ++k)
             {
                 if (k % 2 == 0)
                 {
@@ -1488,11 +1488,11 @@ TEST(DemucsCPPLayers, FreqDecoders)
             }
         }
     }
-    for (size_t i = 0; i < 96; ++i)
+    for (long i = 0; i < 96; ++i)
     {
-        for (size_t j = 0; j < 128; ++j)
+        for (long j = 0; j < 128; ++j)
         {
-            for (size_t k = 0; k < 336; ++k)
+            for (long k = 0; k < 336; ++k)
             {
                 if (k % 2 == 0)
                 {
@@ -1505,11 +1505,11 @@ TEST(DemucsCPPLayers, FreqDecoders)
             }
         }
     }
-    for (size_t i = 0; i < 48; ++i)
+    for (long i = 0; i < 48; ++i)
     {
-        for (size_t j = 0; j < 512; ++j)
+        for (long j = 0; j < 512; ++j)
         {
-            for (size_t k = 0; k < 336; ++k)
+            for (long k = 0; k < 336; ++k)
             {
                 if (k % 2 == 0)
                 {
@@ -1555,11 +1555,11 @@ TEST(DemucsCPPLayers, TimeEncoders)
     Eigen::Tensor3dXf xt_fake(1, 2, 343980);
 
     // fill with -1, 1 alternating
-    for (size_t i = 0; i < 1; ++i)
+    for (long i = 0; i < 1; ++i)
     {
-        for (size_t j = 0; j < 2; ++j)
+        for (long j = 0; j < 2; ++j)
         {
-            for (size_t k = 0; k < 343980; ++k)
+            for (long k = 0; k < 343980; ++k)
             {
                 if (k % 2 == 0)
                 {
@@ -1615,9 +1615,9 @@ TEST(DemucsCPPLayers, TimeDecoders)
     Eigen::Tensor3dXf xt_fake_dec_4(1, 8, 343980);
 
     // fill with -1, 1 alternating
-    for (size_t i = 0; i < 384; ++i)
+    for (long i = 0; i < 384; ++i)
     {
-        for (size_t j = 0; j < 1344; ++j)
+        for (long j = 0; j < 1344; ++j)
         {
             if (j % 2 == 0)
             {
@@ -1631,9 +1631,9 @@ TEST(DemucsCPPLayers, TimeDecoders)
             }
         }
     }
-    for (size_t i = 0; i < 192; ++i)
+    for (long i = 0; i < 192; ++i)
     {
-        for (size_t j = 0; j < 5375; ++j)
+        for (long j = 0; j < 5375; ++j)
         {
             if (j % 2 == 0)
             {
@@ -1645,9 +1645,9 @@ TEST(DemucsCPPLayers, TimeDecoders)
             }
         }
     }
-    for (size_t i = 0; i < 96; ++i)
+    for (long i = 0; i < 96; ++i)
     {
-        for (size_t j = 0; j < 21499; ++j)
+        for (long j = 0; j < 21499; ++j)
         {
             if (j % 2 == 0)
             {
@@ -1659,9 +1659,9 @@ TEST(DemucsCPPLayers, TimeDecoders)
             }
         }
     }
-    for (size_t i = 0; i < 48; ++i)
+    for (long i = 0; i < 48; ++i)
     {
-        for (size_t j = 0; j < 85995; ++j)
+        for (long j = 0; j < 85995; ++j)
         {
             if (j % 2 == 0)
             {
@@ -1713,11 +1713,11 @@ TEST(DemucsCPPLayers, CrossTransformer)
     Eigen::Tensor3dXf xt_fake(1, 384, 1344);
 
     // fill with -1, 1 alternating
-    for (size_t i = 0; i < 384; ++i)
+    for (long i = 0; i < 384; ++i)
     {
-        for (size_t j = 0; j < 8; ++j)
+        for (long j = 0; j < 8; ++j)
         {
-            for (size_t k = 0; k < 336; ++k)
+            for (long k = 0; k < 336; ++k)
             {
                 if (k % 2 == 0)
                 {
@@ -1731,9 +1731,9 @@ TEST(DemucsCPPLayers, CrossTransformer)
         }
     }
 
-    for (size_t j = 0; j < 384; ++j)
+    for (long j = 0; j < 384; ++j)
     {
-        for (size_t k = 0; k < 1344; ++k)
+        for (long k = 0; k < 1344; ++k)
         {
             if (k % 2 == 0)
             {
@@ -1825,11 +1825,11 @@ TEST(DemucsCPPLayers, CrossTransformerNoUpsamp)
     Eigen::Tensor3dXf xt_fake(1, 512, 1344);
 
     // fill with -1, 1 alternating
-    for (size_t i = 0; i < 512; ++i)
+    for (long i = 0; i < 512; ++i)
     {
-        for (size_t j = 0; j < 8; ++j)
+        for (long j = 0; j < 8; ++j)
         {
-            for (size_t k = 0; k < 336; ++k)
+            for (long k = 0; k < 336; ++k)
             {
                 if (k % 2 == 0)
                 {
@@ -1843,9 +1843,9 @@ TEST(DemucsCPPLayers, CrossTransformerNoUpsamp)
         }
     }
 
-    for (size_t j = 0; j < 512; ++j)
+    for (long j = 0; j < 512; ++j)
     {
-        for (size_t k = 0; k < 1344; ++k)
+        for (long k = 0; k < 1344; ++k)
         {
             if (k % 2 == 0)
             {
@@ -1883,11 +1883,11 @@ TEST(DemucsCPPLayers, Upsamplers)
     Eigen::Tensor3dXf xt_fake(1, 384, 1344);
 
     // fill with -1, 1 alternating
-    for (size_t i = 0; i < 384; ++i)
+    for (long i = 0; i < 384; ++i)
     {
-        for (size_t j = 0; j < 8; ++j)
+        for (long j = 0; j < 8; ++j)
         {
-            for (size_t k = 0; k < 336; ++k)
+            for (long k = 0; k < 336; ++k)
             {
                 if (k % 2 == 0)
                 {
@@ -1901,9 +1901,9 @@ TEST(DemucsCPPLayers, Upsamplers)
         }
     }
 
-    for (size_t j = 0; j < 384; ++j)
+    for (long j = 0; j < 384; ++j)
     {
-        for (size_t k = 0; k < 1344; ++k)
+        for (long k = 0; k < 1344; ++k)
         {
             if (k % 2 == 0)
             {
@@ -1978,9 +1978,9 @@ TEST(DemucsCPPLayers, CTLayers)
     Eigen::Tensor3dXf xt_fake(1, 1344, 512);
 
     // fill with -1, 1 alternating
-    for (size_t i = 0; i < 2688; ++i)
+    for (long i = 0; i < 2688; ++i)
     {
-        for (size_t j = 0; j < 512; ++j)
+        for (long j = 0; j < 512; ++j)
         {
             if (j % 2 == 0)
             {
@@ -1993,9 +1993,9 @@ TEST(DemucsCPPLayers, CTLayers)
         }
     }
 
-    for (size_t i = 0; i < 1344; ++i)
+    for (long i = 0; i < 1344; ++i)
     {
-        for (size_t j = 0; j < 512; ++j)
+        for (long j = 0; j < 512; ++j)
         {
             if (j % 2 == 0)
             {
@@ -2193,9 +2193,9 @@ TEST(DemucsCPPLayers, LayerNormBigger)
     Eigen::Tensor1dXf b(512);
 
     // fill x with alternating -1, 1
-    for (size_t i = 0; i < 2688; ++i)
+    for (long i = 0; i < 2688; ++i)
     {
-        for (size_t j = 0; j < 512; ++j)
+        for (long j = 0; j < 512; ++j)
         {
             if (j % 2 == 0)
             {
@@ -2210,7 +2210,7 @@ TEST(DemucsCPPLayers, LayerNormBigger)
 
     // fill w with alternating -0.25, 0.25
     // fill b with alternating 0.5, -0.5
-    for (size_t i = 0; i < 512; ++i)
+    for (long i = 0; i < 512; ++i)
     {
         if (i % 2 == 0)
         {
