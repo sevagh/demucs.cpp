@@ -104,6 +104,11 @@ target_include_directories(demucs_ft_mt.cpp.main PRIVATE vendor/libnyquist/inclu
 target_include_directories(demucs_ft_mt.cpp.main PRIVATE cli-apps)
 target_link_libraries(demucs_ft_mt.cpp.main demucs.cpp.lib libnyquist)
 
+add_executable(demucs_v3.cpp.main "cli-apps/demucs_v3.cpp")
+target_include_directories(demucs_v3.cpp.main PRIVATE vendor/libnyquist/include)
+target_include_directories(demucs_v3.cpp.main PRIVATE cli-apps)
+target_link_libraries(demucs_v3.cpp.main demucs.cpp.lib libnyquist)
+
 file(GLOB SOURCES_TO_LINT "src/*.cpp" "src/*.hpp" "cli-apps/*.cpp" "cli-apps/*.hpp")
 
 # add target to run standard lints and formatters

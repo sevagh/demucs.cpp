@@ -181,7 +181,9 @@ threaded_inference(const struct demucscpp::demucs_model &model,
                 {
                     // account for summing per-target by dividing by n targets,
                     // 2 channels
-                    final_output(t, ch, i) /= (sum_weight(i) / (2.0f * static_cast<float>(nb_out_sources)));
+                    final_output(t, ch, i) /=
+                        (sum_weight(i) /
+                         (2.0f * static_cast<float>(nb_out_sources)));
                 }
             }
         }
