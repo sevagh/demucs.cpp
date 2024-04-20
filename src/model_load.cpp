@@ -1328,24 +1328,14 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
     // read the size of uint32_t bytes from f into magic
     fread(&magic, sizeof(uint32_t), 1, f);
 
-    if (magic == 0x646d6333) // dmc3 = v3 mmi
-    {
-        std::cout << "Model magic is Demucs V3 MMI" << std::endl;
-
-        // modify a few tensor shapes in the model corresponding to the
-        // number of sources
-        model->decoder_conv_tr_weight[3] = Eigen::Tensor4dXf(48, 24, 8, 1);
-        model->decoder_conv_tr_bias[3] = Eigen::Tensor1dXf(24);
-
-        model->tdecoder_conv_tr_weight[3] = Eigen::Tensor3dXf(48, 12, 8);
-        model->tdecoder_conv_tr_bias[3] = Eigen::Tensor1dXf(12);
-    }
-    else
+    if (magic != 0x646d6333) // dmc3 = v3 mmi
     {
         fprintf(stderr, "%s: invalid model data (bad magic)\n", __func__);
         fclose(f);
         return false;
     }
+
+    std::cout << "Model magic is Demucs V3 MMI" << std::endl;
 
     std::cout << "Loading demucs model... " << std::endl;
 
@@ -1389,9 +1379,9 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
             break;
         }
 
-        // std::cout << "Loading tensor " << name << " with shape [" << ne[0]
-        //             << ", " << ne[1] << ", " << ne[2] << ", " << ne[3] << "]"
-        //             << std::endl;
+        std::cout << "Loading tensor " << name << " with shape [" << ne[0]
+                    << ", " << ne[1] << ", " << ne[2] << ", " << ne[3] << "]"
+                    << std::endl;
 
         // match the tensor name to the correct tensor in the model
         size_t loaded_size = 0;
@@ -1526,96 +1516,6 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 loaded_size = load_single_tensor1d(
                     f, name, model->decoder_rewrite_bias[i], ne, nelements);
             }
-
-            // each sub-dconv is a stack of 2
-            for (int j = 0; j < 2; ++j)
-            {
-                int reverse_i = 4 - i - 1;
-                if (name == "decoder." + std::to_string(i) + ".dconv.layers." +
-                                std::to_string(j) + ".0.weight")
-                {
-                    loaded_size = load_single_tensor3d(
-                        f, name,
-                        model->dconv_layers_0_conv1d_weight[0][1][reverse_i][j],
-                        ne, nelements);
-                }
-                else if (name == "decoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".0.bias")
-                {
-                    loaded_size = load_single_tensor1d(
-                        f, name,
-                        model->dconv_layers_0_conv1d_bias[0][1][reverse_i][j],
-                        ne, nelements);
-                }
-                else if (name == "decoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".1.weight")
-                {
-                    loaded_size = load_single_tensor1d(
-                        f, name,
-                        model->dconv_layers_1_groupnorm_weight[0][1][reverse_i]
-                                                              [j],
-                        ne, nelements);
-                }
-                else if (name == "decoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".1.bias")
-                {
-                    loaded_size = load_single_tensor1d(
-                        f, name,
-                        model
-                            ->dconv_layers_1_groupnorm_bias[0][1][reverse_i][j],
-                        ne, nelements);
-                }
-                else if (name == "decoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".3.weight")
-                {
-                    loaded_size = load_single_tensor3d(
-                        f, name,
-                        model->dconv_layers_3_conv1d_weight[0][1][reverse_i][j],
-                        ne, nelements);
-                }
-                else if (name == "decoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".3.bias")
-                {
-                    loaded_size = load_single_tensor1d(
-                        f, name,
-                        model->dconv_layers_3_conv1d_bias[0][1][reverse_i][j],
-                        ne, nelements);
-                }
-                else if (name == "decoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".4.weight")
-                {
-                    loaded_size = load_single_tensor1d(
-                        f, name,
-                        model->dconv_layers_4_groupnorm_weight[0][1][reverse_i]
-                                                              [j],
-                        ne, nelements);
-                }
-                else if (name == "decoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".4.bias")
-                {
-                    loaded_size = load_single_tensor1d(
-                        f, name,
-                        model
-                            ->dconv_layers_4_groupnorm_bias[0][1][reverse_i][j],
-                        ne, nelements);
-                }
-                else if (name == "decoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".6.scale")
-                {
-                    loaded_size = load_single_tensor1d(
-                        f, name,
-                        model->dconv_layers_6_scale[0][1][reverse_i][j], ne,
-                        nelements);
-                }
-            }
         }
 
         // 4 TEncoders
@@ -1749,96 +1649,6 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
             {
                 loaded_size = load_single_tensor1d(
                     f, name, model->tdecoder_rewrite_bias[i], ne, nelements);
-            }
-
-            // each sub-dconv is a stack of 2
-            for (int j = 0; j < 2; ++j)
-            {
-                int reverse_i = 4 - i - 1;
-                if (name == "tdecoder." + std::to_string(i) + ".dconv.layers." +
-                                std::to_string(j) + ".0.weight")
-                {
-                    loaded_size = load_single_tensor3d(
-                        f, name,
-                        model->dconv_layers_0_conv1d_weight[1][1][reverse_i][j],
-                        ne, nelements);
-                }
-                else if (name == "tdecoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".0.bias")
-                {
-                    loaded_size = load_single_tensor1d(
-                        f, name,
-                        model->dconv_layers_0_conv1d_bias[1][1][reverse_i][j],
-                        ne, nelements);
-                }
-                else if (name == "tdecoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".1.weight")
-                {
-                    loaded_size = load_single_tensor1d(
-                        f, name,
-                        model->dconv_layers_1_groupnorm_weight[1][1][reverse_i]
-                                                              [j],
-                        ne, nelements);
-                }
-                else if (name == "tdecoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".1.bias")
-                {
-                    loaded_size = load_single_tensor1d(
-                        f, name,
-                        model
-                            ->dconv_layers_1_groupnorm_bias[1][1][reverse_i][j],
-                        ne, nelements);
-                }
-                else if (name == "tdecoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".3.weight")
-                {
-                    loaded_size = load_single_tensor3d(
-                        f, name,
-                        model->dconv_layers_3_conv1d_weight[1][1][reverse_i][j],
-                        ne, nelements);
-                }
-                else if (name == "tdecoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".3.bias")
-                {
-                    loaded_size = load_single_tensor1d(
-                        f, name,
-                        model->dconv_layers_3_conv1d_bias[1][1][reverse_i][j],
-                        ne, nelements);
-                }
-                else if (name == "tdecoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".4.weight")
-                {
-                    loaded_size = load_single_tensor1d(
-                        f, name,
-                        model->dconv_layers_4_groupnorm_weight[1][1][reverse_i]
-                                                              [j],
-                        ne, nelements);
-                }
-                else if (name == "tdecoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".4.bias")
-                {
-                    loaded_size = load_single_tensor1d(
-                        f, name,
-                        model
-                            ->dconv_layers_4_groupnorm_bias[1][1][reverse_i][j],
-                        ne, nelements);
-                }
-                else if (name == "tdecoder." + std::to_string(i) +
-                                     ".dconv.layers." + std::to_string(j) +
-                                     ".6.scale")
-                {
-                    loaded_size = load_single_tensor1d(
-                        f, name,
-                        model->dconv_layers_6_scale[1][1][reverse_i][j], ne,
-                        nelements);
-                }
             }
         }
 
