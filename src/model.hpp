@@ -914,7 +914,7 @@ struct demucs_v3_model
 
     // time encoder 4 is super simple, just 1 conv
     Eigen::Tensor3dXf tencoder_4_conv_weight{
-        Eigen::Tensor3dXf(768, 384, 3)};
+        Eigen::Tensor3dXf(768, 384, 8)};
 
     Eigen::Tensor1dXf tencoder_4_conv_bias{
         Eigen::Tensor1dXf(768)};
@@ -1178,6 +1178,118 @@ struct demucs_v3_model
     Eigen::Tensor1dXf encoder_4_5_dconv_layers_8_scale[2][2]{
         {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)},
         {Eigen::Tensor1dXf(1536), Eigen::Tensor1dXf(1536)}};
+
+    // now we need 8 decoders that have a simple similar structure
+    // conv_tr (weight + bias), rewrite (weight + bias)
+    // first array dim is [2] for freq, time
+    // next is layer for (2,3,4,5) for freq, (1,2,3,4) for time
+    // Reshaped struct arrays to [2][4]
+    Eigen::Tensor3dXf decoders_conv_tr_weight[2][4]{
+        {
+            Eigen::Tensor3dXf(384, 192, 8), // decoder.2.conv_tr.weight
+            Eigen::Tensor3dXf(192, 96, 8),  // decoder.3.conv_tr.weight
+            Eigen::Tensor3dXf(96, 48, 8),   // decoder.4.conv_tr.weight
+            Eigen::Tensor3dXf(48, 16, 8)    // decoder.5.conv_tr.weight
+        },
+        {
+            Eigen::Tensor3dXf(384, 192, 8), // tdecoder.1.conv_tr.weight
+            Eigen::Tensor3dXf(192, 96, 8),  // tdecoder.2.conv_tr.weight
+            Eigen::Tensor3dXf(96, 48, 8),   // tdecoder.3.conv_tr.weight
+            Eigen::Tensor3dXf(48, 8, 8)     // tdecoder.4.conv_tr.weight
+        }
+    };
+
+    Eigen::Tensor1dXf decoders_conv_tr_bias[2][4]{
+        {
+            Eigen::Tensor1dXf(192), // decoder.2.conv_tr.bias
+            Eigen::Tensor1dXf(96),  // decoder.3.conv_tr.bias
+            Eigen::Tensor1dXf(48),  // decoder.4.conv_tr.bias
+            Eigen::Tensor1dXf(16)   // decoder.5.conv_tr.bias
+        },
+        {
+            Eigen::Tensor1dXf(192), // tdecoder.1.conv_tr.bias
+            Eigen::Tensor1dXf(96),  // tdecoder.2.conv_tr.bias
+            Eigen::Tensor1dXf(48),  // tdecoder.3.conv_tr.bias
+            Eigen::Tensor1dXf(8)    // tdecoder.4.conv_tr.bias
+        }
+    };
+
+    Eigen::Tensor4dXf decoders_rewrite_weight[2][4]{
+        {
+            Eigen::Tensor4dXf(768, 384, 3, 3), // decoder.2.rewrite.weight
+            Eigen::Tensor4dXf(384, 192, 3, 3), // decoder.3.rewrite.weight
+            Eigen::Tensor4dXf(192, 96, 3, 3),  // decoder.4.rewrite.weight
+            Eigen::Tensor4dXf(96, 48, 3, 3)    // decoder.5.rewrite.weight
+        },
+        {
+            Eigen::Tensor4dXf(768, 384, 3, 1), // tdecoder.1.rewrite.weight
+            Eigen::Tensor4dXf(384, 192, 3, 1), // tdecoder.2.rewrite.weight
+            Eigen::Tensor4dXf(192, 96, 3, 1),  // tdecoder.3.rewrite.weight
+            Eigen::Tensor4dXf(96, 48, 3, 1)    // tdecoder.4.rewrite.weight
+        }
+    };
+
+    Eigen::Tensor1dXf decoders_rewrite_bias[2][4]{
+        {
+            Eigen::Tensor1dXf(768), // decoder.2.rewrite.bias
+            Eigen::Tensor1dXf(384), // decoder.3.rewrite.bias
+            Eigen::Tensor1dXf(192), // decoder.4.rewrite.bias
+            Eigen::Tensor1dXf(96)   // decoder.5.rewrite.bias
+        },
+        {
+            Eigen::Tensor1dXf(768), // tdecoder.1.rewrite.bias
+            Eigen::Tensor1dXf(384), // tdecoder.2.rewrite.bias
+            Eigen::Tensor1dXf(192), // tdecoder.3.rewrite.bias
+            Eigen::Tensor1dXf(96)   // tdecoder.4.rewrite.bias
+        }
+    };
+
+    // Frequency Decoders
+    Eigen::Tensor3dXf decoder_0_1_conv_tr_weight[2]{
+        Eigen::Tensor3dXf(1536, 768, 4), // decoder.0.conv_tr.weight
+        Eigen::Tensor3dXf(768, 384, 8)   // decoder.1.conv_tr.weight
+    };
+
+    Eigen::Tensor1dXf decoder_0_1_conv_tr_bias[2]{
+        Eigen::Tensor1dXf(768), // decoder.0.conv_tr.bias
+        Eigen::Tensor1dXf(384)  // decoder.1.conv_tr.bias
+    };
+
+    Eigen::Tensor1dXf decoder_0_1_norm2_weight[2]{
+        Eigen::Tensor1dXf(768), // decoder.0.norm2.weight
+        Eigen::Tensor1dXf(384)  // decoder.1.norm2.weight
+    };
+
+    Eigen::Tensor1dXf decoder_0_1_norm2_bias[2]{
+        Eigen::Tensor1dXf(768), // decoder.0.norm2.bias
+        Eigen::Tensor1dXf(384)  // decoder.1.norm2.bias
+    };
+
+    Eigen::Tensor4dXf decoder_0_1_rewrite_weight[2]{
+        Eigen::Tensor4dXf(3072, 1536, 3, 1), // decoder.0.rewrite.weight
+        Eigen::Tensor4dXf(1536, 768, 3, 3) // decoder.1.rewrite.weight
+    };
+
+    Eigen::Tensor1dXf decoder_0_1_rewrite_bias[2]{
+        Eigen::Tensor1dXf(3072), // decoder.0.rewrite.bias
+        Eigen::Tensor1dXf(1536)  // decoder.1.rewrite.bias
+    };
+
+    Eigen::Tensor1dXf decoder_0_1_norm1_weight[2]{
+        Eigen::Tensor1dXf(3072), // decoder.0.norm1.weight
+        Eigen::Tensor1dXf(1536)  // decoder.1.norm1.weight
+    };
+
+    Eigen::Tensor1dXf decoder_0_1_norm1_bias[2]{
+        Eigen::Tensor1dXf(3072), // decoder.0.norm1.bias
+        Eigen::Tensor1dXf(1536)  // decoder.1.norm1.bias
+    };
+
+    // Unique tdecoder 0
+    Eigen::Tensor3dXf tdecoder_0_conv_tr_weight{Eigen::Tensor3dXf(768, 384, 8)}; // tdecoder.0.conv_tr.weight
+    Eigen::Tensor1dXf tdecoder_0_conv_tr_bias{Eigen::Tensor1dXf(384)};           // tdecoder.0.conv_tr.bias
+    Eigen::Tensor1dXf tdecoder_0_norm2_weight{Eigen::Tensor1dXf(384)};           // tdecoder.0.norm2.weight
+    Eigen::Tensor1dXf tdecoder_0_norm2_bias{Eigen::Tensor1dXf(384)};             // tdecoder.0.norm2.bias
 
     // freq_emb
     Eigen::MatrixXf freq_emb_embedding_weight{Eigen::MatrixXf(512, 48)};
