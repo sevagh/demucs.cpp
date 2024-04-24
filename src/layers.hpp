@@ -8,12 +8,12 @@
 #include <iostream>
 #include <unsupported/Eigen/CXX11/Tensor>
 
-//namespace demucscpp_v3
-//{
-//void apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &model,
-//                 Eigen::Tensor3dXf &y, int freq_idx, int encdec_idx,
-//                 int layer_idx, int mid_crop);
-//} // namespace demucscpp_v3
+namespace demucscpp_v3
+{
+void apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &model,
+                 Eigen::Tensor3dXf &y, int freq_idx, int encdec_idx,
+                 int layer_idx, int mid_crop);
+} // namespace demucscpp_v3
 
 namespace demucscpp
 {

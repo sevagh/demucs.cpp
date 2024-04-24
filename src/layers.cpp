@@ -528,228 +528,227 @@ void demucscpp::common_encoder_layer(
     q = q_shuf;
 }
 
-//void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &model,
-//                            Eigen::Tensor3dXf &y, int freq_idx, int encdec_idx,
-//                            int layer_idx, int mid_crop)
-//{
-//    // store another copy of y to sum back later
-//    Eigen::Tensor3dXf y_copy = y;
-//
-//    // now dconv time
-//
-//    switch (layer_idx)
-//    {
-//    case 0:
-//        y = demucscpp::conv1d<48, 6, 3, 1, 1, 1>(
-//            y,
-//            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [0],
-//            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [0]);
-//        break;
-//    case 1:
-//        y = demucscpp::conv1d<96, 12, 3, 1, 1, 1>(
-//            y,
-//            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [0],
-//            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [0]);
-//        break;
-//    case 2:
-//        y = demucscpp::conv1d<192, 24, 3, 1, 1, 1>(
-//            y,
-//            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [0],
-//            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [0]);
-//        break;
-//    case 3:
-//        y = demucscpp::conv1d<384, 48, 3, 1, 1, 1>(
-//            y,
-//            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [0],
-//            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [0]);
-//        break;
-//    };
-//
-//    y = demucscpp::group_norm_fused_gelu(
-//        y,
-//        model.dconv_layers_1_groupnorm_weight[freq_idx][encdec_idx][layer_idx]
-//                                             [0],
-//        model.dconv_layers_1_groupnorm_bias[freq_idx][encdec_idx][layer_idx][0],
-//        1e-05);
-//
-//    switch (layer_idx)
-//    {
-//    case 0:
-//        y = demucscpp::conv1d<6, 96, 1, 1, 0, 1>(
-//            y,
-//            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [0],
-//            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [0]);
-//        break;
-//    case 1:
-//        y = demucscpp::conv1d<12, 192, 1, 1, 0, 1>(
-//            y,
-//            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [0],
-//            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [0]);
-//        break;
-//    case 2:
-//        y = demucscpp::conv1d<24, 384, 1, 1, 0, 1>(
-//            y,
-//            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [0],
-//            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [0]);
-//        break;
-//    case 3:
-//        y = demucscpp::conv1d<48, 768, 1, 1, 0, 1>(
-//            y,
-//            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [0],
-//            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [0]);
-//        break;
-//    };
-//
-//    y = demucscpp::group_norm(
-//        y,
-//        model.dconv_layers_4_groupnorm_weight[freq_idx][encdec_idx][layer_idx]
-//                                             [0],
-//        model.dconv_layers_4_groupnorm_bias[freq_idx][encdec_idx][layer_idx][0],
-//        1, 1e-05);
-//
-//    y = demucscpp::glu(y, 1);
-//
-//    y = demucscpp::layer_scale(
-//        y, model.dconv_layers_6_scale[freq_idx][encdec_idx][layer_idx][0]);
-//
-//    // now we add y to itself
-//    y = y + y_copy;
-//
-//    // store another copy of y to sum back later
-//    y_copy = y;
-//
-//    // NEXT ENTIRE SUBSEQUENCE OF DCONV WITH SLIGHTLY DIFFERENT PARAMS
-//
-//    // Conv1d(48, 6, kernel_size=(3,), stride=(1,), padding=(2,), dilation=(2,))
-//    switch (layer_idx)
-//    {
-//    case 0:
-//        y = demucscpp::conv1d<48, 6, 3, 1, 2, 2>(
-//            y,
-//            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [1],
-//            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [1]);
-//        break;
-//    case 1:
-//        y = demucscpp::conv1d<96, 12, 3, 1, 2, 2>(
-//            y,
-//            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [1],
-//            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [1]);
-//        break;
-//    case 2:
-//        y = demucscpp::conv1d<192, 24, 3, 1, 2, 2>(
-//            y,
-//            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [1],
-//            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [1]);
-//        break;
-//    case 3:
-//        y = demucscpp::conv1d<384, 48, 3, 1, 2, 2>(
-//            y,
-//            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [1],
-//            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [1]);
-//        break;
-//    };
-//
-//    Eigen::Tensor3dXf y_cropped =
-//        y.slice(Eigen::array<Eigen::Index, 3>({0, 0, 0}),
-//                Eigen::array<Eigen::Index, 3>(
-//                    {y.dimension(0), y.dimension(1), mid_crop}));
-//
-//    y = y_cropped;
-//
-//    y = demucscpp::group_norm_fused_gelu(
-//        y,
-//        model.dconv_layers_1_groupnorm_weight[freq_idx][encdec_idx][layer_idx]
-//                                             [1],
-//        model.dconv_layers_1_groupnorm_bias[freq_idx][encdec_idx][layer_idx][1],
-//        1e-05);
-//
-//    // Conv1d(6, 96, kernel_size=(1,), stride=(1,))
-//    switch (layer_idx)
-//    {
-//    case 0:
-//        y = demucscpp::conv1d<6, 96, 1, 1, 0, 1>(
-//            y,
-//            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [1],
-//            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [1]);
-//        break;
-//    case 1:
-//        y = demucscpp::conv1d<12, 192, 1, 1, 0, 1>(
-//            y,
-//            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [1],
-//            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [1]);
-//        break;
-//    case 2:
-//        y = demucscpp::conv1d<24, 384, 1, 1, 0, 1>(
-//            y,
-//            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [1],
-//            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [1]);
-//        break;
-//    case 3:
-//        y = demucscpp::conv1d<48, 768, 1, 1, 0, 1>(
-//            y,
-//            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
-//                                              [1],
-//            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
-//                                            [1]);
-//        break;
-//    };
-//
-//    y = demucscpp::group_norm(
-//        y,
-//        model.dconv_layers_4_groupnorm_weight[freq_idx][encdec_idx][layer_idx]
-//                                             [1],
-//        model.dconv_layers_4_groupnorm_bias[freq_idx][encdec_idx][layer_idx][1],
-//        1, 1e-05);
-//
-//    y = demucscpp::glu(y, 1);
-//    y = demucscpp::layer_scale(
-//        y, model.dconv_layers_6_scale[freq_idx][encdec_idx][layer_idx][1]);
-//
-//    // if y_copy is shorter than y in the last dim
-//    // pad the last dim with zeros to match
-//
-//    if (y_copy.dimension(2) < y.dimension(2))
-//    {
-//        // pad the last dim with zeros to match
-//        Eigen::Tensor3dXf padded_tensor_copy(
-//            y_copy.dimension(0), y_copy.dimension(1), y.dimension(2));
-//        padded_tensor_copy.setZero();
-//        padded_tensor_copy.slice(Eigen::array<Eigen::Index, 3>({0, 0, 0}),
-//                                 y_copy.dimensions()) = y_copy;
-//        y_copy = padded_tensor_copy;
-//    }
-//
-//    // now sum with itself
-//    y = y + y_copy;
-//}
-//
+void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &model,
+                            Eigen::Tensor3dXf &y, int freq_idx, int encdec_idx,
+                            int layer_idx, int mid_crop)
+{
+    // store another copy of y to sum back later
+    Eigen::Tensor3dXf y_copy = y;
+
+    // now dconv time
+
+    switch (layer_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<48, 6, 3, 1, 1, 1>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [0],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [0]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<96, 12, 3, 1, 1, 1>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [0],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [0]);
+        break;
+    case 2:
+        y = demucscpp::conv1d<192, 24, 3, 1, 1, 1>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [0],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [0]);
+        break;
+    case 3:
+        y = demucscpp::conv1d<384, 48, 3, 1, 1, 1>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [0],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [0]);
+        break;
+    };
+
+    y = demucscpp::group_norm_fused_gelu(
+        y,
+        model.dconv_layers_1_groupnorm_weight[freq_idx][encdec_idx][layer_idx]
+                                             [0],
+        model.dconv_layers_1_groupnorm_bias[freq_idx][encdec_idx][layer_idx][0],
+        1e-05);
+
+    switch (layer_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<6, 96, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [0],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [0]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<12, 192, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [0],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [0]);
+        break;
+    case 2:
+        y = demucscpp::conv1d<24, 384, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [0],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [0]);
+        break;
+    case 3:
+        y = demucscpp::conv1d<48, 768, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [0],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [0]);
+        break;
+    };
+
+    y = demucscpp::group_norm(
+        y,
+        model.dconv_layers_4_groupnorm_weight[freq_idx][encdec_idx][layer_idx]
+                                             [0],
+        model.dconv_layers_4_groupnorm_bias[freq_idx][encdec_idx][layer_idx][0],
+        1, 1e-05);
+
+    y = demucscpp::glu(y, 1);
+
+    y = demucscpp::layer_scale(
+        y, model.dconv_layers_6_scale[freq_idx][encdec_idx][layer_idx][0]);
+
+    // now we add y to itself
+    y = y + y_copy;
+
+    // store another copy of y to sum back later
+    y_copy = y;
+
+    // NEXT ENTIRE SUBSEQUENCE OF DCONV WITH SLIGHTLY DIFFERENT PARAMS
+
+    // Conv1d(48, 6, kernel_size=(3,), stride=(1,), padding=(2,), dilation=(2,))
+    switch (layer_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<48, 6, 3, 1, 2, 2>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [1],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [1]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<96, 12, 3, 1, 2, 2>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [1],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [1]);
+        break;
+    case 2:
+        y = demucscpp::conv1d<192, 24, 3, 1, 2, 2>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [1],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [1]);
+        break;
+    case 3:
+        y = demucscpp::conv1d<384, 48, 3, 1, 2, 2>(
+            y,
+            model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [1],
+            model.dconv_layers_0_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [1]);
+        break;
+    };
+
+    Eigen::Tensor3dXf y_cropped =
+        y.slice(Eigen::array<Eigen::Index, 3>({0, 0, 0}),
+                Eigen::array<Eigen::Index, 3>(
+                    {y.dimension(0), y.dimension(1), mid_crop}));
+
+    y = y_cropped;
+
+    y = demucscpp::group_norm_fused_gelu(
+        y,
+        model.dconv_layers_1_groupnorm_weight[freq_idx][encdec_idx][layer_idx]
+                                             [1],
+        model.dconv_layers_1_groupnorm_bias[freq_idx][encdec_idx][layer_idx][1],
+        1e-05);
+
+    // Conv1d(6, 96, kernel_size=(1,), stride=(1,))
+    switch (layer_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<6, 96, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [1],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [1]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<12, 192, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [1],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [1]);
+        break;
+    case 2:
+        y = demucscpp::conv1d<24, 384, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [1],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [1]);
+        break;
+    case 3:
+        y = demucscpp::conv1d<48, 768, 1, 1, 0, 1>(
+            y,
+            model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
+                                              [1],
+            model.dconv_layers_3_conv1d_bias[freq_idx][encdec_idx][layer_idx]
+                                            [1]);
+        break;
+    };
+
+    y = demucscpp::group_norm(
+        y,
+        model.dconv_layers_4_groupnorm_weight[freq_idx][encdec_idx][layer_idx]
+                                             [1],
+        model.dconv_layers_4_groupnorm_bias[freq_idx][encdec_idx][layer_idx][1],
+        1, 1e-05);
+
+    y = demucscpp::glu(y, 1);
+    y = demucscpp::layer_scale(
+        y, model.dconv_layers_6_scale[freq_idx][encdec_idx][layer_idx][1]);
+
+    // if y_copy is shorter than y in the last dim
+    // pad the last dim with zeros to match
+
+    if (y_copy.dimension(2) < y.dimension(2))
+    {
+        // pad the last dim with zeros to match
+        Eigen::Tensor3dXf padded_tensor_copy(
+            y_copy.dimension(0), y_copy.dimension(1), y.dimension(2));
+        padded_tensor_copy.setZero();
+        padded_tensor_copy.slice(Eigen::array<Eigen::Index, 3>({0, 0, 0}),
+                                 y_copy.dimensions()) = y_copy;
+        y_copy = padded_tensor_copy;
+    }
+
+    // now sum with itself
+    y = y + y_copy;
+}

@@ -542,6 +542,25 @@ Eigen::Tensor3dXf conv1d_tr_fused_gelu(const Eigen::Tensor3dXf &x,
     return y_out_shuf;
 }
 
+template <int in_channels, int out_channels, int kernel_size_height, int kernel_size_width, int stride_height, int stride_width,
+          int pad_height, int pad_width, int dilation_height, int dilation_width>
+Eigen::Tensor3dXf conv2d_tr_fused_gelu(const Eigen::Tensor3dXf &x,
+                                       const Eigen::Tensor4dXf &w,
+                                       const Eigen::Tensor1dXf &b)
+{
+    // Call the 2D transposed convolution function
+    Eigen::Tensor3dXf y_out =
+        conv2d_tr_gemm_fused_gelu<in_channels, out_channels, kernel_size_height, kernel_size_width,
+                                  stride_height, stride_width, pad_height, pad_width, dilation_height, dilation_width>(
+                                    x, w, b);
+
+    // Move end axis to the front
+    Eigen::Tensor3dXf y_out_shuf =
+        y_out.shuffle(Eigen::array<int, 3>({2, 0, 1}));
+
+    return y_out_shuf;
+}
+
 } // namespace demucscpp
 
 #endif // CONV_HPP

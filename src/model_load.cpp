@@ -1943,7 +1943,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
 
                 // Load conv_tr.weight
                 if (name == base_name + ".conv_tr.weight") {
-                    loaded_size = load_single_tensor3d(
+                    loaded_size = load_single_tensor4d(
                         f, name, model->decoders_conv_tr_weight[freq_time][layer], ne, nelements);
                 }
                 // Load conv_tr.bias

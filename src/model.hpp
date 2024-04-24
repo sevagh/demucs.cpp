@@ -1184,18 +1184,18 @@ struct demucs_v3_model
     // first array dim is [2] for freq, time
     // next is layer for (2,3,4,5) for freq, (1,2,3,4) for time
     // Reshaped struct arrays to [2][4]
-    Eigen::Tensor3dXf decoders_conv_tr_weight[2][4]{
+    Eigen::Tensor4dXf decoders_conv_tr_weight[2][4]{
         {
-            Eigen::Tensor3dXf(384, 192, 8), // decoder.2.conv_tr.weight
-            Eigen::Tensor3dXf(192, 96, 8),  // decoder.3.conv_tr.weight
-            Eigen::Tensor3dXf(96, 48, 8),   // decoder.4.conv_tr.weight
-            Eigen::Tensor3dXf(48, 16, 8)    // decoder.5.conv_tr.weight
+            Eigen::Tensor4dXf(384, 192, 8, 1), // decoder.2.conv_tr.weight
+            Eigen::Tensor4dXf(192, 96, 8, 1),  // decoder.3.conv_tr.weight
+            Eigen::Tensor4dXf(96, 48, 8, 1),   // decoder.4.conv_tr.weight
+            Eigen::Tensor4dXf(48, 16, 8, 1)    // decoder.5.conv_tr.weight
         },
         {
-            Eigen::Tensor3dXf(384, 192, 8), // tdecoder.1.conv_tr.weight
-            Eigen::Tensor3dXf(192, 96, 8),  // tdecoder.2.conv_tr.weight
-            Eigen::Tensor3dXf(96, 48, 8),   // tdecoder.3.conv_tr.weight
-            Eigen::Tensor3dXf(48, 8, 8)     // tdecoder.4.conv_tr.weight
+            Eigen::Tensor4dXf(384, 192, 8, 1), // tdecoder.1.conv_tr.weight
+            Eigen::Tensor4dXf(192, 96, 8, 1),  // tdecoder.2.conv_tr.weight
+            Eigen::Tensor4dXf(96, 48, 8, 1),   // tdecoder.3.conv_tr.weight
+            Eigen::Tensor4dXf(48, 8, 8, 1)     // tdecoder.4.conv_tr.weight
         }
     };
 

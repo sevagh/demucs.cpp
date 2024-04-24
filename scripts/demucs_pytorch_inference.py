@@ -20,8 +20,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Demucs')
     parser.add_argument('input_file', type=str, help='path to input wav file')
     parser.add_argument('--dest-dir', type=str, default=None, help='path to write output files')
-    parser.add_argument("--six-source", default=False, action="store_true", help="convert 6s model (default: 4s)")
-    parser.add_argument("--fine-tuned", default=False, action="store_true", help="convert 6s model (default: 4s)")
+    parser.add_argument("--six-source", default=False, action="store_true", help="use 6s model (default: 4s)")
+    parser.add_argument("--fine-tuned", default=False, action="store_true", help="use ft model (default: 4s)")
+    parser.add_argument("--v3", default=False, action="store_true", help="use v3 (hdemucs_mmi) model (default: 4s)")
 
     args = parser.parse_args()
 
@@ -36,6 +37,8 @@ if __name__ == '__main__':
         model_name += '_6s'
     elif args.fine_tuned:
         model_name = 'htdemucs_ft'
+    elif args.v3:
+        model_name = 'hdemucs_mmi'
 
     # demucs v4 hybrid transformer
     model = get_model(model_name)
