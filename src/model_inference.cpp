@@ -596,8 +596,6 @@ void demucscpp_v3::model_v3_inference(
     demucscppdebug::debug_tensor_3dxf(buffers.xt_0, "buffers.xt encoder-0");
     demucscppdebug::debug_tensor_3dxf(buffers.x_0, "buffers.x tencoder-0");
 
-    return;
-
     // absorb both scaling factors in one expression
     //   i.e. eliminate const float freq_emb_scale = 0.2f;
     const float emb_scale = 10.0f * 0.2f;
@@ -630,6 +628,9 @@ void demucscpp_v3::model_v3_inference(
     apply_freq_encoder_v3(model, 1, buffers.x_0, buffers.x_1);
     cb(current_progress + segment_progress * 4.0f / 26.0f, "Freq encoder 1");
 
+    demucscppdebug::debug_tensor_3dxf(buffers.xt_1, "buffers.xt encoder-1");
+    demucscppdebug::debug_tensor_3dxf(buffers.x_1, "buffers.x tencoder-1");
+
     buffers.saved_1 = buffers.x_1;
     buffers.savedt_1 = buffers.xt_1;
 
@@ -638,6 +639,9 @@ void demucscpp_v3::model_v3_inference(
 
     apply_freq_encoder_v3(model, 2, buffers.x_1, buffers.x_2);
     cb(current_progress + segment_progress * 6.0f / 26.0f, "Freq encoder 2");
+
+    demucscppdebug::debug_tensor_3dxf(buffers.xt_2, "buffers.xt encoder-2");
+    demucscppdebug::debug_tensor_3dxf(buffers.x_2, "buffers.x tencoder-2");
 
     buffers.saved_2 = buffers.x_2;
     buffers.savedt_2 = buffers.xt_2;
@@ -651,7 +655,20 @@ void demucscpp_v3::model_v3_inference(
     buffers.saved_3 = buffers.x_3;
     buffers.savedt_3 = buffers.xt_3;
 
+    demucscppdebug::debug_tensor_3dxf(buffers.xt_3, "buffers.xt encoder-3");
+    demucscppdebug::debug_tensor_3dxf(buffers.x_3, "buffers.x tencoder-3");
+
+    return;
+
+    // z/spec branch: unique encoder 4 (bilstm, local attn)
+
+    // t/time branch: unique tencoder 4
+
+    // shared: unique encoder 5 (bistlm local attn)
+
     // now decoder time!
+
+    // shared: unique decoder 5
 
     // skip == saved_3
     demucscpp_v3::apply_freq_decoder_v3(model, 0, buffers.x_3, buffers.x_2,
