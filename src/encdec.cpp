@@ -707,3 +707,17 @@ void demucscpp_v3::apply_time_decoder_v3(const struct demucscpp_v3::demucs_v3_mo
                       Eigen::array<Eigen::Index, 3>(
                           {yt.dimension(0), yt.dimension(1), out_length}));
 }
+
+void demucscpp_v3::apply_time_encoder_4(const struct demucscpp_v3::demucs_v3_model &model,
+                                   const Eigen::Tensor3dXf &xt_in,
+                                   Eigen::Tensor3dXf &xt_out)
+{
+    // now implement the forward pass
+    // first, apply the convolution
+    // Conv1d(2, 48, kernel_size=(8,), stride=(4,), padding=(2,))
+    Eigen::Tensor3dXf yt = demucscpp::conv1d<384, 768, 8, 4, 2, 1>(
+            xt_in, model.tencoder_4_conv_weight,
+            model.tencoder_4_conv_bias);
+
+    xt_out = yt;
+}

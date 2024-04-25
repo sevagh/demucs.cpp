@@ -658,12 +658,16 @@ void demucscpp_v3::model_v3_inference(
     demucscppdebug::debug_tensor_3dxf(buffers.xt_3, "buffers.xt encoder-3");
     demucscppdebug::debug_tensor_3dxf(buffers.x_3, "buffers.x tencoder-3");
 
+    // t/time branch: unique tencoder 4
+    apply_time_encoder_4(model, buffers.xt_3, buffers.xt_4);
+
+    buffers.savedt_4 = buffers.xt_4;
+
+    demucscppdebug::debug_tensor_3dxf(buffers.xt_4, "buffers.xt encoder-4");
+
     return;
 
     // z/spec branch: unique encoder 4 (bilstm, local attn)
-
-    // t/time branch: unique tencoder 4
-
     // shared: unique encoder 5 (bistlm local attn)
 
     // now decoder time!

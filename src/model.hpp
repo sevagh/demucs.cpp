@@ -678,6 +678,7 @@ const int TIME_BRANCH_LEN_0 = 85995;
 const int TIME_BRANCH_LEN_1 = 21499;
 const int TIME_BRANCH_LEN_2 = 5375;
 const int TIME_BRANCH_LEN_3 = 1344;
+const int TIME_BRANCH_LEN_4 = 336;
 
 struct demucs_v3_model
 {
@@ -1317,7 +1318,10 @@ struct demucs_v3_segment_buffers
     Eigen::Tensor3dXf x_1;
     Eigen::Tensor3dXf x_2;
     Eigen::Tensor3dXf x_3;
-    Eigen::Tensor3dXf x_3_channel_upsampled;
+    Eigen::Tensor3dXf x_4;
+
+    // shared after encoder 5
+    Eigen::Tensor3dXf x_shared_5;
 
     // time branch
     Eigen::Tensor3dXf xt;             // input
@@ -1327,7 +1331,7 @@ struct demucs_v3_segment_buffers
     Eigen::Tensor3dXf xt_1;
     Eigen::Tensor3dXf xt_2;
     Eigen::Tensor3dXf xt_3;
-    Eigen::Tensor3dXf xt_3_channel_upsampled;
+    Eigen::Tensor3dXf xt_4;
 
     // skip conns for frequency and time
     // easier as hardcoded matrix sizes
@@ -1335,11 +1339,13 @@ struct demucs_v3_segment_buffers
     Eigen::Tensor3dXf saved_1;
     Eigen::Tensor3dXf saved_2;
     Eigen::Tensor3dXf saved_3;
+    Eigen::Tensor3dXf saved_4;
 
     Eigen::Tensor3dXf savedt_0;
     Eigen::Tensor3dXf savedt_1;
     Eigen::Tensor3dXf savedt_2;
     Eigen::Tensor3dXf savedt_3;
+    Eigen::Tensor3dXf savedt_4;
 
     // constructor for demucs_segment_buffers that takes int parameters
 
@@ -1364,19 +1370,20 @@ struct demucs_v3_segment_buffers
           x_out(nb_sources * 2 * nb_channels, nb_stft_bins - 1, nb_stft_frames),
           x_0(48, 512, FREQ_BRANCH_LEN), x_1(96, 128, FREQ_BRANCH_LEN),
           x_2(192, 32, FREQ_BRANCH_LEN), x_3(384, 8, FREQ_BRANCH_LEN),
-          x_3_channel_upsampled(512, 8, FREQ_BRANCH_LEN),
+          x_4(768, 1, FREQ_BRANCH_LEN),
           xt(1, nb_channels, segment_samples),
           xt_out(1, nb_sources * nb_channels, segment_samples),
           xt_decoded_out(1, 8, segment_samples), xt_0(1, 48, TIME_BRANCH_LEN_0),
           xt_1(1, 96, TIME_BRANCH_LEN_1), xt_2(1, 192, TIME_BRANCH_LEN_2),
-          xt_3(1, 384, TIME_BRANCH_LEN_3),
-          xt_3_channel_upsampled(1, 512, TIME_BRANCH_LEN_3),
+          xt_3(1, 384, TIME_BRANCH_LEN_3), xt_4(1, 768, TIME_BRANCH_LEN_4),
           saved_0(48, 512, FREQ_BRANCH_LEN), saved_1(96, 128, FREQ_BRANCH_LEN),
           saved_2(192, 32, FREQ_BRANCH_LEN), saved_3(384, 8, FREQ_BRANCH_LEN),
+          saved_4(768, 1, FREQ_BRANCH_LEN),
           savedt_0(1, 48, TIME_BRANCH_LEN_0),
           savedt_1(1, 96, TIME_BRANCH_LEN_1),
           savedt_2(1, 192, TIME_BRANCH_LEN_2),
-          savedt_3(1, 384, TIME_BRANCH_LEN_3){};
+          savedt_3(1, 384, TIME_BRANCH_LEN_3),
+          savedt_4(1, 768, TIME_BRANCH_LEN_4){};
 };
 
 bool load_demucs_v3_model(const std::string &model_dir,

@@ -46,6 +46,10 @@ void apply_time_encoder_v3(const struct demucscpp_v3::demucs_v3_model &model,
                         int encoder_idx, const Eigen::Tensor3dXf &xt_in,
                         Eigen::Tensor3dXf &xt_out);
 
+void apply_time_encoder_4(const struct demucscpp_v3::demucs_v3_model &model,
+                        const Eigen::Tensor3dXf &xt_in,
+                        Eigen::Tensor3dXf &xt_out);
+
 // forward declaration to apply a time decoder
 void apply_time_decoder_v3(const struct demucscpp_v3::demucs_v3_model &model,
                         int decoder_idx, const Eigen::Tensor3dXf &xt_in,
