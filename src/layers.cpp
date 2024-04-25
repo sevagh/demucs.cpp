@@ -540,7 +540,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
     switch (layer_idx)
     {
     case 0:
-        y = demucscpp::conv1d<48, 6, 3, 1, 1, 1>(
+        y = demucscpp::conv1d<48, 12, 3, 1, 1, 1>(
             y,
             model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [0],
@@ -548,7 +548,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
                                             [0]);
         break;
     case 1:
-        y = demucscpp::conv1d<96, 12, 3, 1, 1, 1>(
+        y = demucscpp::conv1d<96, 24, 3, 1, 1, 1>(
             y,
             model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [0],
@@ -556,7 +556,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
                                             [0]);
         break;
     case 2:
-        y = demucscpp::conv1d<192, 24, 3, 1, 1, 1>(
+        y = demucscpp::conv1d<192, 48, 3, 1, 1, 1>(
             y,
             model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [0],
@@ -564,7 +564,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
                                             [0]);
         break;
     case 3:
-        y = demucscpp::conv1d<384, 48, 3, 1, 1, 1>(
+        y = demucscpp::conv1d<384, 96, 3, 1, 1, 1>(
             y,
             model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [0],
@@ -583,7 +583,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
     switch (layer_idx)
     {
     case 0:
-        y = demucscpp::conv1d<6, 96, 1, 1, 0, 1>(
+        y = demucscpp::conv1d<12, 96, 1, 1, 0, 1>(
             y,
             model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [0],
@@ -591,7 +591,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
                                             [0]);
         break;
     case 1:
-        y = demucscpp::conv1d<12, 192, 1, 1, 0, 1>(
+        y = demucscpp::conv1d<24, 192, 1, 1, 0, 1>(
             y,
             model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [0],
@@ -599,7 +599,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
                                             [0]);
         break;
     case 2:
-        y = demucscpp::conv1d<24, 384, 1, 1, 0, 1>(
+        y = demucscpp::conv1d<48, 384, 1, 1, 0, 1>(
             y,
             model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [0],
@@ -607,7 +607,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
                                             [0]);
         break;
     case 3:
-        y = demucscpp::conv1d<48, 768, 1, 1, 0, 1>(
+        y = demucscpp::conv1d<96, 768, 1, 1, 0, 1>(
             y,
             model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [0],
@@ -640,7 +640,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
     switch (layer_idx)
     {
     case 0:
-        y = demucscpp::conv1d<48, 6, 3, 1, 2, 2>(
+        y = demucscpp::conv1d<48, 12, 3, 1, 2, 2>(
             y,
             model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [1],
@@ -648,7 +648,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
                                             [1]);
         break;
     case 1:
-        y = demucscpp::conv1d<96, 12, 3, 1, 2, 2>(
+        y = demucscpp::conv1d<96, 24, 3, 1, 2, 2>(
             y,
             model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [1],
@@ -656,7 +656,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
                                             [1]);
         break;
     case 2:
-        y = demucscpp::conv1d<192, 24, 3, 1, 2, 2>(
+        y = demucscpp::conv1d<192, 48, 3, 1, 2, 2>(
             y,
             model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [1],
@@ -664,7 +664,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
                                             [1]);
         break;
     case 3:
-        y = demucscpp::conv1d<384, 48, 3, 1, 2, 2>(
+        y = demucscpp::conv1d<384, 96, 3, 1, 2, 2>(
             y,
             model.dconv_layers_0_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [1],
@@ -691,7 +691,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
     switch (layer_idx)
     {
     case 0:
-        y = demucscpp::conv1d<6, 96, 1, 1, 0, 1>(
+        y = demucscpp::conv1d<12, 96, 1, 1, 0, 1>(
             y,
             model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [1],
@@ -699,7 +699,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
                                             [1]);
         break;
     case 1:
-        y = demucscpp::conv1d<12, 192, 1, 1, 0, 1>(
+        y = demucscpp::conv1d<24, 192, 1, 1, 0, 1>(
             y,
             model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [1],
@@ -707,7 +707,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
                                             [1]);
         break;
     case 2:
-        y = demucscpp::conv1d<24, 384, 1, 1, 0, 1>(
+        y = demucscpp::conv1d<48, 384, 1, 1, 0, 1>(
             y,
             model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [1],
@@ -715,7 +715,7 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
                                             [1]);
         break;
     case 3:
-        y = demucscpp::conv1d<48, 768, 1, 1, 0, 1>(
+        y = demucscpp::conv1d<96, 768, 1, 1, 0, 1>(
             y,
             model.dconv_layers_3_conv1d_weight[freq_idx][encdec_idx][layer_idx]
                                               [1],

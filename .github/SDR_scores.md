@@ -60,6 +60,21 @@ bass            ==> SDR:   4.584  SIR:   9.359  ISR:   9.068  SAR:   4.885
 other           ==> SDR:   7.426  SIR:  12.793  ISR:  12.975  SAR:   7.830
 ```
 
+### Performance ov v3 hdemucs_mmi model
+
+Track 'Zeno - Signs' from MUSDB18-HQ test set
+
+PyTorch inference:
+```
+vocals          ==> SDR:   8.328  SIR:  18.943  ISR:  16.097  SAR:   8.563
+drums           ==> SDR:   9.284  SIR:  18.123  ISR:  16.230  SAR:  10.125
+bass            ==> SDR:   3.612  SIR:  10.313  ISR:   6.958  SAR:   3.077
+other           ==> SDR:   7.122  SIR:  11.391  ISR:  14.363  SAR:   7.910
+```
+CPP inference (thise codebase, `demucs_v3.cpp`:
+```
+```
+
 ### Performance of multi-threaded inference
 
 Zeno - Signs, Demucs 4s multi-threaded using the same strategy used in <https://freemusicdemixer.com>.

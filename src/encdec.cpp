@@ -488,6 +488,8 @@ void demucscpp_v3::apply_time_encoder_v3(const struct demucscpp_v3::demucs_v3_mo
         break;
     };
 
+    std::cout << "first conv!" << std::endl;
+
     // now dconv time
     demucscpp_v3::apply_dconv_v3(model, yt, 1, 0, tencoder_idx, crop);
 

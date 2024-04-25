@@ -593,6 +593,9 @@ void demucscpp_v3::model_v3_inference(
     demucscpp_v3::apply_freq_encoder_v3(model, 0, buffers.x, buffers.x_0);
     cb(current_progress + segment_progress * 2.0f / 26.0f, "Freq encoder 0");
 
+    demucscppdebug::debug_tensor_3dxf(buffers.xt_0, "buffers.xt encoder-0");
+    demucscppdebug::debug_tensor_3dxf(buffers.x_0, "buffers.x tencoder-0");
+
     return;
 
     // absorb both scaling factors in one expression
