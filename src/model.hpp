@@ -679,7 +679,6 @@ const int TIME_BRANCH_LEN_1 = 21499;
 const int TIME_BRANCH_LEN_2 = 5375;
 const int TIME_BRANCH_LEN_3 = 1344;
 const int TIME_BRANCH_LEN_4 = 336;
-const int LSTM_SEQ_LEN = 200;
 const int LSTM_HIDDEN_SIZE_0 = 192;
 const int LSTM_HIDDEN_SIZE_1 = 384;
 
@@ -1416,12 +1415,12 @@ struct demucs_v3_segment_buffers
                     for (int k = 0; k < 2; k++) {
                         // lstm direction
                         for (int l = 0; l < 2; l++) {
-                            lstm_output_per_direction[i][j][k][l] = Eigen::MatrixXf::Zero(LSTM_SEQ_LEN, hidden_size);
+                            lstm_output_per_direction[i][j][k][l] = Eigen::MatrixXf::Zero(FREQ_BRANCH_LEN, hidden_size);
                             lstm_hidden[i][j][k][l] = Eigen::MatrixXf::Zero(hidden_size, 1);
                             lstm_cell[i][j][k][l] = Eigen::MatrixXf::Zero(cell_size, 1);
                         }
 
-                        lstm_output[i][j][k] = Eigen::MatrixXf::Zero(LSTM_SEQ_LEN, 2 * hidden_size);
+                        lstm_output[i][j][k] = Eigen::MatrixXf::Zero(FREQ_BRANCH_LEN, 2 * hidden_size);
                     }
                 }
             }

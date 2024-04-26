@@ -831,13 +831,18 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
     std::cin.ignore();
     // SO FAR SO GOOD!
 
-    Eigen::MatrixXf y_mat = Eigen::Map<Eigen::MatrixXf>(y.data(), y.dimension(1), y.dimension(2));
+    // transpose it to put time seq last
+    Eigen::MatrixXf y_mat = Eigen::Map<Eigen::MatrixXf>(y.data(), y.dimension(1), y.dimension(2)).transpose();
 
     // then, bilstm
     demucscpp_v3::lstm_forward(model, 0, 0, y_mat, buffers, demucscpp_v3::LSTM_HIDDEN_SIZE_0);
 
-    demucscppdebug::debug_matrix_xf(buffers.lstm_output[0][0][0], "lstm output layer-0 post-bilstm");
-    demucscppdebug::debug_matrix_xf(buffers.lstm_output[0][0][1], "lstm output layer-1 post-bilstm");
+    // access last element of the last dim which is the output of the bilstm
+    Eigen::MatrixXf lstm_out_0 = buffers.lstm_output[0][0][1];
+
+    demucscppdebug::debug_matrix_xf(lstm_out_0, "y_shuf post-bilstm");
+
+    std::cin.ignore();
 
     // then, localattn
 
