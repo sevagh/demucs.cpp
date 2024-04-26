@@ -584,9 +584,6 @@ void demucscpp_v3::model_v3_inference(
     demucscppdebug::debug_tensor_3dxf(buffers.xt, "buffers.xt");
     demucscppdebug::debug_tensor_3dxf(buffers.x, "buffers.x");
 
-    std::cout << "Press Enter to continue..." << std::endl;
-    std::cin.ignore();
-
     demucscpp_v3::apply_time_encoder_v3(model, 0, buffers.xt, buffers.xt_0);
     cb(current_progress + segment_progress * 1.0f / 26.0f, "Time encoder 0");
 
@@ -665,14 +662,22 @@ void demucscpp_v3::model_v3_inference(
 
     demucscppdebug::debug_tensor_3dxf(buffers.xt_4, "buffers.xt encoder-4");
 
+    // z/spec branch: unique encoder 4 (bilstm, local attn)
+
+    // t/time branch: unique tencoder 4
+    apply_freq_shared_encoder_4_5(model, buffers.x_3, buffers.xt_4, 0, buffers.x_4, buffers);
+
+    buffers.saved_4 = buffers.x_4;
+
+    demucscppdebug::debug_tensor_3dxf(buffers.x_4, "buffers.x encoder-4");
+
     return;
 
-    // z/spec branch: unique encoder 4 (bilstm, local attn)
     // shared: unique encoder 5 (bistlm local attn)
 
-    // now decoder time!
-
     // shared: unique decoder 5
+
+    // now decoder time!
 
     // skip == saved_3
     demucscpp_v3::apply_freq_decoder_v3(model, 0, buffers.x_3, buffers.x_2,

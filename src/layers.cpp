@@ -1,6 +1,7 @@
 #include "layers.hpp"
 #include "model.hpp"
 #include "tensor.hpp"
+#include "lstm.hpp"
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
 
@@ -84,6 +85,46 @@ demucscpp::group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
 
                 // Assign the activated value back to the tensor
                 y_out(i, c, w) = activated_val;
+            }
+        }
+    }
+
+    return y_out;
+}
+
+Eigen::Tensor3dXf demucscpp::group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
+                                                   const Eigen::Tensor1dXf &weight,
+                                                   const Eigen::Tensor1dXf &bias,
+                                                   int num_groups, float eps) {
+    int C = x.dimension(0);
+    int H = x.dimension(1);
+    int W = x.dimension(2);
+
+    Eigen::Tensor3dXf y_out(C, H, W);
+    y_out.setZero();
+
+    int group_size = C / num_groups;
+
+    for (int g = 0; g < num_groups; ++g) {
+        int start_channel = g * group_size;
+
+        Eigen::Tensor3dXf group_slice = x.slice(Eigen::array<int, 3>{start_channel, 0, 0},
+                                   Eigen::array<int, 3>{group_size, H, W});
+
+        Eigen::Tensor<float, 0> mean_tensor = group_slice.mean(Eigen::array<int, 3>{0, 1, 2});
+        float mean = mean_tensor(0);
+        float var = demucscpp::calculate_variance(group_slice, mean);
+
+        for (int c = start_channel; c < start_channel + group_size; ++c) {
+            for (int h = 0; h < H; ++h) {
+                for (int w = 0; w < W; ++w) {
+                    float norm_val = (x(c, h, w) - mean) / std::sqrt(var + eps);
+
+                    norm_val = norm_val * weight(c) + bias(c);
+
+                    float gelu_val = 0.5f * norm_val * (1.0f + std::erf(norm_val / std::sqrt(2.0f)));
+                    y_out(c, h, w) = gelu_val;
+                }
             }
         }
     }
@@ -734,6 +775,165 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
     y = demucscpp::glu(y, 1);
     y = demucscpp::layer_scale(
         y, model.dconv_layers_6_scale[freq_idx][encdec_idx][layer_idx][1]);
+
+    // if y_copy is shorter than y in the last dim
+    // pad the last dim with zeros to match
+
+    if (y_copy.dimension(2) < y.dimension(2))
+    {
+        // pad the last dim with zeros to match
+        Eigen::Tensor3dXf padded_tensor_copy(
+            y_copy.dimension(0), y_copy.dimension(1), y.dimension(2));
+        padded_tensor_copy.setZero();
+        padded_tensor_copy.slice(Eigen::array<Eigen::Index, 3>({0, 0, 0}),
+                                 y_copy.dimensions()) = y_copy;
+        y_copy = padded_tensor_copy;
+    }
+
+    // now sum with itself
+    y = y + y_copy;
+}
+
+void demucscpp_v3::apply_dconv_v3_encoder_4_5(
+    const struct demucscpp_v3::demucs_v3_model &model,
+    Eigen::Tensor3dXf &y, int encoder_idx,
+    int mid_crop,
+    struct demucscpp_v3::demucs_v3_segment_buffers &buffers)
+{
+    // store another copy of y to sum back later
+    Eigen::Tensor3dXf y_copy = y;
+
+    // now dconv time
+
+    switch (encoder_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<768, 192, 3, 1, 1, 1>(
+            y,
+            model.encoder_4_5_dconv_layers_0_conv1d_weight[encoder_idx][0],
+            model.encoder_4_5_dconv_layers_0_conv1d_bias[encoder_idx][0]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<768, 192, 3, 1, 1, 1>(
+            y,
+            model.encoder_4_5_dconv_layers_0_conv1d_weight[encoder_idx][0],
+            model.encoder_4_5_dconv_layers_0_conv1d_bias[encoder_idx][0]);
+        break;
+    };
+
+    y = demucscpp::group_norm_fused_gelu(
+        y,
+        model.encoder_4_5_dconv_layers_1_groupnorm_weight[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_1_groupnorm_bias[encoder_idx][0],
+        1e-05);
+
+    demucscppdebug::debug_tensor_3dxf(y, "y_shuff pre-bilstm");
+    std::cin.ignore();
+    // SO FAR SO GOOD!
+
+    Eigen::MatrixXf y_mat = Eigen::Map<Eigen::MatrixXf>(y.data(), y.dimension(1), y.dimension(2));
+
+    // then, bilstm
+    demucscpp_v3::lstm_forward(model, 0, 0, y_mat, buffers, demucscpp_v3::LSTM_HIDDEN_SIZE_0);
+
+    demucscppdebug::debug_matrix_xf(buffers.lstm_output[0][0][0], "lstm output layer-0 post-bilstm");
+    demucscppdebug::debug_matrix_xf(buffers.lstm_output[0][0][1], "lstm output layer-1 post-bilstm");
+
+    // then, localattn
+
+    switch (encoder_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<12, 96, 1, 1, 0, 1>(
+            y,
+            model.encoder_4_5_dconv_layers_5_conv1d_weight[encoder_idx][0],
+            model.encoder_4_5_dconv_layers_5_conv1d_bias[encoder_idx][0]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<24, 192, 1, 1, 0, 1>(
+            y,
+            model.encoder_4_5_dconv_layers_5_conv1d_weight[encoder_idx][0],
+            model.encoder_4_5_dconv_layers_5_conv1d_bias[encoder_idx][0]);
+        break;
+    };
+
+    y = demucscpp::group_norm(
+        y,
+        model.encoder_4_5_dconv_layers_6_groupnorm_weight[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_6_groupnorm_bias[encoder_idx][0],
+        1, 1e-05);
+
+    y = demucscpp::glu(y, 1);
+
+    y = demucscpp::layer_scale(
+        y, model.encoder_4_5_dconv_layers_8_scale[encoder_idx][0]);
+
+    // now we add y to itself
+    y = y + y_copy;
+
+    // store another copy of y to sum back later
+    y_copy = y;
+
+    // NEXT ENTIRE SUBSEQUENCE OF DCONV WITH SLIGHTLY DIFFERENT PARAMS
+
+    // Conv1d(48, 6, kernel_size=(3,), stride=(1,), padding=(2,), dilation=(2,))
+    switch (encoder_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<48, 12, 3, 1, 2, 2>(
+            y,
+            model.encoder_4_5_dconv_layers_0_conv1d_weight[encoder_idx][1],
+            model.encoder_4_5_dconv_layers_0_conv1d_bias[encoder_idx][1]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<96, 24, 3, 1, 2, 2>(
+            y,
+            model.encoder_4_5_dconv_layers_0_conv1d_weight[encoder_idx][1],
+            model.encoder_4_5_dconv_layers_0_conv1d_bias[encoder_idx][1]);
+        break;
+    };
+
+    Eigen::Tensor3dXf y_cropped =
+        y.slice(Eigen::array<Eigen::Index, 3>({0, 0, 0}),
+                Eigen::array<Eigen::Index, 3>(
+                    {y.dimension(0), y.dimension(1), mid_crop}));
+
+    y = y_cropped;
+
+    y = demucscpp::group_norm_fused_gelu(
+        y,
+        model.encoder_4_5_dconv_layers_1_groupnorm_weight[encoder_idx][1],
+        model.encoder_4_5_dconv_layers_1_groupnorm_bias[encoder_idx][1],
+        1e-05);
+
+    // now another bilstm, localattn
+
+    // Conv1d(6, 96, kernel_size=(1,), stride=(1,))
+    switch (encoder_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<12, 96, 1, 1, 0, 1>(
+            y,
+            model.encoder_4_5_dconv_layers_5_conv1d_weight[encoder_idx][1],
+            model.encoder_4_5_dconv_layers_5_conv1d_bias[encoder_idx][1]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<24, 192, 1, 1, 0, 1>(
+            y,
+            model.encoder_4_5_dconv_layers_5_conv1d_weight[encoder_idx][1],
+            model.encoder_4_5_dconv_layers_5_conv1d_bias[encoder_idx][1]);
+        break;
+    };
+
+    y = demucscpp::group_norm(
+        y,
+        model.encoder_4_5_dconv_layers_6_groupnorm_weight[encoder_idx][1],
+        model.encoder_4_5_dconv_layers_6_groupnorm_bias[encoder_idx][1],
+        1, 1e-05);
+
+    y = demucscpp::glu(y, 1);
+    y = demucscpp::layer_scale(
+        y, model.encoder_4_5_dconv_layers_8_scale[encoder_idx][1]);
 
     // if y_copy is shorter than y in the last dim
     // pad the last dim with zeros to match

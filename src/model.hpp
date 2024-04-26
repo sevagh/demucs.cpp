@@ -679,6 +679,9 @@ const int TIME_BRANCH_LEN_1 = 21499;
 const int TIME_BRANCH_LEN_2 = 5375;
 const int TIME_BRANCH_LEN_3 = 1344;
 const int TIME_BRANCH_LEN_4 = 336;
+const int LSTM_SEQ_LEN = 200;
+const int LSTM_HIDDEN_SIZE_0 = 192;
+const int LSTM_HIDDEN_SIZE_1 = 384;
 
 struct demucs_v3_model
 {
@@ -923,8 +926,8 @@ struct demucs_v3_model
     // freq encoder 4 and shared encoder 5
     // have the bilistm and localattention layers, similar to each other
     // index of two to hold both
-    Eigen::Tensor3dXf encoder_4_5_conv_weight[2]{
-        Eigen::Tensor3dXf(768, 384, 8), Eigen::Tensor3dXf(1536, 768, 4)};
+    Eigen::Tensor4dXf encoder_4_5_conv_weight[2]{
+        Eigen::Tensor4dXf(768, 384, 8, 1), Eigen::Tensor4dXf(1536, 768, 4, 1)};
 
     Eigen::Tensor1dXf encoder_4_5_conv_bias[2]{
         Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(1536)};
@@ -965,22 +968,22 @@ struct demucs_v3_model
 
     // 2 encoders, 2 dconv layers, 2 layer bi-lstm (2 layers 2 directions) => [2][2][2][2]
     // first index = encoder, second index = dconv layer, third index = layer, fourth index = direction
-    Eigen::Tensor2dXf encoder_4_5_dconv_layers_3_lstm_ih_w[2][2][2][2]{
+    Eigen::MatrixXf encoder_4_5_dconv_layers_3_lstm_ih_w[2][2][2][2]{
         // encoder 4
         {
             // dconv layer 0
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor2dXf(768, 192), Eigen::Tensor2dXf(768, 192)},
+                {Eigen::MatrixXf(768, 192), Eigen::MatrixXf(768, 192)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor2dXf(768, 384), Eigen::Tensor2dXf(768, 384)},
+                {Eigen::MatrixXf(768, 384), Eigen::MatrixXf(768, 384)},
             },
             // dconv layer 1
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor2dXf(768, 192), Eigen::Tensor2dXf(768, 192)},
+                {Eigen::MatrixXf(768, 192), Eigen::MatrixXf(768, 192)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor2dXf(768, 384), Eigen::Tensor2dXf(768, 384)},
+                {Eigen::MatrixXf(768, 384), Eigen::MatrixXf(768, 384)},
             },
         },
         // encoder 5
@@ -988,35 +991,35 @@ struct demucs_v3_model
             //  dconv layer 0
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor2dXf(1536, 384), Eigen::Tensor2dXf(1536, 384)},
+                {Eigen::MatrixXf(1536, 384), Eigen::MatrixXf(1536, 384)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor2dXf(1536, 768), Eigen::Tensor2dXf(1536, 768)},
+                {Eigen::MatrixXf(1536, 768), Eigen::MatrixXf(1536, 768)},
             },
             // dconv layer 1
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor2dXf(1536, 384), Eigen::Tensor2dXf(1536, 384)},
+                {Eigen::MatrixXf(1536, 384), Eigen::MatrixXf(1536, 384)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor2dXf(1536, 768), Eigen::Tensor2dXf(1536, 768)},
+                {Eigen::MatrixXf(1536, 768), Eigen::MatrixXf(1536, 768)},
             },
         }};
 
-    Eigen::Tensor1dXf encoder_4_5_dconv_layers_3_lstm_ih_bias [2][2][2][2]{
+    Eigen::MatrixXf encoder_4_5_dconv_layers_3_lstm_ih_b[2][2][2][2]{
         // encoder 4
         {
             // dconv layer 0
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)},
+                {Eigen::MatrixXf(768, 1), Eigen::MatrixXf(768, 1)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)},
+                {Eigen::MatrixXf(768, 1), Eigen::MatrixXf(768, 1)},
             },
             // dconv layer 1
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)},
+                {Eigen::MatrixXf(768, 1), Eigen::MatrixXf(768, 1)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)},
+                {Eigen::MatrixXf(768, 1), Eigen::MatrixXf(768, 1)},
             },
         },
         // encoder 5
@@ -1024,36 +1027,36 @@ struct demucs_v3_model
             // dconv layer 0
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor1dXf(1536), Eigen::Tensor1dXf(1536)},
+                {Eigen::MatrixXf(1536, 1), Eigen::MatrixXf(1536, 1)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor1dXf(1536), Eigen::Tensor1dXf(1536)},
+                {Eigen::MatrixXf(1536, 1), Eigen::MatrixXf(1536, 1)},
             },
             // dconv layer 1
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor1dXf(1536), Eigen::Tensor1dXf(1536)},
+                {Eigen::MatrixXf(1536, 1), Eigen::MatrixXf(1536, 1)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor1dXf(1536), Eigen::Tensor1dXf(1536)},
+                {Eigen::MatrixXf(1536, 1), Eigen::MatrixXf(1536, 1)},
             },
         },
     };
 
-    Eigen::Tensor2dXf encoder_4_5_dconv_layers_3_lstm_hh_w[2][2][2][2]{
+    Eigen::MatrixXf encoder_4_5_dconv_layers_3_lstm_hh_w[2][2][2][2]{
         // encoder 4
         {
             // dconv layer 0
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor2dXf(768, 192), Eigen::Tensor2dXf(768, 192)},
+                {Eigen::MatrixXf(768, 192), Eigen::MatrixXf(768, 192)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor2dXf(768, 192), Eigen::Tensor2dXf(768, 192)},
+                {Eigen::MatrixXf(768, 192), Eigen::MatrixXf(768, 192)},
             },
             // dconv layer 1
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor2dXf(768, 192), Eigen::Tensor2dXf(768, 192)},
+                {Eigen::MatrixXf(768, 192), Eigen::MatrixXf(768, 192)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor2dXf(768, 192), Eigen::Tensor2dXf(768, 192)},
+                {Eigen::MatrixXf(768, 192), Eigen::MatrixXf(768, 192)},
             },
         },
         // encoder 5
@@ -1061,36 +1064,36 @@ struct demucs_v3_model
             // dconv layer 0
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor2dXf(1536, 384), Eigen::Tensor2dXf(1536, 384)},
+                {Eigen::MatrixXf(1536, 384), Eigen::MatrixXf(1536, 384)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor2dXf(1536, 384), Eigen::Tensor2dXf(1536, 384)},
+                {Eigen::MatrixXf(1536, 384), Eigen::MatrixXf(1536, 384)},
             },
             // dconv layer 1
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor2dXf(1536, 384), Eigen::Tensor2dXf(1536, 384)},
+                {Eigen::MatrixXf(1536, 384), Eigen::MatrixXf(1536, 384)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor2dXf(1536, 384), Eigen::Tensor2dXf(1536, 384)},
+                {Eigen::MatrixXf(1536, 384), Eigen::MatrixXf(1536, 384)},
             },
         },
     };
 
-    Eigen::Tensor1dXf encoder_4_5_dconv_layers_3_lstm_hh_bias [2][2][2][2]{
+    Eigen::MatrixXf encoder_4_5_dconv_layers_3_lstm_hh_b[2][2][2][2]{
         // encoder 4
         {
             // dconv layer 0
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)},
+                {Eigen::MatrixXf(768, 1), Eigen::MatrixXf(768, 1)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)},
+                {Eigen::MatrixXf(768, 1), Eigen::MatrixXf(768, 1)},
             },
             // dconv layer 1
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)},
+                {Eigen::MatrixXf(768, 1), Eigen::MatrixXf(768, 1)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)},
+                {Eigen::MatrixXf(768, 1), Eigen::MatrixXf(768, 1)},
             },
         },
         // encoder 5
@@ -1098,16 +1101,16 @@ struct demucs_v3_model
             // dconv layer 0
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor1dXf(1536), Eigen::Tensor1dXf(1536)},
+                {Eigen::MatrixXf(1536, 1), Eigen::MatrixXf(1536, 1)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor1dXf(1536), Eigen::Tensor1dXf(1536)},
+                {Eigen::MatrixXf(1536, 1), Eigen::MatrixXf(1536, 1)},
             },
             // dconv layer 1
             {
                 // ih_l0, ih_l0_reverse
-                {Eigen::Tensor1dXf(1536), Eigen::Tensor1dXf(1536)},
+                {Eigen::MatrixXf(1536, 1), Eigen::MatrixXf(1536, 1)},
                 // ih_l1, ih_l1_reverse
-                {Eigen::Tensor1dXf(1536), Eigen::Tensor1dXf(1536)},
+                {Eigen::MatrixXf(1536, 1), Eigen::MatrixXf(1536, 1)},
             },
         },
     };
@@ -1160,19 +1163,19 @@ struct demucs_v3_model
         {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
         {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)}};
 
-    Eigen::Tensor2dXf encoder_4_5_dconv_layers_5_weight[2][2]{
-        {Eigen::Tensor2dXf(1536, 192), Eigen::Tensor2dXf(1536, 192)},
-        {Eigen::Tensor2dXf(3072, 384), Eigen::Tensor2dXf(3072, 384)}};
+    Eigen::Tensor3dXf encoder_4_5_dconv_layers_5_conv1d_weight[2][2]{
+        {Eigen::Tensor3dXf(1536, 192, 1), Eigen::Tensor3dXf(1536, 192, 1)},
+        {Eigen::Tensor3dXf(3072, 384, 1), Eigen::Tensor3dXf(3072, 384, 1)}};
 
-    Eigen::Tensor1dXf encoder_4_5_dconv_layers_5_bias[2][2]{
+    Eigen::Tensor1dXf encoder_4_5_dconv_layers_5_conv1d_bias[2][2]{
         {Eigen::Tensor1dXf(1536), Eigen::Tensor1dXf(1536)},
         {Eigen::Tensor1dXf(3072), Eigen::Tensor1dXf(3072)}};
 
-    Eigen::Tensor1dXf encoder_4_5_dconv_layers_6_weight[2][2]{
+    Eigen::Tensor1dXf encoder_4_5_dconv_layers_6_groupnorm_weight[2][2]{
         {Eigen::Tensor1dXf(1536), Eigen::Tensor1dXf(1536)},
         {Eigen::Tensor1dXf(3072), Eigen::Tensor1dXf(3072)}};
 
-    Eigen::Tensor1dXf encoder_4_5_dconv_layers_6_bias[2][2]{
+    Eigen::Tensor1dXf encoder_4_5_dconv_layers_6_groupnorm_bias[2][2]{
         {Eigen::Tensor1dXf(1536), Eigen::Tensor1dXf(1536)},
         {Eigen::Tensor1dXf(3072), Eigen::Tensor1dXf(3072)}};
 
@@ -1347,6 +1350,15 @@ struct demucs_v3_segment_buffers
     Eigen::Tensor3dXf savedt_3;
     Eigen::Tensor3dXf savedt_4;
 
+    // LSTM data
+    // 2 encoders, 2 dconv layers, 2 layers, 2 directions
+    // per-direction buffers
+    Eigen::MatrixXf lstm_output_per_direction[2][2][2][2];
+    Eigen::MatrixXf lstm_hidden[2][2][2][2];
+    Eigen::MatrixXf lstm_cell[2][2][2][2];
+    // out-of-direction buffers
+    Eigen::MatrixXf lstm_output[2][2][2];
+
     // constructor for demucs_segment_buffers that takes int parameters
 
     // let's do pesky precomputing of the signal repadding to 1/4 hop
@@ -1383,7 +1395,37 @@ struct demucs_v3_segment_buffers
           savedt_1(1, 96, TIME_BRANCH_LEN_1),
           savedt_2(1, 192, TIME_BRANCH_LEN_2),
           savedt_3(1, 384, TIME_BRANCH_LEN_3),
-          savedt_4(1, 768, TIME_BRANCH_LEN_4){};
+          savedt_4(1, 768, TIME_BRANCH_LEN_4){
+            // initialize lstm buffers
+            int hidden_size = -1;
+            int cell_size = -1;
+
+            // encoder layer
+            for (int i = 0; i < 2; i++) {
+                if (i == 0) {
+                    hidden_size = LSTM_HIDDEN_SIZE_0;
+                    cell_size = LSTM_HIDDEN_SIZE_0;
+                } else {
+                    hidden_size = LSTM_HIDDEN_SIZE_1;
+                    cell_size = LSTM_HIDDEN_SIZE_1;
+                }
+
+                // dconv layer
+                for (int j = 0; j < 2; j++) {
+                    // lstm layer
+                    for (int k = 0; k < 2; k++) {
+                        // lstm direction
+                        for (int l = 0; l < 2; l++) {
+                            lstm_output_per_direction[i][j][k][l] = Eigen::MatrixXf::Zero(LSTM_SEQ_LEN, hidden_size);
+                            lstm_hidden[i][j][k][l] = Eigen::MatrixXf::Zero(hidden_size, 1);
+                            lstm_cell[i][j][k][l] = Eigen::MatrixXf::Zero(cell_size, 1);
+                        }
+
+                        lstm_output[i][j][k] = Eigen::MatrixXf::Zero(LSTM_SEQ_LEN, 2 * hidden_size);
+                    }
+                }
+            }
+        };
 };
 
 bool load_demucs_v3_model(const std::string &model_dir,
