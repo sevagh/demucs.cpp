@@ -1114,13 +1114,13 @@ struct demucs_v3_model
         },
     };
 
-    Eigen::Tensor2dXf encoder_4_5_dconv_layers_3_linear_weight[2][2]{
-        {Eigen::Tensor2dXf(192, 384), Eigen::Tensor2dXf(192, 384)},
-        {Eigen::Tensor2dXf(384, 768), Eigen::Tensor2dXf(384, 768)}};
+    Eigen::MatrixXf encoder_4_5_dconv_layers_3_linear_weight[2][2]{
+        {Eigen::MatrixXf(192, 384), Eigen::MatrixXf(192, 384)},
+        {Eigen::MatrixXf(384, 768), Eigen::MatrixXf(384, 768)}};
 
-    Eigen::Tensor1dXf encoder_4_5_dconv_layers_3_linear_bias[2][2]{
-        {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-        {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)}};
+    Eigen::VectorXf encoder_4_5_dconv_layers_3_linear_bias[2][2]{
+        {Eigen::VectorXf(192), Eigen::VectorXf(192)},
+        {Eigen::VectorXf(384), Eigen::VectorXf(384)}};
 
     Eigen::Tensor2dXf encoder_4_5_dconv_layers_4_content_weight[2][2]{
         {Eigen::Tensor2dXf(192, 192), Eigen::Tensor2dXf(192, 192)},

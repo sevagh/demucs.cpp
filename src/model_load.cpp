@@ -1640,14 +1640,14 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 if (name == "encoder." + std::to_string(encoder_index) +
                                     ".dconv.layers." + std::to_string(dconv_index) +
                                     ".3.linear.weight") {
-                    loaded_size = load_single_tensor2d(
+                    loaded_size = load_single_matrix(
                         f, name,
                         model->encoder_4_5_dconv_layers_3_linear_weight[array_index][dconv_index], ne,
                         nelements);
                 } else if (name == "encoder." + std::to_string(encoder_index) +
                                     ".dconv.layers." + std::to_string(dconv_index) +
                                     ".3.linear.bias") {
-                    loaded_size = load_single_tensor1d(
+                    loaded_size = load_single_vector(
                         f, name,
                         model->encoder_4_5_dconv_layers_3_linear_bias[array_index][dconv_index], ne,
                         nelements);

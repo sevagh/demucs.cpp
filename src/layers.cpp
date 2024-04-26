@@ -842,6 +842,11 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
 
     demucscppdebug::debug_matrix_xf(lstm_out_0, "y_shuf post-bilstm");
 
+    // apply the linear layer on the lstm_out_0
+    lstm_out_0 = (lstm_out_0 * model.encoder_4_5_dconv_layers_3_linear_weight[encoder_idx][0].transpose()).rowwise() + model.encoder_4_5_dconv_layers_3_linear_bias[encoder_idx][0].transpose();
+
+    demucscppdebug::debug_matrix_xf(lstm_out_0, "y_shuf post-linear");
+
     std::cin.ignore();
 
     // then, localattn
