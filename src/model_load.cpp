@@ -1654,7 +1654,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 } else if (name == "encoder." + std::to_string(encoder_index) +
                                     ".dconv.layers." + std::to_string(dconv_index) +
                                     ".4.content.weight") {
-                    loaded_size = load_single_tensor2d(
+                    loaded_size = load_single_tensor3d(
                         f, name,
                         model->encoder_4_5_dconv_layers_4_content_weight[array_index][dconv_index], ne,
                         nelements);
@@ -1668,7 +1668,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 } else if (name == "encoder." + std::to_string(encoder_index) +
                                     ".dconv.layers." + std::to_string(dconv_index) +
                                     ".4.query.weight") {
-                    loaded_size = load_single_tensor2d(
+                    loaded_size = load_single_tensor3d(
                         f, name,
                         model->encoder_4_5_dconv_layers_4_query_weight[array_index][dconv_index], ne,
                         nelements);
@@ -1682,7 +1682,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 } else if (name == "encoder." + std::to_string(encoder_index) +
                                     ".dconv.layers." + std::to_string(dconv_index) +
                                     ".4.key.weight") {
-                    loaded_size = load_single_tensor2d(
+                    loaded_size = load_single_tensor3d(
                         f, name,
                         model->encoder_4_5_dconv_layers_4_key_weight[array_index][dconv_index], ne,
                         nelements);
@@ -1696,7 +1696,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 } else if (name == "encoder." + std::to_string(encoder_index) +
                                     ".dconv.layers." + std::to_string(dconv_index) +
                                     ".4.query_decay.weight") {
-                    loaded_size = load_single_tensor2d(
+                    loaded_size = load_single_tensor3d(
                         f, name,
                         model->encoder_4_5_dconv_layers_4_query_decay_weight[array_index][dconv_index], ne,
                         nelements);
@@ -1710,7 +1710,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 } else if (name == "encoder." + std::to_string(encoder_index) +
                                     ".dconv.layers." + std::to_string(dconv_index) +
                                     ".4.proj.weight") {
-                    loaded_size = load_single_tensor2d(
+                    loaded_size = load_single_tensor3d(
                         f, name,
                         model->encoder_4_5_dconv_layers_4_proj_weight[array_index][dconv_index], ne,
                         nelements);

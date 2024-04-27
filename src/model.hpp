@@ -679,8 +679,18 @@ const int TIME_BRANCH_LEN_1 = 21499;
 const int TIME_BRANCH_LEN_2 = 5375;
 const int TIME_BRANCH_LEN_3 = 1344;
 const int TIME_BRANCH_LEN_4 = 336;
+
+// dconv lstm constants
+// the seq len is 336, the final encoded time branch length
+// (for both time and frequency)
 const int LSTM_HIDDEN_SIZE_0 = 192;
 const int LSTM_HIDDEN_SIZE_1 = 384;
+
+// dconv localstate
+const int LOCAL_ATTN_N_HEADS = 4;
+const int LOCAL_ATTN_N_FREQS = 0;
+const int LOCAL_ATTN_N_DECAY = 4;
+const int LOCAL_ATTN_CHANNELS = 192;
 
 struct demucs_v3_model
 {
@@ -1122,41 +1132,41 @@ struct demucs_v3_model
         {Eigen::VectorXf(192), Eigen::VectorXf(192)},
         {Eigen::VectorXf(384), Eigen::VectorXf(384)}};
 
-    Eigen::Tensor2dXf encoder_4_5_dconv_layers_4_content_weight[2][2]{
-        {Eigen::Tensor2dXf(192, 192), Eigen::Tensor2dXf(192, 192)},
-        {Eigen::Tensor2dXf(384, 384), Eigen::Tensor2dXf(384, 384)}};
+    Eigen::Tensor3dXf encoder_4_5_dconv_layers_4_content_weight[2][2]{
+        {Eigen::Tensor3dXf(192, 192, 1), Eigen::Tensor3dXf(192, 192, 1)},
+        {Eigen::Tensor3dXf(384, 384, 1), Eigen::Tensor3dXf(384, 384, 1)}};
 
     Eigen::Tensor1dXf encoder_4_5_dconv_layers_4_content_bias[2][2]{
         {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
         {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)}};
 
-    Eigen::Tensor2dXf encoder_4_5_dconv_layers_4_query_weight[2][2]{
-        {Eigen::Tensor2dXf(192, 192), Eigen::Tensor2dXf(192, 192)},
-        {Eigen::Tensor2dXf(384, 384), Eigen::Tensor2dXf(384, 384)}};
+    Eigen::Tensor3dXf encoder_4_5_dconv_layers_4_query_weight[2][2]{
+        {Eigen::Tensor3dXf(192, 192, 1), Eigen::Tensor3dXf(192, 192, 1)},
+        {Eigen::Tensor3dXf(384, 384, 1), Eigen::Tensor3dXf(384, 384, 1)}};
 
     Eigen::Tensor1dXf encoder_4_5_dconv_layers_4_query_bias[2][2]{
         {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
         {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)}};
 
-    Eigen::Tensor2dXf encoder_4_5_dconv_layers_4_key_weight[2][2]{
-        {Eigen::Tensor2dXf(192, 192), Eigen::Tensor2dXf(192, 192)},
-        {Eigen::Tensor2dXf(384, 384), Eigen::Tensor2dXf(384, 384)}};
+    Eigen::Tensor3dXf encoder_4_5_dconv_layers_4_key_weight[2][2]{
+        {Eigen::Tensor3dXf(192, 192, 1), Eigen::Tensor3dXf(192, 192, 1)},
+        {Eigen::Tensor3dXf(384, 384, 1), Eigen::Tensor3dXf(384, 384, 1)}};
 
     Eigen::Tensor1dXf encoder_4_5_dconv_layers_4_key_bias[2][2]{
         {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
         {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)}};
 
-    Eigen::Tensor2dXf encoder_4_5_dconv_layers_4_query_decay_weight[2][2]{
-        {Eigen::Tensor2dXf(16, 192), Eigen::Tensor2dXf(16, 192)},
-        {Eigen::Tensor2dXf(16, 384), Eigen::Tensor2dXf(16, 384)}};
+    Eigen::Tensor3dXf encoder_4_5_dconv_layers_4_query_decay_weight[2][2]{
+        {Eigen::Tensor3dXf(16, 192, 1), Eigen::Tensor3dXf(16, 192, 1)},
+        {Eigen::Tensor3dXf(16, 384, 1), Eigen::Tensor3dXf(16, 384, 1)}};
 
     Eigen::Tensor1dXf encoder_4_5_dconv_layers_4_query_decay_bias[2][2]{
         {Eigen::Tensor1dXf(16), Eigen::Tensor1dXf(16)},
         {Eigen::Tensor1dXf(16), Eigen::Tensor1dXf(16)}};
 
-    Eigen::Tensor2dXf encoder_4_5_dconv_layers_4_proj_weight[2][2]{
-        {Eigen::Tensor2dXf(192, 192), Eigen::Tensor2dXf(192, 192)},
-        {Eigen::Tensor2dXf(384, 384), Eigen::Tensor2dXf(384, 384)}};
+    Eigen::Tensor3dXf encoder_4_5_dconv_layers_4_proj_weight[2][2]{
+        {Eigen::Tensor3dXf(192, 192, 1), Eigen::Tensor3dXf(192, 192, 1)},
+        {Eigen::Tensor3dXf(384, 384, 1), Eigen::Tensor3dXf(384, 384, 1)}};
 
     Eigen::Tensor1dXf encoder_4_5_dconv_layers_4_proj_bias[2][2]{
         {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
@@ -1358,6 +1368,10 @@ struct demucs_v3_segment_buffers
     // out-of-direction buffers
     Eigen::MatrixXf lstm_output[2][2][2];
 
+    // LocalAttention structs
+    Eigen::VectorXi local_attn_index;
+    Eigen::MatrixXi local_attn_delta;
+
     // constructor for demucs_segment_buffers that takes int parameters
 
     // let's do pesky precomputing of the signal repadding to 1/4 hop
@@ -1394,7 +1408,9 @@ struct demucs_v3_segment_buffers
           savedt_1(1, 96, TIME_BRANCH_LEN_1),
           savedt_2(1, 192, TIME_BRANCH_LEN_2),
           savedt_3(1, 384, TIME_BRANCH_LEN_3),
-          savedt_4(1, 768, TIME_BRANCH_LEN_4){
+          savedt_4(1, 768, TIME_BRANCH_LEN_4),
+          local_attn_index(FREQ_BRANCH_LEN),
+          local_attn_delta(FREQ_BRANCH_LEN, FREQ_BRANCH_LEN) {
             // initialize lstm buffers
             int hidden_size = -1;
             int cell_size = -1;
@@ -1422,6 +1438,17 @@ struct demucs_v3_segment_buffers
 
                         lstm_output[i][j][k] = Eigen::MatrixXf::Zero(FREQ_BRANCH_LEN, 2 * hidden_size);
                     }
+                }
+            }
+            // initialize local attn stuff
+            for (int i = 0; i < FREQ_BRANCH_LEN; ++i) {
+                local_attn_index(i) = i;
+            }
+
+            // delta = indexes[:, None] - indexes[None, :]
+            for (int i = 0; i < FREQ_BRANCH_LEN; ++i) {
+                for (int j = 0; j < FREQ_BRANCH_LEN; ++j) {
+                    local_attn_delta(i, j) = local_attn_index(i) - local_attn_index(j);
                 }
             }
         };

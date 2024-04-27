@@ -20,6 +20,16 @@ void apply_dconv_v3_encoder_4_5(
     int mid_crop,
     struct demucscpp_v3::demucs_v3_segment_buffers &buffers);
 
+// new function for LocalState, a local attention layer used
+// in demucs v3
+void local_attention(
+    Eigen::Tensor3dXf &x,       // x = frequency, time, or combined
+    const Eigen::Tensor3dXf &content_weight, const Eigen::Tensor1dXf &content_bias,
+    const Eigen::Tensor3dXf &query_weight, const Eigen::Tensor1dXf &query_bias,
+    const Eigen::Tensor3dXf &key_weight, const Eigen::Tensor1dXf &key_bias,
+    const Eigen::Tensor3dXf &query_decay_weight, const Eigen::Tensor1dXf &query_decay_bias,
+    const Eigen::Tensor3dXf &proj_weight, const Eigen::Tensor1dXf &proj_bias);
+
 } // namespace demucscpp_v3
 
 namespace demucscpp

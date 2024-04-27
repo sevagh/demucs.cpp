@@ -2,6 +2,7 @@
 #include "model.hpp"
 #include "tensor.hpp"
 #include "lstm.hpp"
+#include "conv.hpp"
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
 
@@ -569,6 +570,50 @@ void demucscpp::common_encoder_layer(
     q = q_shuf;
 }
 
+void demucscpp_v3::local_attention(
+    Eigen::Tensor3dXf &x,       // x = frequency, time, or combined
+    const Eigen::Tensor3dXf &content_weight, const Eigen::Tensor1dXf &content_bias,
+    const Eigen::Tensor3dXf &query_weight, const Eigen::Tensor1dXf &query_bias,
+    const Eigen::Tensor3dXf &key_weight, const Eigen::Tensor1dXf &key_bias,
+    const Eigen::Tensor3dXf &query_decay_weight, const Eigen::Tensor1dXf &query_decay_bias,
+    const Eigen::Tensor3dXf &proj_weight, const Eigen::Tensor1dXf &proj_bias) {
+    // local-attention block
+
+    int B = x.dimension(0);
+    int C = x.dimension(1);
+    int T = x.dimension(2);
+
+    const int num_heads = demucscpp_v3::LOCAL_ATTN_N_HEADS;
+
+    demucscppdebug::debug_tensor_3dxf(x, "x input to LocalAttn!");
+
+    // apply query conv1d on x
+    Eigen::Tensor3dXf queries = demucscpp::conv1d<192, 192, 1, 1, 0, 1>(
+        x,
+        query_weight,
+        query_bias);
+
+    // apply key conv1d on x
+    Eigen::Tensor3dXf keys = demucscpp::conv1d<192, 192, 1, 1, 0, 1>(
+        x,
+        key_weight,
+        key_bias);
+
+
+    // now apply view reshaping
+    //  queries = self.query(x).view(B, heads, -1, T)
+    //  keys = self.key(x).view(B, heads, -1, T)
+
+    // Correctly reshaped without needing a shuffle operation
+    Eigen::Tensor4dXf queries_4d = queries.reshape(Eigen::DSizes<ptrdiff_t, 4>{B, num_heads, C / num_heads, T});
+    Eigen::Tensor4dXf keys_4d = keys.reshape(Eigen::DSizes<ptrdiff_t, 4>{B, num_heads, C / num_heads, T});
+
+    demucscppdebug::debug_tensor_4dxf(queries_4d, "queries");
+    demucscppdebug::debug_tensor_4dxf(keys_4d, "keys");
+
+    std::cin.ignore();
+}
+
 void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &model,
                             Eigen::Tensor3dXf &y, int freq_idx, int encdec_idx,
                             int layer_idx, int mid_crop)
@@ -828,7 +873,6 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
         1e-05);
 
     demucscppdebug::debug_tensor_3dxf(y, "y_shuff pre-bilstm");
-    std::cin.ignore();
     // SO FAR SO GOOD!
 
     // transpose it to put time seq last
@@ -847,9 +891,32 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
 
     demucscppdebug::debug_matrix_xf(lstm_out_0, "y_shuf post-linear");
 
-    std::cin.ignore();
+    // then apply skip connection
+    lstm_out_0 = lstm_out_0 + y_mat;
+
+    // copy it to a original 3d tensor
+    y = Eigen::TensorMap<Eigen::Tensor3dXf>(lstm_out_0.data(), lstm_out_0.rows(), 1, lstm_out_0.cols());
+
+    demucscppdebug::debug_tensor_3dxf(y, "y post-biLSTM");
+    // swap dims from 0,1,2 to 1,2,0
+    Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({1, 2, 0}));
+    demucscppdebug::debug_tensor_3dxf(y_shuff, "y post-shuf input to LocalAttn!");
 
     // then, localattn
+    demucscpp_v3::local_attention(
+        y_shuff,
+        model.encoder_4_5_dconv_layers_4_content_weight[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_content_bias[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_query_weight[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_query_bias[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_key_weight[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_key_bias[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_query_decay_weight[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_query_decay_bias[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_proj_weight[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_proj_bias[encoder_idx][0]);
+
+    std::cin.ignore();
 
     switch (encoder_idx)
     {
