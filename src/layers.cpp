@@ -629,6 +629,9 @@ void demucscpp_v3::local_attention(
 
     demucscppdebug::debug_tensor_3dxf(query_decays, "query_decays 3d");
 
+    // Initialize the weights tensor for softmax
+    Eigen::Tensor4dXf weights(B, num_heads, T, T);
+
     // Loop structure to compute both dot products and apply decay simultaneously
     for (int b = 0; b < B; ++b) {
         for (int h = 0; h < num_heads; ++h) {
@@ -656,31 +659,14 @@ void demucscpp_v3::local_attention(
                     }
 
                     // Apply decay effect directly to the dot product
-                    dots(b, h, t, s) += decay_effect;
+                    if (t != s) {
+                        dots(b, h, t, s) += decay_effect;
+                    } else {
+                        dots(b, h, t, s) = -100.0f;
+                    }
                 }
             }
-        }
-    }
 
-    demucscppdebug::debug_tensor_4dxf(dots, "dots 4d");
-
-    // apply this operation:
-    // dots.masked_fill_(torch.eye(T, device=dots.device, dtype=torch.bool), -100)
-
-    // fill dots with -100 on the diagonal to implement the above
-    for (int b = 0; b < B; ++b) {
-        for (int h = 0; h < num_heads; ++h) {
-            for (int t = 0; t < T; ++t) {
-                dots(b, h, t, t) = -100.0f;
-            }
-        }
-    }
-
-    // Initialize the weights tensor for softmax
-    Eigen::Tensor4dXf weights(B, num_heads, T, T);
-
-    for (int b = 0; b < B; ++b) {
-        for (int h = 0; h < num_heads; ++h) {
             for (int t = 0; t < T; ++t) {
                 float max_val = -std::numeric_limits<float>::infinity();
                 for (int s = 0; s < T; ++s) {
@@ -714,39 +700,21 @@ void demucscpp_v3::local_attention(
 
     demucscppdebug::debug_tensor_3dxf(content, "content 3d");
 
-    std::cin.ignore();
+    // Initialize the reshaped result tensor directly
+    Eigen::Tensor3dXf reshaped_result(B, C, T);
+    reshaped_result.setZero();
 
-    // now:
-    // result = torch.einsum("bhts,bhct->bhcs", weights, content)
-
-    // Initialize the result tensor
-    Eigen::Tensor4dXf result(B, num_heads, C, T);
-    result.setZero();
-
-    // Correct computation of result tensor
+    // Merge computation of result tensor and reshaping
     for (int b = 0; b < B; ++b) {
         for (int h = 0; h < num_heads; ++h) {
             for (int c = 0; c < C / num_heads; ++c) {
                 for (int s = 0; s < T; ++s) {
                     for (int t = 0; t < T; ++t) {
-                        result(b, h, c, s) += weights(b, h, t, s) * content(b, h * (C / num_heads) + c, t);
+                        // Directly update the reshaped_result tensor
+                        int full_channel_index = h * (C / num_heads) + c;
+                        reshaped_result(b, full_channel_index, s) += weights(b, h, t, s) * content(b, h * (C / num_heads) + c, t);
                     }
                 }
-            }
-        }
-    }
-
-    // Correct reshaping and projection
-    Eigen::Tensor3dXf reshaped_result(B, C, T);
-    reshaped_result.setZero();
-
-    // Assuming result tensor is correctly computed as above
-    for (int b = 0; b < B; ++b) {
-        for (int c = 0; c < C; ++c) {
-            for (int s = 0; s < T; ++s) {
-                int head_index = c / (C / num_heads);
-                int intra_head_index = c % (C / num_heads);
-                reshaped_result(b, c, s) = result(b, head_index, intra_head_index, s);
             }
         }
     }
