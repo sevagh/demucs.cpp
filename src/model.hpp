@@ -1371,6 +1371,9 @@ struct demucs_v3_segment_buffers
     // LocalAttention structs
     Eigen::VectorXi local_attn_index;
     Eigen::MatrixXi local_attn_delta;
+    Eigen::Tensor1dXf local_attn_decays;
+
+    Eigen::Tensor2dXf local_attn_decay_kernel;
 
     // constructor for demucs_segment_buffers that takes int parameters
 
@@ -1410,7 +1413,9 @@ struct demucs_v3_segment_buffers
           savedt_3(1, 384, TIME_BRANCH_LEN_3),
           savedt_4(1, 768, TIME_BRANCH_LEN_4),
           local_attn_index(FREQ_BRANCH_LEN),
-          local_attn_delta(FREQ_BRANCH_LEN, FREQ_BRANCH_LEN) {
+          local_attn_delta(FREQ_BRANCH_LEN, FREQ_BRANCH_LEN),
+          local_attn_decays(LOCAL_ATTN_N_DECAY),
+          local_attn_decay_kernel(LOCAL_ATTN_N_DECAY, FREQ_BRANCH_LEN) {
             // initialize lstm buffers
             int hidden_size = -1;
             int cell_size = -1;
@@ -1449,6 +1454,17 @@ struct demucs_v3_segment_buffers
             for (int i = 0; i < FREQ_BRANCH_LEN; ++i) {
                 for (int j = 0; j < FREQ_BRANCH_LEN; ++j) {
                     local_attn_delta(i, j) = local_attn_index(i) - local_attn_index(j);
+                }
+            }
+
+            // Decay levels from 1 to ndecay
+            for (int i = 0; i < LOCAL_ATTN_N_DECAY; ++i) {
+                local_attn_decays(i) = i + 1;
+            }
+
+            for (int d = 0; d < LOCAL_ATTN_N_DECAY; ++d) {
+                for (int t = 0; t < FREQ_BRANCH_LEN; ++t) {
+                    local_attn_decay_kernel(d, t) = -local_attn_decays(d) * std::abs(local_attn_delta(0, t)) / std::sqrt(LOCAL_ATTN_N_DECAY);
                 }
             }
         };

@@ -572,10 +572,12 @@ void demucscpp::common_encoder_layer(
 
 void demucscpp_v3::local_attention(
     Eigen::Tensor3dXf &x,       // x = frequency, time, or combined
+                                // input tensor [B, C, T]
     const Eigen::Tensor3dXf &content_weight, const Eigen::Tensor1dXf &content_bias,
     const Eigen::Tensor3dXf &query_weight, const Eigen::Tensor1dXf &query_bias,
     const Eigen::Tensor3dXf &key_weight, const Eigen::Tensor1dXf &key_bias,
     const Eigen::Tensor3dXf &query_decay_weight, const Eigen::Tensor1dXf &query_decay_bias,
+    const Eigen::Tensor2dXf &query_decay_kernel,
     const Eigen::Tensor3dXf &proj_weight, const Eigen::Tensor1dXf &proj_bias) {
     // local-attention block
 
@@ -599,17 +601,166 @@ void demucscpp_v3::local_attention(
         key_weight,
         key_bias);
 
+    // so far, this is correct and matches pytorch
 
-    // now apply view reshaping
-    //  queries = self.query(x).view(B, heads, -1, T)
-    //  keys = self.key(x).view(B, heads, -1, T)
+    demucscppdebug::debug_tensor_3dxf(queries, "queries 3d");
+    demucscppdebug::debug_tensor_3dxf(keys, "keys 3d");
 
-    // Correctly reshaped without needing a shuffle operation
-    Eigen::Tensor4dXf queries_4d = queries.reshape(Eigen::DSizes<ptrdiff_t, 4>{B, num_heads, C / num_heads, T});
-    Eigen::Tensor4dXf keys_4d = keys.reshape(Eigen::DSizes<ptrdiff_t, 4>{B, num_heads, C / num_heads, T});
+    int features_per_head = C / num_heads;
 
-    demucscppdebug::debug_tensor_4dxf(queries_4d, "queries");
-    demucscppdebug::debug_tensor_4dxf(keys_4d, "keys");
+    // now implement dots calculation
+
+    // Initialize the dots tensor
+    Eigen::Tensor4dXf dots(B, num_heads, T, T);
+    dots.setZero();
+
+    // Precompute the square root of features_per_head
+    float sqrt_features_per_head = std::sqrt(features_per_head);
+
+    // compute query decays
+    Eigen::Tensor3dXf query_decays = demucscpp::conv1d<192, 16, 1, 1, 0, 1>(
+        x,
+        query_decay_weight,
+        query_decay_bias);
+
+    // apply a sigmoid activation with a 1/2 incorporated
+    query_decays = query_decays.unaryExpr(
+        [](float v) { return 0.5f / (1.0f + std::exp(-v)); });
+
+    demucscppdebug::debug_tensor_3dxf(query_decays, "query_decays 3d");
+
+    // Loop structure to compute both dot products and apply decay simultaneously
+    for (int b = 0; b < B; ++b) {
+        for (int h = 0; h < num_heads; ++h) {
+            for (int t = 0; t < T; ++t) {
+                for (int s = 0; s < T; ++s) {
+                    float dot_product = 0.0f;
+                    float decay_effect = 0.0f;
+
+                    // Compute the standard dot product
+                    for (int c = 0; c < features_per_head; ++c) {
+                        int channel_index = h * features_per_head + c;
+                        dot_product += queries(b, channel_index, s) * keys(b, channel_index, t);
+                    }
+                    dots(b, h, t, s) = dot_product / sqrt_features_per_head;
+
+                    // Calculate decay effect for this dot product
+                    for (int n = 0; n < LOCAL_ATTN_N_DECAY; ++n) {
+                        int decay_index = std::abs(t - s);  // Assuming decay_kernel is indexed by delta
+                        float decay_kernel_value = query_decay_kernel(n, decay_index);
+
+                        // Transform query_decay by applying sigmoid directly here
+                        float decay_query_value = query_decays(b, h * LOCAL_ATTN_N_DECAY + n, s);
+
+                        decay_effect += decay_kernel_value * decay_query_value;
+                    }
+
+                    // Apply decay effect directly to the dot product
+                    dots(b, h, t, s) += decay_effect;
+                }
+            }
+        }
+    }
+
+    demucscppdebug::debug_tensor_4dxf(dots, "dots 4d");
+
+    // apply this operation:
+    // dots.masked_fill_(torch.eye(T, device=dots.device, dtype=torch.bool), -100)
+
+    // fill dots with -100 on the diagonal to implement the above
+    for (int b = 0; b < B; ++b) {
+        for (int h = 0; h < num_heads; ++h) {
+            for (int t = 0; t < T; ++t) {
+                dots(b, h, t, t) = -100.0f;
+            }
+        }
+    }
+
+    // Initialize the weights tensor for softmax
+    Eigen::Tensor4dXf weights(B, num_heads, T, T);
+
+    for (int b = 0; b < B; ++b) {
+        for (int h = 0; h < num_heads; ++h) {
+            for (int t = 0; t < T; ++t) {
+                float max_val = -std::numeric_limits<float>::infinity();
+                for (int s = 0; s < T; ++s) {
+                    if (dots(b, h, s, t) > max_val) {
+                        max_val = dots(b, h, s, t);
+                    }
+                }
+
+                float sum_exp = 0.0f;
+                // Calculate the exponentials and sum them
+                for (int s = 0; s < T; ++s) {
+                    weights(b, h, s, t) = std::exp(dots(b, h, s, t) - max_val);
+                    sum_exp += weights(b, h, s, t);
+                }
+
+                // Normalize the weights to form a proper probability distribution
+                for (int s = 0; s < T; ++s) {
+                    weights(b, h, s, t) /= sum_exp;
+                }
+            }
+        }
+    }
+
+    demucscppdebug::debug_tensor_4dxf(weights, "weights 4d");
+
+    // create content tensor
+    Eigen::Tensor3dXf content = demucscpp::conv1d<192, 192, 1, 1, 0, 1>(
+        x,
+        content_weight,
+        content_bias);
+
+    demucscppdebug::debug_tensor_3dxf(content, "content 3d");
+
+    std::cin.ignore();
+
+    // now:
+    // result = torch.einsum("bhts,bhct->bhcs", weights, content)
+
+    // Initialize the result tensor
+    Eigen::Tensor4dXf result(B, num_heads, C, T);
+    result.setZero();
+
+    // Correct computation of result tensor
+    for (int b = 0; b < B; ++b) {
+        for (int h = 0; h < num_heads; ++h) {
+            for (int c = 0; c < C / num_heads; ++c) {
+                for (int s = 0; s < T; ++s) {
+                    for (int t = 0; t < T; ++t) {
+                        result(b, h, c, s) += weights(b, h, t, s) * content(b, h * (C / num_heads) + c, t);
+                    }
+                }
+            }
+        }
+    }
+
+    // Correct reshaping and projection
+    Eigen::Tensor3dXf reshaped_result(B, C, T);
+    reshaped_result.setZero();
+
+    // Assuming result tensor is correctly computed as above
+    for (int b = 0; b < B; ++b) {
+        for (int c = 0; c < C; ++c) {
+            for (int s = 0; s < T; ++s) {
+                int head_index = c / (C / num_heads);
+                int intra_head_index = c % (C / num_heads);
+                reshaped_result(b, c, s) = result(b, head_index, intra_head_index, s);
+            }
+        }
+    }
+
+    // Apply projection layer
+    Eigen::Tensor3dXf projected_result = demucscpp::conv1d<192, 192, 1, 1, 0, 1>(
+        reshaped_result,
+        proj_weight,
+        proj_bias);
+
+    // Add x to projected_result
+    x += projected_result;
+
+    demucscppdebug::debug_tensor_3dxf(x, "x after LocalAttn!");
 
     std::cin.ignore();
 }
@@ -913,6 +1064,7 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
         model.encoder_4_5_dconv_layers_4_key_bias[encoder_idx][0],
         model.encoder_4_5_dconv_layers_4_query_decay_weight[encoder_idx][0],
         model.encoder_4_5_dconv_layers_4_query_decay_bias[encoder_idx][0],
+        buffers.local_attn_decay_kernel,
         model.encoder_4_5_dconv_layers_4_proj_weight[encoder_idx][0],
         model.encoder_4_5_dconv_layers_4_proj_bias[encoder_idx][0]);
 
