@@ -734,7 +734,7 @@ void demucscpp_v3::apply_freq_shared_encoder_4_5(const struct demucscpp_v3::demu
     // 2D Convolution operation
     Eigen::Tensor3dXf y;
 
-    demucscppdebug::debug_tensor_3dxf(x_in, "x_in enc_4_5 before conv");
+    //demucscppdebug::debug_tensor_3dxf(x_in, "x_in enc_4_5 before conv");
 
     switch (encoder_idx)
     {
@@ -750,7 +750,7 @@ void demucscpp_v3::apply_freq_shared_encoder_4_5(const struct demucscpp_v3::demu
         break;
     };
 
-    demucscppdebug::debug_tensor_3dxf(y, "y enc_4_5 before group norm");
+    //demucscppdebug::debug_tensor_3dxf(y, "y enc_4_5 before group norm");
 
     y += x_inject;
 
@@ -758,7 +758,7 @@ void demucscpp_v3::apply_freq_shared_encoder_4_5(const struct demucscpp_v3::demu
     y = demucscpp::group_norm_fused_gelu(y, model.encoder_4_5_norm1_weight[encoder_idx],
                              model.encoder_4_5_norm1_bias[encoder_idx], 4, 1e-05);
 
-    demucscppdebug::debug_tensor_3dxf(y, "y enc_4_5 before dconv");
+    //demucscppdebug::debug_tensor_3dxf(y, "y enc_4_5 before dconv");
 
     // swap first two dims
     Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
@@ -767,27 +767,46 @@ void demucscpp_v3::apply_freq_shared_encoder_4_5(const struct demucscpp_v3::demu
     demucscpp_v3::apply_dconv_v3_encoder_4_5(model, y_shuff, encoder_idx,
                            y_shuff.dimension(2), buffers);
 
+    //demucscppdebug::debug_tensor_3dxf(y_shuff, "y enc_4_5 after dconv");
+
     // swap back from H,C,W to C,H,W
     // then put W in front to use conv1d function for width=1 conv2d
-    y = y_shuff.shuffle(Eigen::array<int, 3>({2, 1, 0}));
+    //y = y_shuff.shuffle(Eigen::array<int, 3>({1, 0, 2}));
+    y = y_shuff;
+
+    //demucscppdebug::debug_tensor_3dxf(y, "y enc_4_5 after shuff");
+
+    //demucscppdebug::debug_tensor_3dxf(y, "y before rewrite");
 
     // need rewrite, norm2, glu
     switch (encoder_idx)
     {
     case 0:
-        y = demucscpp::conv1d<48, 96, 1, 1, 0, 1>(
-            y, model.encoder_rewrite_weight[encoder_idx],
-            model.encoder_rewrite_bias[encoder_idx]);
+        y = demucscpp::conv1d<768, 1536, 1, 1, 0, 1>(
+            y, model.encoder_4_5_rewrite_weight[encoder_idx],
+            model.encoder_4_5_rewrite_bias[encoder_idx]);
         break;
     case 1:
-        y = demucscpp::conv1d<96, 192, 1, 1, 0, 1>(
-            y, model.encoder_rewrite_weight[encoder_idx],
-            model.encoder_rewrite_bias[encoder_idx]);
+        y = demucscpp::conv1d<1536, 3072, 1, 1, 0, 1>(
+            y, model.encoder_4_5_rewrite_weight[encoder_idx],
+            model.encoder_4_5_rewrite_bias[encoder_idx]);
         break;
     };
 
-    y_shuff = y.shuffle(Eigen::array<int, 3>({1, 2, 0}));
+    //demucscppdebug::debug_tensor_3dxf(y, "y after rewrite");
+
+    // apply groupnorm
+    y = demucscpp::group_norm(y, model.encoder_4_5_norm2_weight[encoder_idx],
+                             model.encoder_4_5_norm2_bias[encoder_idx], 4, 1e-05);
+
+    //demucscppdebug::debug_tensor_3dxf(y, "y after group norm");
+
+    // swap first and second dims
+    // from C,H,W into H,C,W
+    y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
 
     // copy into x_out
     x_out = demucscpp::glu(y_shuff, 0);
+
+    //demucscppdebug::debug_tensor_3dxf(x_out, "y after glu");
 }

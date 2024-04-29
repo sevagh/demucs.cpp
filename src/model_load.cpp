@@ -1424,9 +1424,9 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
             break;
         }
 
-        std::cout << "Loading tensor " << name << " with shape [" << ne[0]
-                    << ", " << ne[1] << ", " << ne[2] << ", " << ne[3] << "]"
-                    << std::endl;
+        //std::cout << "Loading tensor " << name << " with shape [" << ne[0]
+        //            << ", " << ne[1] << ", " << ne[2] << ", " << ne[3] << "]"
+        //            << std::endl;
 
         // match the tensor name to the correct tensor in the model
         size_t loaded_size = 0;

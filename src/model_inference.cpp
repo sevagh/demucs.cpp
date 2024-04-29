@@ -625,8 +625,8 @@ void demucscpp_v3::model_v3_inference(
     apply_freq_encoder_v3(model, 1, buffers.x_0, buffers.x_1);
     cb(current_progress + segment_progress * 4.0f / 26.0f, "Freq encoder 1");
 
-    demucscppdebug::debug_tensor_3dxf(buffers.xt_1, "buffers.xt encoder-1");
-    demucscppdebug::debug_tensor_3dxf(buffers.x_1, "buffers.x tencoder-1");
+    demucscppdebug::debug_tensor_3dxf(buffers.xt_1, "buffers.xt tencoder-1");
+    demucscppdebug::debug_tensor_3dxf(buffers.x_1, "buffers.x encoder-1");
 
     buffers.saved_1 = buffers.x_1;
     buffers.savedt_1 = buffers.xt_1;
@@ -637,8 +637,8 @@ void demucscpp_v3::model_v3_inference(
     apply_freq_encoder_v3(model, 2, buffers.x_1, buffers.x_2);
     cb(current_progress + segment_progress * 6.0f / 26.0f, "Freq encoder 2");
 
-    demucscppdebug::debug_tensor_3dxf(buffers.xt_2, "buffers.xt encoder-2");
-    demucscppdebug::debug_tensor_3dxf(buffers.x_2, "buffers.x tencoder-2");
+    demucscppdebug::debug_tensor_3dxf(buffers.xt_2, "buffers.xt tencoder-2");
+    demucscppdebug::debug_tensor_3dxf(buffers.x_2, "buffers.x encoder-2");
 
     buffers.saved_2 = buffers.x_2;
     buffers.savedt_2 = buffers.xt_2;
@@ -652,24 +652,31 @@ void demucscpp_v3::model_v3_inference(
     buffers.saved_3 = buffers.x_3;
     buffers.savedt_3 = buffers.xt_3;
 
-    demucscppdebug::debug_tensor_3dxf(buffers.xt_3, "buffers.xt encoder-3");
-    demucscppdebug::debug_tensor_3dxf(buffers.x_3, "buffers.x tencoder-3");
+    demucscppdebug::debug_tensor_3dxf(buffers.xt_3, "buffers.x tencoder-3");
+    demucscppdebug::debug_tensor_3dxf(buffers.x_3, "buffers.x encoder-3");
 
     // t/time branch: unique tencoder 4
     apply_time_encoder_4(model, buffers.xt_3, buffers.xt_4);
 
     buffers.savedt_4 = buffers.xt_4;
 
-    demucscppdebug::debug_tensor_3dxf(buffers.xt_4, "buffers.xt encoder-4");
+    demucscppdebug::debug_tensor_3dxf(buffers.xt_4, "buffers.xt tencoder-4");
 
     // z/spec branch: unique encoder 4 (bilstm, local attn)
-
-    // t/time branch: unique tencoder 4
     apply_freq_shared_encoder_4_5(model, buffers.x_3, buffers.xt_4, 0, buffers.x_4, buffers);
 
     buffers.saved_4 = buffers.x_4;
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_4, "buffers.x encoder-4");
+
+    // now time for the shared branch
+    // merge time and frequency
+
+    buffers.x_4 = buffers.x_4 + buffers.xt_4;
+
+    apply_freq_shared_encoder_4_5(model, buffers.x_4, buffers.x_shared_5_empty_skip, 1, buffers.x_shared_5, buffers);
+
+    demucscppdebug::debug_tensor_3dxf(buffers.x_shared_5, "shared encoder-5");
 
     return;
 
