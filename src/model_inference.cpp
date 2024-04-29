@@ -663,17 +663,14 @@ void demucscpp_v3::model_v3_inference(
     demucscppdebug::debug_tensor_3dxf(buffers.xt_4, "buffers.xt tencoder-4");
 
     // z/spec branch: unique encoder 4 (bilstm, local attn)
+    // merge time and frequency with the inject parameter
     apply_freq_shared_encoder_4_5(model, buffers.x_3, buffers.xt_4, 0, buffers.x_4, buffers);
 
     buffers.saved_4 = buffers.x_4;
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_4, "buffers.x encoder-4");
 
-    // now time for the shared branch
-    // merge time and frequency
-
-    buffers.x_4 = buffers.x_4 + buffers.xt_4;
-
+    // now shared branch
     apply_freq_shared_encoder_4_5(model, buffers.x_4, buffers.x_shared_5_empty_skip, 1, buffers.x_shared_5, buffers);
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_shared_5, "shared encoder-5");

@@ -76,8 +76,8 @@ void demucscpp_v3::lstm_forward(const demucs_v3_model& model,
         for (int direction = 0; direction < 2; ++direction)
         {
             // Initialize hidden and cell states to zero if not already done
-            buffers.lstm_hidden[encoder_idx][dconv_idx][lstm_layer][direction].setZero(hidden_state_size, 1);
-            buffers.lstm_cell[encoder_idx][dconv_idx][lstm_layer][direction].setZero(hidden_state_size, 1);
+            //buffers.lstm_hidden[encoder_idx][dconv_idx][lstm_layer][direction].setZero(hidden_state_size, 1);
+            //buffers.lstm_cell[encoder_idx][dconv_idx][lstm_layer][direction].setZero(hidden_state_size, 1);
 
             for (int t = (direction == 0 ? 0 : seq_len - 1);
                  (direction == 0 ? t < seq_len : t > -1);

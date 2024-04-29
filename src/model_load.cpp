@@ -1544,8 +1544,13 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
             int array_index = encoder_index - 4; // Maps 4 to 0, 5 to 1
 
             if (name == "encoder." + std::to_string(encoder_index) + ".conv.weight") {
-                loaded_size = load_single_tensor4d(
-                    f, name, model->encoder_4_5_conv_weight[array_index], ne, nelements);
+                if (encoder_index == 4) {
+                    loaded_size = load_single_tensor4d(
+                            f, name, model->encoder_4_conv_weight, ne, nelements);
+                } else {
+                    loaded_size = load_single_tensor3d(
+                        f, name, model->encoder_5_conv_weight, ne, nelements);
+                }
             } else if (name == "encoder." + std::to_string(encoder_index) + ".conv.bias") {
                 loaded_size = load_single_tensor1d(
                     f, name, model->encoder_4_5_conv_bias[array_index], ne, nelements);

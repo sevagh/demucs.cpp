@@ -937,8 +937,8 @@ struct demucs_v3_model
     // freq encoder 4 and shared encoder 5
     // have the bilistm and localattention layers, similar to each other
     // index of two to hold both
-    Eigen::Tensor4dXf encoder_4_5_conv_weight[2]{
-        Eigen::Tensor4dXf(768, 384, 8, 1), Eigen::Tensor4dXf(1536, 768, 4, 1)};
+    Eigen::Tensor4dXf encoder_4_conv_weight{Eigen::Tensor4dXf(768, 384, 8, 1)};
+    Eigen::Tensor3dXf encoder_5_conv_weight{Eigen::Tensor3dXf(1536, 768, 4)};
 
     Eigen::Tensor1dXf encoder_4_5_conv_bias[2]{
         Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(1536)};
@@ -1403,13 +1403,12 @@ struct demucs_v3_segment_buffers
           x_out(nb_sources * 2 * nb_channels, nb_stft_bins - 1, nb_stft_frames),
           x_0(48, 512, FREQ_BRANCH_LEN), x_1(96, 128, FREQ_BRANCH_LEN),
           x_2(192, 32, FREQ_BRANCH_LEN), x_3(384, 8, FREQ_BRANCH_LEN),
-          x_4(768, 1, FREQ_BRANCH_LEN), x_shared_5(1, 1536, SHARED_BRANCH_LEN),
+          x_4(768, 1, FREQ_BRANCH_LEN), x_shared_5(1536, 1, SHARED_BRANCH_LEN),
           xt(1, nb_channels, segment_samples),
           xt_out(1, nb_sources * nb_channels, segment_samples),
           xt_decoded_out(1, 8, segment_samples), xt_0(1, 48, TIME_BRANCH_LEN_0),
           xt_1(1, 96, TIME_BRANCH_LEN_1), xt_2(1, 192, TIME_BRANCH_LEN_2),
           xt_3(1, 384, TIME_BRANCH_LEN_3), xt_4(1, 768, TIME_BRANCH_LEN_4),
-          x_shared_5_empty_skip(1, 1536, SHARED_BRANCH_LEN),
           saved_0(48, 512, FREQ_BRANCH_LEN), saved_1(96, 128, FREQ_BRANCH_LEN),
           saved_2(192, 32, FREQ_BRANCH_LEN), saved_3(384, 8, FREQ_BRANCH_LEN),
           saved_4(768, 1, FREQ_BRANCH_LEN),
@@ -1425,15 +1424,18 @@ struct demucs_v3_segment_buffers
             // initialize lstm buffers
             int hidden_size = -1;
             int cell_size = -1;
+            int lstm_seq_len = -1;
 
             // encoder layer
             for (int i = 0; i < 2; i++) {
                 if (i == 0) {
                     hidden_size = LSTM_HIDDEN_SIZE_0;
                     cell_size = LSTM_HIDDEN_SIZE_0;
+                    lstm_seq_len = FREQ_BRANCH_LEN;
                 } else {
                     hidden_size = LSTM_HIDDEN_SIZE_1;
                     cell_size = LSTM_HIDDEN_SIZE_1;
+                    lstm_seq_len = SHARED_BRANCH_LEN;
                 }
 
                 // dconv layer
@@ -1442,12 +1444,12 @@ struct demucs_v3_segment_buffers
                     for (int k = 0; k < 2; k++) {
                         // lstm direction
                         for (int l = 0; l < 2; l++) {
-                            lstm_output_per_direction[i][j][k][l] = Eigen::MatrixXf::Zero(FREQ_BRANCH_LEN, hidden_size);
+                            lstm_output_per_direction[i][j][k][l] = Eigen::MatrixXf::Zero(lstm_seq_len, hidden_size);
                             lstm_hidden[i][j][k][l] = Eigen::MatrixXf::Zero(hidden_size, 1);
                             lstm_cell[i][j][k][l] = Eigen::MatrixXf::Zero(cell_size, 1);
                         }
 
-                        lstm_output[i][j][k] = Eigen::MatrixXf::Zero(FREQ_BRANCH_LEN, 2 * hidden_size);
+                        lstm_output[i][j][k] = Eigen::MatrixXf::Zero(lstm_seq_len, 2 * hidden_size);
                     }
                 }
             }

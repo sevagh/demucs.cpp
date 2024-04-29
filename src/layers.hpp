@@ -29,7 +29,8 @@ void local_attention(
     const Eigen::Tensor3dXf &key_weight, const Eigen::Tensor1dXf &key_bias,
     const Eigen::Tensor3dXf &query_decay_weight, const Eigen::Tensor1dXf &query_decay_bias,
     const Eigen::Tensor2dXf &query_decay_kernel,
-    const Eigen::Tensor3dXf &proj_weight, const Eigen::Tensor1dXf &proj_bias);
+    const Eigen::Tensor3dXf &proj_weight, const Eigen::Tensor1dXf &proj_bias,
+    const int hidden_size);
 
 } // namespace demucscpp_v3
 
