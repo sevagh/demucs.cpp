@@ -523,191 +523,6 @@ void demucscpp_v3::apply_time_encoder_v3(const struct demucscpp_v3::demucs_v3_mo
     xt_out = demucscpp::glu(yt, 1);
 }
 
-void demucscpp_v3::apply_freq_decoder_v3(const struct demucscpp_v3::demucs_v3_model &model,
-                                   int decoder_idx,
-                                   const Eigen::Tensor3dXf &x_in,
-                                   Eigen::Tensor3dXf &x_out,
-                                   const Eigen::Tensor3dXf &skip)
-{
-    const int freq_idx = 0;
-    Eigen::Tensor3dXf y = x_in + skip;
-
-    // need rewrite, norm2, glu
-    switch (decoder_idx)
-    {
-    case 0:
-        y = demucscpp::conv2d<384, 768, 3, 3, 1, 1, 1, 1, 1, 1>(
-            y, model.decoders_rewrite_weight[freq_idx][decoder_idx],
-            model.decoders_rewrite_bias[freq_idx][decoder_idx]);
-        break;
-    case 1:
-        y = demucscpp::conv2d<192, 384, 3, 3, 1, 1, 1, 1, 1, 1>(
-            y, model.decoders_rewrite_weight[freq_idx][decoder_idx],
-            model.decoders_rewrite_bias[freq_idx][decoder_idx]);
-        break;
-    case 2:
-        y = demucscpp::conv2d<96, 192, 3, 3, 1, 1, 1, 1, 1, 1>(
-            y, model.decoders_rewrite_weight[freq_idx][decoder_idx],
-            model.decoders_rewrite_bias[freq_idx][decoder_idx]);
-        break;
-    case 3:
-        y = demucscpp::conv2d<48, 96, 3, 3, 1, 1, 1, 1, 1, 1>(
-            y, model.decoders_rewrite_weight[freq_idx][decoder_idx],
-            model.decoders_rewrite_bias[freq_idx][decoder_idx]);
-        break;
-    };
-
-    y = demucscpp::glu(y, 0);
-
-    // swap first and second dimensions
-    // from C,H,W into H,C,W
-    Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
-    y = y_shuff;
-
-    // start the DConv
-    demucscpp_v3::apply_dconv_v3(model, y, 0, 1, 4 - decoder_idx - 1, y.dimension(2));
-
-    // dconv finished
-
-    // swap back from H,C,W to C,H,W
-    Eigen::Tensor3dXf y_shuff_2 = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
-
-    // now time for the transpose convolution
-
-    // 2D Convolution operation
-    switch (decoder_idx)
-    {
-    case 0:
-        y = demucscpp::conv2d_tr_gemm_fused_gelu<384, 192, 8, 1, 4, 1, 0, 0, 1,
-                                                 1>(
-            y_shuff_2, model.decoders_conv_tr_weight[freq_idx][decoder_idx],
-            model.decoders_conv_tr_bias[freq_idx][decoder_idx]);
-        break;
-    case 1:
-        y = demucscpp::conv2d_tr_gemm_fused_gelu<192, 96, 8, 1, 4, 1, 0, 0, 1,
-                                                 1>(
-            y_shuff_2, model.decoders_conv_tr_weight[freq_idx][decoder_idx],
-            model.decoders_conv_tr_bias[freq_idx][decoder_idx]);
-        break;
-    case 2:
-        y = demucscpp::conv2d_tr_gemm_fused_gelu<96, 48, 8, 1, 4, 1, 0, 0, 1,
-                                                 1>(
-            y_shuff_2, model.decoders_conv_tr_weight[freq_idx][decoder_idx],
-            model.decoders_conv_tr_bias[freq_idx][decoder_idx]);
-        break;
-    case 3:
-        y = demucscpp::conv2d_tr<48, 16, 8, 1, 4, 1, 0, 0, 1, 1>(
-            y_shuff_2, model.decoders_conv_tr_weight[freq_idx][decoder_idx],
-            model.decoders_conv_tr_bias[freq_idx][decoder_idx]);
-    };
-
-    int y_dim1_begin = 2;
-    int y_dim1_end = y.dimension(1) - 4;
-
-    // remove 2 elements from begin and end of y along dimension 1 (0, 1, 2)
-    x_out = y.slice(Eigen::array<Eigen::Index, 3>({0, y_dim1_begin, 0}),
-                    Eigen::array<Eigen::Index, 3>(
-                        {y.dimension(0), y_dim1_end, y.dimension(2)}));
-}
-
-void demucscpp_v3::apply_time_decoder_v3(const struct demucscpp_v3::demucs_v3_model &model,
-                                   int tdecoder_idx,
-                                   const Eigen::Tensor3dXf &xt_in,
-                                   Eigen::Tensor3dXf &xt_out,
-                                   const Eigen::Tensor3dXf &skip)
-{
-    const int time_index = 1;
-
-    int crop = demucscpp::TIME_BRANCH_LEN_3;
-    int out_length = demucscpp::TIME_BRANCH_LEN_2;
-    // switch case for tdecoder_idx
-    switch (tdecoder_idx)
-    {
-    case 0:
-        break;
-    case 1:
-        crop = demucscpp::TIME_BRANCH_LEN_2;
-        out_length = demucscpp::TIME_BRANCH_LEN_1;
-        break;
-    case 2:
-        crop = demucscpp::TIME_BRANCH_LEN_1;
-        out_length = demucscpp::TIME_BRANCH_LEN_0;
-        break;
-    case 3:
-        crop = demucscpp::TIME_BRANCH_LEN_0;
-        out_length = demucscpp::TIME_BRANCH_LEN_IN;
-        break;
-    }
-
-    // need rewrite, norm2, glu
-    Eigen::Tensor3dXf yt;
-    switch (tdecoder_idx)
-    {
-    case 0:
-        yt = demucscpp::conv2d<384, 768, 3, 3, 1, 1, 1, 1, 1, 1>(
-            xt_in + skip, model.decoders_rewrite_weight[time_index][tdecoder_idx],
-            model.decoders_rewrite_bias[time_index][tdecoder_idx]);
-        break;
-    case 1:
-        yt = demucscpp::conv2d<192, 384, 3, 3,  1, 1, 1, 1, 1, 1>(
-            xt_in + skip, model.decoders_rewrite_weight[time_index][tdecoder_idx],
-            model.decoders_rewrite_bias[time_index][tdecoder_idx]);
-        break;
-    case 2:
-        yt = demucscpp::conv2d<96, 192, 3, 3, 1, 1, 1, 1, 1, 1>(
-            xt_in + skip, model.decoders_rewrite_weight[time_index][tdecoder_idx],
-            model.decoders_rewrite_bias[time_index][tdecoder_idx]);
-        break;
-    case 3:
-        yt = demucscpp::conv2d<48, 96, 3, 3, 1, 1, 1, 1, 1, 1>(
-            xt_in + skip, model.decoders_rewrite_weight[time_index][tdecoder_idx],
-            model.decoders_rewrite_bias[time_index][tdecoder_idx]);
-        break;
-    };
-
-    yt = demucscpp::glu(yt, 1);
-
-    // start the DConv
-    demucscpp_v3::apply_dconv_v3(model, yt, 1, 1, 4 - tdecoder_idx - 1, crop);
-
-    // dconv finished
-
-    // next, apply the final transpose convolution
-    Eigen::Tensor3dXf yt_tmp;
-
-    switch (tdecoder_idx)
-    {
-    case 0:
-        yt_tmp = demucscpp::conv2d_tr_fused_gelu<384, 192, 8, 1, 4, 1, 0, 0, 1, 1>(
-            yt, model.decoders_conv_tr_weight[time_index][tdecoder_idx],
-            model.decoders_conv_tr_bias[time_index][tdecoder_idx]);
-        break;
-    case 1:
-        yt_tmp = demucscpp::conv2d_tr_fused_gelu<192, 96, 8, 1, 4, 1, 0, 0, 1, 1>(
-            yt, model.decoders_conv_tr_weight[time_index][tdecoder_idx],
-            model.decoders_conv_tr_bias[time_index][tdecoder_idx]);
-        break;
-    case 2:
-        yt_tmp = demucscpp::conv2d_tr_fused_gelu<96, 48, 8, 1, 4, 1, 0, 0, 1, 1>(
-            yt, model.decoders_conv_tr_weight[time_index][tdecoder_idx],
-            model.decoders_conv_tr_bias[time_index][tdecoder_idx]);
-        break;
-    case 3:
-        yt_tmp = demucscpp::conv2d_tr<48, 8, 8, 1, 4, 1, 0, 0, 1, 1>(
-            yt, model.decoders_conv_tr_weight[time_index][tdecoder_idx],
-            model.decoders_conv_tr_bias[time_index][tdecoder_idx]);
-        break;
-    };
-
-    yt = yt_tmp;
-
-    // remove padding
-    // 2:2+length
-    xt_out = yt.slice(Eigen::array<Eigen::Index, 3>({0, 0, 2}),
-                      Eigen::array<Eigen::Index, 3>(
-                          {yt.dimension(0), yt.dimension(1), out_length}));
-}
-
 void demucscpp_v3::apply_time_encoder_4(const struct demucscpp_v3::demucs_v3_model &model,
                                    const Eigen::Tensor3dXf &xt_in,
                                    Eigen::Tensor3dXf &xt_out)
@@ -814,4 +629,99 @@ void demucscpp_v3::apply_freq_shared_encoder_4_5(const struct demucscpp_v3::demu
     x_out = demucscpp::glu(y_shuff, 0);
 
     //demucscppdebug::debug_tensor_3dxf(x_out, "y after glu");
+}
+
+void demucscpp_v3::apply_freq_shared_decoder_0_1(
+    const struct demucscpp_v3::demucs_v3_model &model,
+    const int decoder_idx,
+    const Eigen::Tensor3dXf &x_in,
+    Eigen::Tensor3dXf &x_out,
+    const Eigen::Tensor3dXf &skip)
+{
+    Eigen::Tensor3dXf y = x_in + skip;
+
+    // swap first two dims
+    Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
+
+    // first glu(norm1(rewrite))
+    switch (decoder_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<1536, 3072, 3, 1, 1, 1>(
+            y_shuff, model.decoder_0_rewrite_weight,
+            model.decoder_0_1_rewrite_bias[decoder_idx]);
+        break;
+    case 1:
+        y = demucscpp::conv2d<768, 1536, 3, 3, 1, 1, 1, 1, 1, 1>(
+            y_shuff, model.decoder_1_rewrite_weight,
+            model.decoder_0_1_rewrite_bias[decoder_idx]);
+        break;
+    };
+
+    demucscppdebug::debug_tensor_3dxf(y, "y after rewrite");
+
+    switch (decoder_idx)
+    {
+    case 0:
+        // apply groupnorm1 with norm1 weights
+        y = demucscpp::group_norm(y, model.decoder_0_1_norm1_weight[decoder_idx],
+                                model.decoder_0_1_norm1_bias[decoder_idx], 4, 1e-05);
+
+        demucscppdebug::debug_tensor_3dxf(y, "y after group norm");
+
+        y = demucscpp::glu(y, 1);
+        break;
+    case 1:
+        // apply groupnorm1 with norm1 weights
+        y = demucscpp::group_norm_2(y, model.decoder_0_1_norm1_weight[decoder_idx],
+                                model.decoder_0_1_norm1_bias[decoder_idx], 4, 1e-05);
+
+        demucscppdebug::debug_tensor_3dxf(y, "y after group norm");
+
+        y = demucscpp::glu(y, 0);
+        break;
+    }
+
+    demucscppdebug::debug_tensor_3dxf(y, "y after glu");
+
+    // swap first and second dimensions
+    // from C,H,W into H,C,W
+    //y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
+    //y = y_shuff;
+
+    // no dconv for decoders
+    // simply conv_tr -> norm2
+
+    // 2D Convolution operation
+    switch (decoder_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d_tr<1536, 768, 4, 2, 0, 1>(
+            y, model.decoder_0_1_conv_tr_weight[decoder_idx],
+            model.decoder_0_1_conv_tr_bias[decoder_idx]);
+        break;
+    case 1:
+        y = demucscpp::conv1d_tr<3072, 1536, 3, 1, 1, 1>(
+            y, model.decoder_0_1_conv_tr_weight[decoder_idx],
+            model.decoder_0_1_conv_tr_bias[decoder_idx]);
+        break;
+    };
+
+    demucscppdebug::debug_tensor_3dxf(y, "y after conv1d_tr");
+
+    // now apply groupnorm2 with norm2 weights
+    y = demucscpp::group_norm_fused_gelu_2(y, model.decoder_0_1_norm2_weight[decoder_idx],
+                             model.decoder_0_1_norm2_bias[decoder_idx], 4, 1e-05);
+
+    demucscppdebug::debug_tensor_3dxf(y, "y after group norm");
+
+    int y_dim2_begin = 2;
+    int y_dim2_end = y.dimension(2) - 2;
+
+    // remove 2 elements from begin and end of y along dimension 2
+    x_out = y.slice(Eigen::array<Eigen::Index, 3>({0, 0, y_dim2_begin}),
+                    Eigen::array<Eigen::Index, 3>(
+                        {y.dimension(0), y.dimension(1), y_dim2_end}));
+
+    demucscppdebug::debug_tensor_3dxf(x_out, "x_out after cropping?");
 }

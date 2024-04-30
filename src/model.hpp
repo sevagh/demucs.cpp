@@ -1280,10 +1280,11 @@ struct demucs_v3_model
         Eigen::Tensor1dXf(384)  // decoder.1.norm2.bias
     };
 
-    Eigen::Tensor4dXf decoder_0_1_rewrite_weight[2]{
-        Eigen::Tensor4dXf(3072, 1536, 3, 1), // decoder.0.rewrite.weight
-        Eigen::Tensor4dXf(1536, 768, 3, 3) // decoder.1.rewrite.weight
-    };
+    Eigen::Tensor3dXf decoder_0_rewrite_weight{
+        Eigen::Tensor3dXf(3072, 1536, 3)};
+
+    Eigen::Tensor4dXf decoder_1_rewrite_weight{
+        Eigen::Tensor4dXf(1536, 768, 3, 3)};
 
     Eigen::Tensor1dXf decoder_0_1_rewrite_bias[2]{
         Eigen::Tensor1dXf(3072), // decoder.0.rewrite.bias
@@ -1347,6 +1348,11 @@ struct demucs_v3_segment_buffers
     Eigen::Tensor3dXf xt_3;
     Eigen::Tensor3dXf xt_4;
 
+    // empty tensors to hold decoded output
+    // in conjunction with skip connections
+    Eigen::Tensor3dXf x_decode;
+    Eigen::Tensor3dXf xt_decode;
+
     // empty skip conn for encoder 5
     Eigen::Tensor3dXf x_shared_5_empty_skip;
 
@@ -1409,6 +1415,7 @@ struct demucs_v3_segment_buffers
           xt_decoded_out(1, 8, segment_samples), xt_0(1, 48, TIME_BRANCH_LEN_0),
           xt_1(1, 96, TIME_BRANCH_LEN_1), xt_2(1, 192, TIME_BRANCH_LEN_2),
           xt_3(1, 384, TIME_BRANCH_LEN_3), xt_4(1, 768, TIME_BRANCH_LEN_4),
+          x_decode(1536, 1, SHARED_BRANCH_LEN),
           saved_0(48, 512, FREQ_BRANCH_LEN), saved_1(96, 128, FREQ_BRANCH_LEN),
           saved_2(192, 32, FREQ_BRANCH_LEN), saved_3(384, 8, FREQ_BRANCH_LEN),
           saved_4(768, 1, FREQ_BRANCH_LEN),

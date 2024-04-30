@@ -1909,8 +1909,13 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 loaded_size = load_single_tensor1d(
                     f, name, model->decoder_0_1_norm2_bias[i], ne, nelements);
             } else if (name == "decoder." + std::to_string(i) + ".rewrite.weight") {
-                loaded_size = load_single_tensor4d(
-                    f, name, model->decoder_0_1_rewrite_weight[i], ne, nelements);
+                if (i == 0) {
+                    loaded_size = load_single_tensor3d(
+                        f, name, model->decoder_0_rewrite_weight, ne, nelements);
+                } else {
+                    loaded_size = load_single_tensor4d(
+                        f, name, model->decoder_1_rewrite_weight, ne, nelements);
+                }
             } else if (name == "decoder." + std::to_string(i) + ".rewrite.bias") {
                 loaded_size = load_single_tensor1d(
                     f, name, model->decoder_0_1_rewrite_bias[i], ne, nelements);

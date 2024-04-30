@@ -670,18 +670,27 @@ void demucscpp_v3::model_v3_inference(
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_4, "buffers.x encoder-4");
 
-    // now shared branch
+    // shared: unique encoder 5 (bistlm local attn)
     apply_freq_shared_encoder_4_5(model, buffers.x_4, buffers.x_shared_5_empty_skip, 1, buffers.x_shared_5, buffers);
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_shared_5, "shared encoder-5");
 
-    return;
-
-    // shared: unique encoder 5 (bistlm local attn)
-
-    // shared: unique decoder 5
-
     // now decoder time!
+
+    // shared decoder 5, which is one of the two unique decoder_0_1
+
+    // start from 0 tensors
+
+    apply_freq_shared_decoder_0_1(model, 0, buffers.x_decode, buffers.x_shared_5, buffers.x_shared_5);
+
+    demucscppdebug::debug_tensor_3dxf(buffers.x_shared_5, "buffers.x decoder-0");
+
+
+    apply_freq_shared_decoder_0_1(model, 1, buffers.x_shared_5, buffers.x_4, buffers.x_4);
+
+    demucscppdebug::debug_tensor_3dxf(buffers.x_4, "buffers.x decoder-1");
+
+    return;
 
     // skip == saved_3
     demucscpp_v3::apply_freq_decoder_v3(model, 0, buffers.x_3, buffers.x_2,

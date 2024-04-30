@@ -48,6 +48,91 @@ Eigen::Tensor3dXf demucscpp::group_norm(const Eigen::Tensor3dXf &x,
     return y_out;
 }
 
+Eigen::Tensor3dXf demucscpp::group_norm_2(const Eigen::Tensor3dXf &x,
+                                          const Eigen::Tensor1dXf &weight,
+                                          const Eigen::Tensor1dXf &b,
+                                          int num_groups, float eps)
+{
+    int channels = x.dimension(0);
+    int freq = x.dimension(1);
+    int width = x.dimension(2);
+
+    Eigen::Tensor3dXf y_out(channels, freq, width);
+    y_out.setZero();
+
+    int group_size = channels / num_groups;
+
+    for (int i = 0; i < channels; ++i) // Loop over channels
+    {
+        for (int g = 0; g < num_groups; ++g)
+        {
+            int start = g * group_size;
+            int end = (g + 1) * group_size;
+
+            // Adjust slicing to correctly slice across the new first dimension (channels)
+            Eigen::Tensor3dXf slice =
+                x.slice(Eigen::array<int, 3>{start, 0, 0},
+                        Eigen::array<int, 3>{group_size, freq, width});
+            Eigen::Tensor<float, 0> mean_tensor = slice.mean(Eigen::array<int, 3>{1, 2});
+            float mean = mean_tensor(0);
+            float var = demucscpp::calculate_variance(slice, mean);
+
+            for (int f = 0; f < freq; ++f) // Loop over freq
+            {
+                for (int w = 0; w < width; ++w) // Loop over width
+                {
+                    // Adjust indexing to reflect the swapped dimensions
+                    float norm_val = (x(i, f, w) - mean) / std::sqrt(var + eps);
+                    y_out(i, f, w) = norm_val * weight(i) + b(i); // Use 'i' for channel-based operations
+                }
+            }
+        }
+    }
+
+    return y_out;
+}
+
+//Eigen::Tensor3dXf demucscpp::group_norm_2(const Eigen::Tensor3dXf &x,
+//                                          const Eigen::Tensor1dXf &weight,
+//                                          const Eigen::Tensor1dXf &b,
+//                                          int num_groups, float eps)
+//{
+//    int channels = x.dimension(0);
+//    int freq = x.dimension(1);
+//    int width = x.dimension(2);
+//
+//    Eigen::Tensor3dXf y_out(channels, freq, width);
+//    y_out.setZero();
+//
+//    int group_size = channels / num_groups;
+//
+//    for (int i = 0; i < freq; ++i)
+//    {
+//        for (int g = 0; g < num_groups; ++g)
+//        {
+//            int start = g * group_size;
+//            int end = (g + 1) * group_size;
+//
+//            Eigen::Tensor3dXf slice =
+//                x.slice(Eigen::array<int, 3>{i, start, 0},
+//                        Eigen::array<int, 3>{1, group_size, width});
+//            Eigen::Tensor<float, 0> mean_tensor = slice.mean();
+//            float mean = mean_tensor(0);
+//            float var = demucscpp::calculate_variance(slice, mean);
+//
+//            for (int c = start; c < end; ++c)
+//            {
+//                for (int w = 0; w < width; ++w)
+//                {
+//                    float norm_val = (x(i, c, w) - mean) / std::sqrt(var + eps);
+//                    y_out(i, c, w) = norm_val * weight(c) + b(c);
+//                }
+//            }
+//        }
+//    }
+//    return y_out;
+//}
+
 Eigen::Tensor3dXf
 demucscpp::group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
                                  const Eigen::Tensor1dXf &weight,
@@ -125,6 +210,47 @@ Eigen::Tensor3dXf demucscpp::group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
 
                     float gelu_val = 0.5f * norm_val * (1.0f + std::erf(norm_val / std::sqrt(2.0f)));
                     y_out(c, h, w) = gelu_val;
+                }
+            }
+        }
+    }
+
+    return y_out;
+}
+
+Eigen::Tensor3dXf demucscpp::group_norm_fused_gelu_2(const Eigen::Tensor3dXf &x,
+                                                     const Eigen::Tensor1dXf &weight,
+                                                     const Eigen::Tensor1dXf &bias,
+                                                     int num_groups, float eps) {
+    int H = x.dimension(0);
+    int C = x.dimension(1);
+    int W = x.dimension(2);
+
+    Eigen::Tensor3dXf y_out(H, C, W);
+    y_out.setZero();
+
+    int group_size = C / num_groups;
+
+    for (int g = 0; g < num_groups; ++g) {
+        int start_channel = g * group_size;
+
+        // Correct slicing to reflect the swapped dimensions
+        for (int h = 0; h < H; ++h) {
+            Eigen::Tensor3dXf group_slice = x.slice(Eigen::array<int, 3>{h, start_channel, 0},
+                                                    Eigen::array<int, 3>{1, group_size, W});
+
+            Eigen::Tensor<float, 0> mean_tensor = group_slice.mean(Eigen::array<int, 3>{1, 2});
+            float mean = mean_tensor(0);
+            float var = demucscpp::calculate_variance(group_slice, mean);
+
+            for (int c = start_channel; c < start_channel + group_size; ++c) {
+                for (int w = 0; w < W; ++w) {
+                    float norm_val = (x(h, c, w) - mean) / std::sqrt(var + eps);
+
+                    norm_val = norm_val * weight(c) + bias(c);
+
+                    float gelu_val = 0.5f * norm_val * (1.0f + std::erf(norm_val / std::sqrt(2.0f)));
+                    y_out(h, c, w) = gelu_val;
                 }
             }
         }
