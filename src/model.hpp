@@ -1260,9 +1260,12 @@ struct demucs_v3_model
     };
 
     // Frequency Decoders
-    Eigen::Tensor3dXf decoder_0_1_conv_tr_weight[2]{
-        Eigen::Tensor3dXf(1536, 768, 4), // decoder.0.conv_tr.weight
-        Eigen::Tensor3dXf(768, 384, 8)   // decoder.1.conv_tr.weight
+    Eigen::Tensor3dXf decoder_0_conv_tr_weight{
+        Eigen::Tensor3dXf(1536, 768, 4)}; // decoder.0.conv_tr.weight
+
+
+    Eigen::Tensor4dXf decoder_1_conv_tr_weight{
+        Eigen::Tensor4dXf(768, 384, 8, 1)   // decoder.1.conv_tr.weight
     };
 
     Eigen::Tensor1dXf decoder_0_1_conv_tr_bias[2]{
@@ -1416,6 +1419,7 @@ struct demucs_v3_segment_buffers
           xt_1(1, 96, TIME_BRANCH_LEN_1), xt_2(1, 192, TIME_BRANCH_LEN_2),
           xt_3(1, 384, TIME_BRANCH_LEN_3), xt_4(1, 768, TIME_BRANCH_LEN_4),
           x_decode(1536, 1, SHARED_BRANCH_LEN),
+          xt_decode(1, 1536, SHARED_BRANCH_LEN),
           saved_0(48, 512, FREQ_BRANCH_LEN), saved_1(96, 128, FREQ_BRANCH_LEN),
           saved_2(192, 32, FREQ_BRANCH_LEN), saved_3(384, 8, FREQ_BRANCH_LEN),
           saved_4(768, 1, FREQ_BRANCH_LEN),

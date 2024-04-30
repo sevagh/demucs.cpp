@@ -685,45 +685,20 @@ void demucscpp_v3::model_v3_inference(
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_shared_5, "buffers.x decoder-0");
 
-
-    apply_freq_shared_decoder_0_1(model, 1, buffers.x_shared_5, buffers.x_4, buffers.x_4);
+    Eigen::Tensor3dXf pre_t = apply_freq_shared_decoder_0_1(model, 1, buffers.x_shared_5, buffers.x_4, buffers.saved_4);
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_4, "buffers.x decoder-1");
+    demucscppdebug::debug_tensor_3dxf(pre_t, "pre (input to tdecoder-0)");
+
+    apply_time_decoder_0(model, pre_t, buffers.xt_4, buffers.xt_decode);
+
+    demucscppdebug::debug_tensor_3dxf(buffers.xt_4, "buffers.xt tdecoder-1");
 
     return;
 
-    // skip == saved_3
-    demucscpp_v3::apply_freq_decoder_v3(model, 0, buffers.x_3, buffers.x_2,
-                                  buffers.saved_3);
-    cb(current_progress + segment_progress * 19.0f / 26.0f, "Freq: decoder 0");
+    //apply_common_decoder(model, 0, 0, buffers.x_4, buffers.x_3, buffers.saved_3);
 
-    demucscpp_v3::apply_time_decoder_v3(model, 0, buffers.xt_3, buffers.xt_2,
-                                  buffers.savedt_3);
-    cb(current_progress + segment_progress * 20.0f / 26.0f, "Time: decoder 0");
-
-    demucscpp_v3::apply_freq_decoder_v3(model, 1, buffers.x_2, buffers.x_1,
-                                  buffers.saved_2);
-    cb(current_progress + segment_progress * 21.0f / 26.0f, "Freq: decoder 1");
-
-    demucscpp_v3::apply_time_decoder_v3(model, 1, buffers.xt_2, buffers.xt_1,
-                                  buffers.savedt_2);
-    cb(current_progress + segment_progress * 22.0f / 26.0f, "Time: decoder 1");
-
-    demucscpp_v3::apply_freq_decoder_v3(model, 2, buffers.x_1, buffers.x_0,
-                                  buffers.saved_1);
-    cb(current_progress + segment_progress * 23.0f / 26.0f, "Freq: decoder 2");
-
-    demucscpp_v3::apply_time_decoder_v3(model, 2, buffers.xt_1, buffers.xt_0,
-                                  buffers.savedt_1);
-    cb(current_progress + segment_progress * 24.0f / 26.0f, "Time: decoder 2");
-
-    demucscpp_v3::apply_freq_decoder_v3(model, 3, buffers.x_0, buffers.x_out,
-                                  buffers.saved_0);
-    cb(current_progress + segment_progress * 25.0f / 26.0f, "Freq: decoder 3");
-
-    demucscpp_v3::apply_time_decoder_v3(model, 3, buffers.xt_0, buffers.xt_out,
-                                  buffers.savedt_0);
-    cb(current_progress + segment_progress * 26.0f / 26.0f, "Time: decoder 3");
+    //demucscppdebug::debug_tensor_3dxf(buffers.x_3, "buffers.x decoder-2");
 
     cb(current_progress + segment_progress, "Mask + istft");
 

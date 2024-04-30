@@ -54,24 +54,25 @@ void apply_freq_shared_encoder_4_5(const struct demucscpp_v3::demucs_v3_model &m
                                    Eigen::Tensor3dXf &x_out,
                                    struct demucscpp_v3::demucs_v3_segment_buffers &buffers);
 
-void apply_freq_shared_decoder_0_1(
+Eigen::Tensor3dXf apply_freq_shared_decoder_0_1(
     const struct demucscpp_v3::demucs_v3_model &model,
     const int decoder_idx,
     const Eigen::Tensor3dXf &x_in,
     Eigen::Tensor3dXf &x_out,
     const Eigen::Tensor3dXf &skip);
 
-// forward declaration to apply a frequency decoder
-void apply_freq_decoder_v3(const struct demucscpp_v3::demucs_v3_model &model,
-                        int decoder_idx, const Eigen::Tensor3dXf &x_in,
-                        Eigen::Tensor3dXf &x_out,
-                        const Eigen::Tensor3dXf &skip);
+void apply_time_decoder_0(
+    const struct demucscpp_v3::demucs_v3_model &model,
+    const Eigen::Tensor3dXf &x_in,
+    Eigen::Tensor3dXf &x_out,
+    const Eigen::Tensor3dXf &skip);
 
-// forward declaration to apply a time decoder
-void apply_time_decoder_v3(const struct demucscpp_v3::demucs_v3_model &model,
-                        int decoder_idx, const Eigen::Tensor3dXf &xt_in,
-                        Eigen::Tensor3dXf &xt_out,
-                        const Eigen::Tensor3dXf &skip);
+// forward declaration to apply a common freq or time decoder
+void apply_common_decoder(const struct demucscpp_v3::demucs_v3_model &model,
+                          const int freq_or_time_idx,
+                          const int decoder_idx, const Eigen::Tensor3dXf &x_in,
+                          Eigen::Tensor3dXf &x_out,
+                          const Eigen::Tensor3dXf &skip);
 
 } // namespace demucscpp_v3
 

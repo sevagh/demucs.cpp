@@ -1897,8 +1897,13 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
         // start with decoder 0,1 for frequency which has its own arrays
         for (int i = 0; i < 2; ++i) {
             if (name == "decoder." + std::to_string(i) + ".conv_tr.weight") {
-                loaded_size = load_single_tensor3d(
-                    f, name, model->decoder_0_1_conv_tr_weight[i], ne, nelements);
+                if (i == 0) {
+                    loaded_size = load_single_tensor3d(
+                        f, name, model->decoder_0_conv_tr_weight, ne, nelements);
+                } else {
+                    loaded_size = load_single_tensor4d(
+                        f, name, model->decoder_1_conv_tr_weight, ne, nelements);
+                }
             } else if (name == "decoder." + std::to_string(i) + ".conv_tr.bias") {
                 loaded_size = load_single_tensor1d(
                     f, name, model->decoder_0_1_conv_tr_bias[i], ne, nelements);
