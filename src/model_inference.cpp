@@ -676,6 +676,8 @@ void demucscpp_v3::model_v3_inference(
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_shared_5, "shared encoder-5");
 
+    std::cout << "\nwaiting here..." << std::endl;
+
     // now decoder time!
 
     // shared decoder 5, which is one of the two unique decoder_0_1
