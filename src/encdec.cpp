@@ -546,6 +546,7 @@ void demucscpp_v3::apply_freq_shared_encoder_4_5(const struct demucscpp_v3::demu
 {
     // 2D Convolution operation
     Eigen::Tensor3dXf y;
+    Eigen::Tensor3dXf y_shuff;
 
     //demucscppdebug::debug_tensor_3dxf(x_in, "x_in enc_4_5 before conv");
 
@@ -556,7 +557,8 @@ void demucscpp_v3::apply_freq_shared_encoder_4_5(const struct demucscpp_v3::demu
             x_in, model.encoder_4_conv_weight,
             model.encoder_4_5_conv_bias[encoder_idx]);
         // encoder 4 (i.e. encoder_idx 0) has the inject param
-        y += x_inject;
+        // swap first two dims of x_inject
+        y += x_inject.shuffle(Eigen::array<int, 3>({1, 0, 2}));
         break;
     case 1:
         // shuffle first two dims of x_in
@@ -566,9 +568,8 @@ void demucscpp_v3::apply_freq_shared_encoder_4_5(const struct demucscpp_v3::demu
             y, model.encoder_5_conv_weight,
             model.encoder_4_5_conv_bias[encoder_idx]);
         // shuffle dims of y for group norm + gelu
-        //demucscppdebug::debug_tensor_3dxf(y, "y after conv");
-        y = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
-        //demucscppdebug::debug_tensor_3dxf(y, "y after shuff");
+        y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
+        y = y_shuff;
         break;
     };
 
@@ -581,7 +582,7 @@ void demucscpp_v3::apply_freq_shared_encoder_4_5(const struct demucscpp_v3::demu
     //demucscppdebug::debug_tensor_3dxf(y, "y enc_4_5 before dconv");
 
     // swap first two dims
-    Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
+    y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
 
     // special dconv with bilstm + local attn
     demucscpp_v3::apply_dconv_v3_encoder_4_5(model, y_shuff, encoder_idx,
@@ -595,7 +596,6 @@ void demucscpp_v3::apply_freq_shared_encoder_4_5(const struct demucscpp_v3::demu
     y = y_shuff;
 
     //demucscppdebug::debug_tensor_3dxf(y, "y enc_4_5 after shuff");
-
     //demucscppdebug::debug_tensor_3dxf(y, "y before rewrite");
 
     // need rewrite, norm2, glu
@@ -619,16 +619,18 @@ void demucscpp_v3::apply_freq_shared_encoder_4_5(const struct demucscpp_v3::demu
     y = demucscpp::group_norm(y, model.encoder_4_5_norm2_weight[encoder_idx],
                              model.encoder_4_5_norm2_bias[encoder_idx], 4, 1e-05);
 
-    ////demucscppdebug::debug_tensor_3dxf(y, "y after group norm");
-
-    // swap first and second dims
-    // from C,H,W into H,C,W
-    y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
+    //demucscppdebug::debug_tensor_3dxf(y, "y after group norm");
 
     // copy into x_out
-    x_out = demucscpp::glu(y_shuff, 0);
+    if (encoder_idx == 0) {
+        y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
+        x_out = demucscpp::glu(y_shuff, 0);
+    } else {
+        y_shuff = y;
+        x_out = demucscpp::glu(y_shuff, 1);
+    }
 
-    ////demucscppdebug::debug_tensor_3dxf(x_out, "y after glu");
+    //demucscppdebug::debug_tensor_3dxf(x_out, "y after glu");
 }
 
 Eigen::Tensor3dXf demucscpp_v3::apply_freq_shared_decoder_0_1(
@@ -638,26 +640,19 @@ Eigen::Tensor3dXf demucscpp_v3::apply_freq_shared_decoder_0_1(
     Eigen::Tensor3dXf &x_out,
     const Eigen::Tensor3dXf &skip)
 {
-    //demucscppdebug::debug_tensor_3dxf(skip, "skip");
-    //demucscppdebug::debug_tensor_3dxf(x_in, "x_in pre-skip");
+    if (decoder_idx == 1) {
+        demucscppdebug::debug_tensor_3dxf(skip, "skip");
+        demucscppdebug::debug_tensor_3dxf(x_in, "x_in pre-skip");
+    }
 
     // TODO: after done, collapse all switch cases into one
     // wont need print statements
 
-    Eigen::Tensor3dXf y;
-    // assign skip with first two axes swapped to y
-    switch (decoder_idx) {
-    case 0:
-        y = x_in + skip;
-        break;
-    case 1:
-        y = skip.shuffle(Eigen::array<int, 3>({1, 0, 2}));
-        //demucscppdebug::debug_tensor_3dxf(y, "y pre-shuffle SPECIAL CASE!");
-        y += x_in;
-        break;
-    }
+    Eigen::Tensor3dXf y = x_in + skip;
 
-    //demucscppdebug::debug_tensor_3dxf(y, "y post-skip");
+    if (decoder_idx == 1) {
+        demucscppdebug::debug_tensor_3dxf(y, "x_in post-skip");
+    }
 
     // swap first two dims
     Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
@@ -677,7 +672,9 @@ Eigen::Tensor3dXf demucscpp_v3::apply_freq_shared_decoder_0_1(
         break;
     };
 
-    //demucscppdebug::debug_tensor_3dxf(y, "y after rewrite");
+    if (decoder_idx == 1) {
+        demucscppdebug::debug_tensor_3dxf(y, "y after rewrite");
+    }
 
     switch (decoder_idx)
     {
@@ -695,13 +692,17 @@ Eigen::Tensor3dXf demucscpp_v3::apply_freq_shared_decoder_0_1(
         y = demucscpp_v3::group_norm_2(y, model.decoder_0_1_norm1_weight[decoder_idx],
                                 model.decoder_0_1_norm1_bias[decoder_idx], 4, 1e-05);
 
-        //demucscppdebug::debug_tensor_3dxf(y, "y after group norm");
+        if (decoder_idx == 1) {
+            demucscppdebug::debug_tensor_3dxf(y, "y after group norm");
+        }
 
         y = demucscpp::glu(y, 0);
         break;
     }
 
-    //demucscppdebug::debug_tensor_3dxf(y, "y after glu");
+    if (decoder_idx == 1) {
+        demucscppdebug::debug_tensor_3dxf(y, "y after glu");
+    }
 
     // return pre, to be used optionally (as first input to time decoder)
     Eigen::Tensor3dXf pre_ret = y;
@@ -724,13 +725,17 @@ Eigen::Tensor3dXf demucscpp_v3::apply_freq_shared_decoder_0_1(
         break;
     };
 
-    //demucscppdebug::debug_tensor_3dxf(y, "y after conv1d_tr");
+    if (decoder_idx == 1) {
+        demucscppdebug::debug_tensor_3dxf(y, "y after conv1d_tr");
+    }
 
     // now apply groupnorm2 with norm2 weights
     y = demucscpp_v3::group_norm_fused_gelu_2(y, model.decoder_0_1_norm2_weight[decoder_idx],
                              model.decoder_0_1_norm2_bias[decoder_idx], 4, 1e-05);
 
-    //demucscppdebug::debug_tensor_3dxf(y, "y after group norm + gelu");
+    if (decoder_idx == 1) {
+        demucscppdebug::debug_tensor_3dxf(y, "y after group norm + gelu");
+    }
 
     if (decoder_idx == 0) {
         int y_dim2_begin = 2;

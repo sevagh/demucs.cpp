@@ -1412,7 +1412,8 @@ struct demucs_v3_segment_buffers
           x_out(nb_sources * 2 * nb_channels, nb_stft_bins - 1, nb_stft_frames),
           x_0(48, 512, FREQ_BRANCH_LEN), x_1(96, 128, FREQ_BRANCH_LEN),
           x_2(192, 32, FREQ_BRANCH_LEN), x_3(384, 8, FREQ_BRANCH_LEN),
-          x_4(768, 1, FREQ_BRANCH_LEN), x_shared_5(1536, 1, SHARED_BRANCH_LEN),
+          x_4(768, 1, FREQ_BRANCH_LEN),
+          x_shared_5(1, 1536, SHARED_BRANCH_LEN), // merged freq and time
           xt(1, nb_channels, segment_samples),
           xt_out(1, nb_sources * nb_channels, segment_samples),
           xt_decoded_out(1, 8, segment_samples), xt_0(1, 48, TIME_BRANCH_LEN_0),

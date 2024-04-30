@@ -697,11 +697,11 @@ void demucscpp_v3::model_v3_inference(
 
     demucscppdebug::debug_tensor_3dxf(buffers.xt_4, "buffers.xt tdecoder-1");
 
-    apply_common_decoder(model, 0, 0, buffers.x_4, buffers.x_3, buffers.saved_3);
-
-    demucscppdebug::debug_tensor_3dxf(buffers.x_3, "buffers.x decoder-2");
-
     return;
+
+    //apply_common_decoder(model, 0, 0, buffers.x_4, buffers.x_3, buffers.saved_3);
+
+    //demucscppdebug::debug_tensor_3dxf(buffers.x_3, "buffers.x decoder-2");
 
     cb(current_progress + segment_progress, "Mask + istft");
 
