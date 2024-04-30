@@ -32,6 +32,21 @@ void local_attention(
     const Eigen::Tensor3dXf &proj_weight, const Eigen::Tensor1dXf &proj_bias,
     const int hidden_size);
 
+Eigen::Tensor3dXf group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
+                                                   const Eigen::Tensor1dXf &weight,
+                                                   const Eigen::Tensor1dXf &b,
+                                                   int num_groups, float eps);
+
+Eigen::Tensor3dXf group_norm_2(const Eigen::Tensor3dXf &x,
+                               const Eigen::Tensor1dXf &w,
+                               const Eigen::Tensor1dXf &b, int num_groups,
+                               float eps);
+
+Eigen::Tensor3dXf group_norm_fused_gelu_2(const Eigen::Tensor3dXf &x,
+                                                   const Eigen::Tensor1dXf &weight,
+                                                   const Eigen::Tensor1dXf &b,
+                                                   int num_groups, float eps);
+
 } // namespace demucscpp_v3
 
 namespace demucscpp
@@ -64,23 +79,9 @@ Eigen::Tensor3dXf group_norm(const Eigen::Tensor3dXf &x,
                              const Eigen::Tensor1dXf &b, int num_groups,
                              float eps);
 
-Eigen::Tensor3dXf group_norm_2(const Eigen::Tensor3dXf &x,
-                               const Eigen::Tensor1dXf &w,
-                               const Eigen::Tensor1dXf &b, int num_groups,
-                               float eps);
-
 Eigen::Tensor3dXf group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
                                         const Eigen::Tensor1dXf &w,
                                         const Eigen::Tensor1dXf &b, float eps);
-
-Eigen::Tensor3dXf group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
-                                                   const Eigen::Tensor1dXf &weight,
-                                                   const Eigen::Tensor1dXf &b,
-                                                   int num_groups, float eps);
-Eigen::Tensor3dXf group_norm_fused_gelu_2(const Eigen::Tensor3dXf &x,
-                                                   const Eigen::Tensor1dXf &weight,
-                                                   const Eigen::Tensor1dXf &b,
-                                                   int num_groups, float eps);
 
 
 Eigen::Tensor3dXf layer_norm(const Eigen::Tensor3dXf &x,

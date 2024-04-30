@@ -48,91 +48,6 @@ Eigen::Tensor3dXf demucscpp::group_norm(const Eigen::Tensor3dXf &x,
     return y_out;
 }
 
-Eigen::Tensor3dXf demucscpp::group_norm_2(const Eigen::Tensor3dXf &x,
-                                          const Eigen::Tensor1dXf &weight,
-                                          const Eigen::Tensor1dXf &b,
-                                          int num_groups, float eps)
-{
-    int channels = x.dimension(0);
-    int freq = x.dimension(1);
-    int width = x.dimension(2);
-
-    Eigen::Tensor3dXf y_out(channels, freq, width);
-    y_out.setZero();
-
-    int group_size = channels / num_groups;
-
-    for (int i = 0; i < channels; ++i) // Loop over channels
-    {
-        for (int g = 0; g < num_groups; ++g)
-        {
-            int start = g * group_size;
-            int end = (g + 1) * group_size;
-
-            // Adjust slicing to correctly slice across the new first dimension (channels)
-            Eigen::Tensor3dXf slice =
-                x.slice(Eigen::array<int, 3>{start, 0, 0},
-                        Eigen::array<int, 3>{group_size, freq, width});
-            Eigen::Tensor<float, 0> mean_tensor = slice.mean(Eigen::array<int, 3>{1, 2});
-            float mean = mean_tensor(0);
-            float var = demucscpp::calculate_variance(slice, mean);
-
-            for (int f = 0; f < freq; ++f) // Loop over freq
-            {
-                for (int w = 0; w < width; ++w) // Loop over width
-                {
-                    // Adjust indexing to reflect the swapped dimensions
-                    float norm_val = (x(i, f, w) - mean) / std::sqrt(var + eps);
-                    y_out(i, f, w) = norm_val * weight(i) + b(i); // Use 'i' for channel-based operations
-                }
-            }
-        }
-    }
-
-    return y_out;
-}
-
-//Eigen::Tensor3dXf demucscpp::group_norm_2(const Eigen::Tensor3dXf &x,
-//                                          const Eigen::Tensor1dXf &weight,
-//                                          const Eigen::Tensor1dXf &b,
-//                                          int num_groups, float eps)
-//{
-//    int channels = x.dimension(0);
-//    int freq = x.dimension(1);
-//    int width = x.dimension(2);
-//
-//    Eigen::Tensor3dXf y_out(channels, freq, width);
-//    y_out.setZero();
-//
-//    int group_size = channels / num_groups;
-//
-//    for (int i = 0; i < freq; ++i)
-//    {
-//        for (int g = 0; g < num_groups; ++g)
-//        {
-//            int start = g * group_size;
-//            int end = (g + 1) * group_size;
-//
-//            Eigen::Tensor3dXf slice =
-//                x.slice(Eigen::array<int, 3>{i, start, 0},
-//                        Eigen::array<int, 3>{1, group_size, width});
-//            Eigen::Tensor<float, 0> mean_tensor = slice.mean();
-//            float mean = mean_tensor(0);
-//            float var = demucscpp::calculate_variance(slice, mean);
-//
-//            for (int c = start; c < end; ++c)
-//            {
-//                for (int w = 0; w < width; ++w)
-//                {
-//                    float norm_val = (x(i, c, w) - mean) / std::sqrt(var + eps);
-//                    y_out(i, c, w) = norm_val * weight(c) + b(c);
-//                }
-//            }
-//        }
-//    }
-//    return y_out;
-//}
-
 Eigen::Tensor3dXf
 demucscpp::group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
                                  const Eigen::Tensor1dXf &weight,
@@ -178,7 +93,51 @@ demucscpp::group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
     return y_out;
 }
 
-Eigen::Tensor3dXf demucscpp::group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
+Eigen::Tensor3dXf demucscpp_v3::group_norm_2(const Eigen::Tensor3dXf &x,
+                                          const Eigen::Tensor1dXf &weight,
+                                          const Eigen::Tensor1dXf &b,
+                                          int num_groups, float eps)
+{
+    int channels = x.dimension(0);
+    int freq = x.dimension(1);
+    int width = x.dimension(2);
+
+    Eigen::Tensor3dXf y_out(channels, freq, width);
+    y_out.setZero();
+
+    int group_size = channels / num_groups;
+
+    for (int i = 0; i < channels; ++i) // Loop over channels
+    {
+        for (int g = 0; g < num_groups; ++g)
+        {
+            int start = g * group_size;
+            int end = (g + 1) * group_size;
+
+            // Adjust slicing to correctly slice across the new first dimension (channels)
+            Eigen::Tensor3dXf slice =
+                x.slice(Eigen::array<int, 3>{start, 0, 0},
+                        Eigen::array<int, 3>{group_size, freq, width});
+            Eigen::Tensor<float, 0> mean_tensor = slice.mean(Eigen::array<int, 3>{1, 2});
+            float mean = mean_tensor(0);
+            float var = demucscpp::calculate_variance(slice, mean);
+
+            for (int f = 0; f < freq; ++f) // Loop over freq
+            {
+                for (int w = 0; w < width; ++w) // Loop over width
+                {
+                    // Adjust indexing to reflect the swapped dimensions
+                    float norm_val = (x(i, f, w) - mean) / std::sqrt(var + eps);
+                    y_out(i, f, w) = norm_val * weight(i) + b(i); // Use 'i' for channel-based operations
+                }
+            }
+        }
+    }
+
+    return y_out;
+}
+
+Eigen::Tensor3dXf demucscpp_v3::group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
                                                    const Eigen::Tensor1dXf &weight,
                                                    const Eigen::Tensor1dXf &bias,
                                                    int num_groups, float eps) {
@@ -218,7 +177,7 @@ Eigen::Tensor3dXf demucscpp::group_norm_fused_gelu(const Eigen::Tensor3dXf &x,
     return y_out;
 }
 
-Eigen::Tensor3dXf demucscpp::group_norm_fused_gelu_2(const Eigen::Tensor3dXf &x,
+Eigen::Tensor3dXf demucscpp_v3::group_norm_fused_gelu_2(const Eigen::Tensor3dXf &x,
                                                      const Eigen::Tensor1dXf &weight,
                                                      const Eigen::Tensor1dXf &bias,
                                                      int num_groups, float eps) {
@@ -1107,7 +1066,7 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
     // store another copy of y to sum back later
     Eigen::Tensor3dXf y_copy = y;
 
-    demucscppdebug::debug_tensor_3dxf(y, "y pre-conv1d dconv 0");
+    //demucscppdebug::debug_tensor_3dxf(y, "y pre-conv1d dconv 0");
 
     // now dconv time
 
@@ -1127,7 +1086,7 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
         break;
     };
 
-    demucscppdebug::debug_tensor_3dxf(y, "y post-conv1d dconv 0");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-conv1d dconv 0");
 
     y = demucscpp::group_norm_fused_gelu(
         y,
@@ -1135,7 +1094,7 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
         model.encoder_4_5_dconv_layers_1_groupnorm_bias[encoder_idx][0],
         1e-05);
 
-    demucscppdebug::debug_tensor_3dxf(y, "y_shuff pre-bilstm");
+    //demucscppdebug::debug_tensor_3dxf(y, "y_shuff pre-bilstm");
 
     // transpose it to put time seq last
     Eigen::MatrixXf y_mat = Eigen::Map<Eigen::MatrixXf>(y.data(), y.dimension(1), y.dimension(2)).transpose();
@@ -1146,7 +1105,7 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
     // access last element of the last dim which is the output of the bilstm
     Eigen::MatrixXf lstm_out_0 = buffers.lstm_output[encoder_idx][0][1];
 
-    demucscppdebug::debug_matrix_xf(lstm_out_0, "y_shuf post-lstm");
+    //demucscppdebug::debug_matrix_xf(lstm_out_0, "y_shuf post-lstm");
 
     // set lstm state to 0
     demucscpp_v3::lstm_reset_zero(encoder_idx, 0, buffers);
@@ -1156,22 +1115,22 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
         lstm_out_0 * model.encoder_4_5_dconv_layers_3_linear_weight[encoder_idx][0].transpose()
         ).rowwise() + model.encoder_4_5_dconv_layers_3_linear_bias[encoder_idx][0].transpose();
 
-    demucscppdebug::debug_matrix_xf(lstm_out_0, "y_shuf post-linear");
+    //demucscppdebug::debug_matrix_xf(lstm_out_0, "y_shuf post-linear");
 
     // then apply skip connection
     lstm_out_0 = lstm_out_0 + y_mat;
 
-    demucscppdebug::debug_matrix_xf(lstm_out_0, "y_shuf post-skip");
+    //demucscppdebug::debug_matrix_xf(lstm_out_0, "y_shuf post-skip");
 
     // copy it to a original 3d tensor
     y = Eigen::TensorMap<Eigen::Tensor3dXf>(lstm_out_0.data(), lstm_out_0.rows(), 1, lstm_out_0.cols());
 
-    demucscppdebug::debug_tensor_3dxf(y, "y post-biLSTM");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-biLSTM");
 
     // swap dims from 0,1,2 to 1,2,0
     Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({1, 2, 0}));
 
-    demucscppdebug::debug_tensor_3dxf(y_shuff, "y post-shuf input to LocalAttn!");
+    //demucscppdebug::debug_tensor_3dxf(y_shuff, "y post-shuf input to LocalAttn!");
 
     // then, localattn
     demucscpp_v3::local_attention(
@@ -1190,7 +1149,7 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
 
     y = y_shuff;
 
-    demucscppdebug::debug_tensor_3dxf(y, "y post-local attention");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-local attention");
 
     switch (encoder_idx)
     {
@@ -1208,7 +1167,7 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
         break;
     };
 
-    demucscppdebug::debug_tensor_3dxf(y, "y post-conv1d");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-conv1d");
 
     y = demucscpp::group_norm(
         y,
@@ -1216,22 +1175,22 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
         model.encoder_4_5_dconv_layers_6_groupnorm_bias[encoder_idx][0],
         1, 1e-05);
 
-    demucscppdebug::debug_tensor_3dxf(y, "y post-groupnorm");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-groupnorm");
 
     y = demucscpp::glu(y, 1);
 
-    demucscppdebug::debug_tensor_3dxf(y, "y post-glu");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-glu");
 
     y = demucscpp::layer_scale(
         y, model.encoder_4_5_dconv_layers_8_scale[encoder_idx][0]);
 
-    demucscppdebug::debug_tensor_3dxf(y, "y post-layer scale");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-layer scale");
 
     // now we add y to itself
     y = y + y_copy;
 
     // debug
-    demucscppdebug::debug_tensor_3dxf(y, "y post-dconv 0");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-dconv 0");
 
     // store another copy of y to sum back later
     y_copy = y;
@@ -1262,7 +1221,7 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
 
     y = y_cropped;
 
-    demucscppdebug::debug_tensor_3dxf(y, "y_shuff post-conv1d");
+    //demucscppdebug::debug_tensor_3dxf(y, "y_shuff post-conv1d");
 
     y = demucscpp::group_norm_fused_gelu(
         y,
@@ -1270,12 +1229,12 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
         model.encoder_4_5_dconv_layers_1_groupnorm_bias[encoder_idx][1],
         1e-05);
 
-    demucscppdebug::debug_tensor_3dxf(y, "y post-gelu 1 (i.e. pre bilstm)");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-gelu 1 (i.e. pre bilstm)");
 
     // transpose it to put time seq last
     y_mat = Eigen::Map<Eigen::MatrixXf>(y.data(), y.dimension(1), y.dimension(2)).transpose();
 
-    demucscppdebug::debug_matrix_xf(y_mat, "y mat (input to bilstm)");
+    //demucscppdebug::debug_matrix_xf(y_mat, "y mat (input to bilstm)");
 
     // then, bilstm
     demucscpp_v3::lstm_forward(model, encoder_idx, 1, y_mat, buffers, lstm_hidden_size);
@@ -1283,7 +1242,7 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
     // access last element of the last dim which is the output of the bilstm
     lstm_out_0 = buffers.lstm_output[encoder_idx][1][1];
 
-    demucscppdebug::debug_matrix_xf(lstm_out_0, "lstm_out_0 (post-bilstm)");
+    //demucscppdebug::debug_matrix_xf(lstm_out_0, "lstm_out_0 (post-bilstm)");
 
     // reset lstm state to 0
     demucscpp_v3::lstm_reset_zero(encoder_idx, 1, buffers);
@@ -1293,20 +1252,20 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
         lstm_out_0 * model.encoder_4_5_dconv_layers_3_linear_weight[encoder_idx][1].transpose()
         ).rowwise() + model.encoder_4_5_dconv_layers_3_linear_bias[encoder_idx][1].transpose();
 
-    demucscppdebug::debug_matrix_xf(lstm_out_0, "lstm_out_0 (post-linear)");
+    //demucscppdebug::debug_matrix_xf(lstm_out_0, "lstm_out_0 (post-linear)");
 
     // then apply skip connection
     lstm_out_0 = lstm_out_0 + y_mat;
 
-    demucscppdebug::debug_matrix_xf(lstm_out_0, "lstm_out_0 (post-skip)");
+    //demucscppdebug::debug_matrix_xf(lstm_out_0, "lstm_out_0 (post-skip)");
 
     // copy it to a original 3d tensor
     y = Eigen::TensorMap<Eigen::Tensor3dXf>(lstm_out_0.data(), lstm_out_0.rows(), 1, lstm_out_0.cols());
 
-    demucscppdebug::debug_tensor_3dxf(y, "y post-biLSTM");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-biLSTM");
     // swap dims from 0,1,2 to 1,2,0
     y_shuff = y.shuffle(Eigen::array<int, 3>({1, 2, 0}));
-    demucscppdebug::debug_tensor_3dxf(y_shuff, "y post-shuf input to LocalAttn!");
+    //demucscppdebug::debug_tensor_3dxf(y_shuff, "y post-shuf input to LocalAttn!");
 
     // then, localattn
     demucscpp_v3::local_attention(
@@ -1326,7 +1285,7 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
 
     y = y_shuff;
 
-    demucscppdebug::debug_tensor_3dxf(y, "y post-local attention");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-local attention");
 
     switch (encoder_idx)
     {
@@ -1344,7 +1303,7 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
         break;
     };
 
-    demucscppdebug::debug_tensor_3dxf(y, "y post-conv1d");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-conv1d");
 
     y = demucscpp::group_norm(
         y,
@@ -1352,19 +1311,19 @@ void demucscpp_v3::apply_dconv_v3_encoder_4_5(
         model.encoder_4_5_dconv_layers_6_groupnorm_bias[encoder_idx][1],
         1, 1e-05);
 
-    demucscppdebug::debug_tensor_3dxf(y, "y post-group norm");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-group norm");
 
     y = demucscpp::glu(y, 1);
 
-    demucscppdebug::debug_tensor_3dxf(y, "y post-glu");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-glu");
 
     y = demucscpp::layer_scale(
         y, model.encoder_4_5_dconv_layers_8_scale[encoder_idx][1]);
 
-    demucscppdebug::debug_tensor_3dxf(y, "y post-layer scale");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-layer scale");
 
     // now sum with itself
     y = y + y_copy;
 
-    demucscppdebug::debug_tensor_3dxf(y, "y end of dconv 1");
+    //demucscppdebug::debug_tensor_3dxf(y, "y end of dconv 1");
 }

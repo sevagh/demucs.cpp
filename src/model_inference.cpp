@@ -658,7 +658,8 @@ void demucscpp_v3::model_v3_inference(
     // t/time branch: unique tencoder 4
     apply_time_encoder_4(model, buffers.xt_3, buffers.xt_4);
 
-    buffers.savedt_4 = buffers.xt_4;
+    // possible this is not used, since it is the "inject" parameter
+    //buffers.savedt_4 = buffers.xt_4;
 
     demucscppdebug::debug_tensor_3dxf(buffers.xt_4, "buffers.xt tencoder-4");
 
@@ -688,17 +689,17 @@ void demucscpp_v3::model_v3_inference(
     Eigen::Tensor3dXf pre_t = apply_freq_shared_decoder_0_1(model, 1, buffers.x_shared_5, buffers.x_4, buffers.saved_4);
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_4, "buffers.x decoder-1");
-    demucscppdebug::debug_tensor_3dxf(pre_t, "pre (input to tdecoder-0)");
+    //demucscppdebug::debug_tensor_3dxf(pre_t, "pre (input to tdecoder-0)");
 
     apply_time_decoder_0(model, pre_t, buffers.xt_4, buffers.xt_decode);
 
     demucscppdebug::debug_tensor_3dxf(buffers.xt_4, "buffers.xt tdecoder-1");
 
+    apply_common_decoder(model, 0, 0, buffers.x_4, buffers.x_3, buffers.saved_3);
+
+    demucscppdebug::debug_tensor_3dxf(buffers.x_3, "buffers.x decoder-2");
+
     return;
-
-    //apply_common_decoder(model, 0, 0, buffers.x_4, buffers.x_3, buffers.saved_3);
-
-    //demucscppdebug::debug_tensor_3dxf(buffers.x_3, "buffers.x decoder-2");
 
     cb(current_progress + segment_progress, "Mask + istft");
 
