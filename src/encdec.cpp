@@ -799,8 +799,8 @@ void demucscpp_v3::apply_common_decoder(
 {
     // simple decoder
     // rewrite and conv_tr, no group norms
-    demucscppdebug::debug_tensor_3dxf(skip, "skip");
-    demucscppdebug::debug_tensor_3dxf(x_in, "x_in pre-skip");
+    //demucscppdebug::debug_tensor_3dxf(skip, "skip");
+    //demucscppdebug::debug_tensor_3dxf(x_in, "x_in pre-skip");
 
     // TODO: after done, collapse all switch cases into one
     // wont need print statements
@@ -812,7 +812,7 @@ void demucscpp_v3::apply_common_decoder(
     //    y = x_in + skip;
     //}
 
-    demucscppdebug::debug_tensor_3dxf(y, "y post-skip");
+    //demucscppdebug::debug_tensor_3dxf(y, "y post-skip");
 
     // swap first two dims
     //Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
@@ -852,11 +852,11 @@ void demucscpp_v3::apply_common_decoder(
             model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
     }
 
-    demucscppdebug::debug_tensor_3dxf(y, "y after rewrite conv2d");
+    //demucscppdebug::debug_tensor_3dxf(y, "y after rewrite conv2d");
 
     y = demucscpp::glu(y, freq_or_time_idx);
 
-    demucscppdebug::debug_tensor_3dxf(y, "y after glu");
+    //demucscppdebug::debug_tensor_3dxf(y, "y after glu");
 
     // no dconv for decoders, no norm2
     // simply conv_tr
@@ -896,7 +896,7 @@ void demucscpp_v3::apply_common_decoder(
             model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
     }
 
-    demucscppdebug::debug_tensor_3dxf(y, "y after conv1d_tr");
+    //demucscppdebug::debug_tensor_3dxf(y, "y after conv1d_tr");
 
     // apply gelu activation unless it's the last layer
     // self.last in pytorch
@@ -904,7 +904,7 @@ void demucscpp_v3::apply_common_decoder(
         y = demucscpp::gelu(y);
     }
 
-    demucscppdebug::debug_tensor_3dxf(y, "y after gelu");
+    //demucscppdebug::debug_tensor_3dxf(y, "y after gelu");
 
     if (freq_or_time_idx == 1) {
         // for time branch

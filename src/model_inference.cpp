@@ -677,6 +677,7 @@ void demucscpp_v3::model_v3_inference(
     demucscppdebug::debug_tensor_3dxf(buffers.x_shared_5, "shared encoder-5");
 
     std::cout << "\nwaiting here..." << std::endl;
+    std::cin.ignore();
 
     // now decoder time!
 
@@ -731,6 +732,8 @@ void demucscpp_v3::model_v3_inference(
     apply_common_decoder(model, 1, 3, buffers.xt_0, buffers.xt_out, buffers.savedt_0);
 
     demucscppdebug::debug_tensor_3dxf(buffers.xt_out, "buffers.xt tdecoder-5");
+
+    std::cin.ignore();
 
     cb(current_progress + segment_progress, "Mask + istft");
 

@@ -60,19 +60,30 @@ bass            ==> SDR:   4.584  SIR:   9.359  ISR:   9.068  SAR:   4.885
 other           ==> SDR:   7.426  SIR:  12.793  ISR:  12.975  SAR:   7.830
 ```
 
-### Performance ov v3 hdemucs_mmi model
+### Performance of v3 hdemucs_mmi model
 
 Track 'Zeno - Signs' from MUSDB18-HQ test set
 
-PyTorch inference:
+PyTorch inference (using v3-mmi default segment length + LSTM max length of 200):
 ```
 vocals          ==> SDR:   8.328  SIR:  18.943  ISR:  16.097  SAR:   8.563
 drums           ==> SDR:   9.284  SIR:  18.123  ISR:  16.230  SAR:  10.125
 bass            ==> SDR:   3.612  SIR:  10.313  ISR:   6.958  SAR:   3.077
 other           ==> SDR:   7.122  SIR:  11.391  ISR:  14.363  SAR:   7.910
 ```
-CPP inference (thise codebase, `demucs_v3.cpp`:
+PyTorch inference (using v4 7.8s segment length + LSTM max length of 336):
 ```
+vocals          ==> SDR:   8.304  SIR:  18.916  ISR:  16.087  SAR:   8.557
+drums           ==> SDR:   9.279  SIR:  18.149  ISR:  16.203  SAR:  10.109
+bass            ==> SDR:   3.601  SIR:  10.350  ISR:   6.971  SAR:   3.076
+other           ==> SDR:   7.123  SIR:  11.373  ISR:  14.373  SAR:   7.907
+```
+CPP inference (this codebase, `demucs_v3.cpp`):
+```
+vocals          ==> SDR:   8.331  SIR:  18.783  ISR:  16.027  SAR:   8.476
+drums           ==> SDR:   7.546  SIR:  13.867  ISR:  13.572  SAR:   8.524
+bass            ==> SDR:   1.737  SIR:   7.808  ISR:   3.990  SAR:   0.628
+other           ==> SDR:   6.689  SIR:   9.831  ISR:  14.362  SAR:   8.026
 ```
 
 ### Performance of multi-threaded inference
