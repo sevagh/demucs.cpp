@@ -805,28 +805,56 @@ void demucscpp_v3::apply_common_decoder(
     // TODO: after done, collapse all switch cases into one
     // wont need print statements
 
-    Eigen::Tensor3dXf y;
+    Eigen::Tensor3dXf y = x_in + skip;
 
     // assign skip with first two axes swapped to y
-    if ((freq_or_time_idx == 0) && (decoder_idx == 0)) {
-        y = x_in + skip;
-    }
+    //if ((freq_or_time_idx == 0) && (decoder_idx == 0)) {
+    //    y = x_in + skip;
+    //}
 
     demucscppdebug::debug_tensor_3dxf(y, "y post-skip");
 
     // swap first two dims
-    Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
+    //Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
 
     // first glu(norm1(rewrite))
     if ((freq_or_time_idx == 0) && (decoder_idx == 0)) {
         y = demucscpp::conv2d<384, 768, 3, 3, 1, 1, 1, 1, 1, 1>(
-            y_shuff, model.decoders_rewrite_weight[freq_or_time_idx][decoder_idx],
+            y, model.freq_decoders_rewrite_weight[decoder_idx],
+            model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
+    } else if ((freq_or_time_idx == 1) && (decoder_idx == 0)) {
+        y = demucscpp::conv1d<384, 768, 3, 1, 1, 1>(
+            y, model.time_decoders_rewrite_weight[decoder_idx],
+            model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
+    } else if ((freq_or_time_idx == 0) && (decoder_idx == 1)) {
+        y = demucscpp::conv2d<192, 384, 3, 3, 1, 1, 1, 1, 1, 1>(
+            y, model.freq_decoders_rewrite_weight[decoder_idx],
+            model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
+    } else if ((freq_or_time_idx == 1) && (decoder_idx == 1)) {
+        y = demucscpp::conv1d<192, 384, 3, 1, 1, 1>(
+            y, model.time_decoders_rewrite_weight[decoder_idx],
+            model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
+    } else if ((freq_or_time_idx == 0) && (decoder_idx == 2)) {
+        y = demucscpp::conv2d<96, 192, 3, 3, 1, 1, 1, 1, 1, 1>(
+            y, model.freq_decoders_rewrite_weight[decoder_idx],
+            model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
+    } else if ((freq_or_time_idx == 1) && (decoder_idx == 2)) {
+        y = demucscpp::conv1d<96, 192, 3, 1, 1, 1>(
+            y, model.time_decoders_rewrite_weight[decoder_idx],
+            model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
+    } else if ((freq_or_time_idx == 0) && (decoder_idx == 3)) {
+        y = demucscpp::conv2d<48, 96, 3, 3, 1, 1, 1, 1, 1, 1>(
+            y, model.freq_decoders_rewrite_weight[decoder_idx],
+            model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
+    } else if ((freq_or_time_idx == 1) && (decoder_idx == 3)) {
+        y = demucscpp::conv1d<48, 96, 3, 1, 1, 1>(
+            y, model.time_decoders_rewrite_weight[decoder_idx],
             model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
     }
 
     demucscppdebug::debug_tensor_3dxf(y, "y after rewrite conv2d");
 
-    y = demucscpp::glu(y, 1);
+    y = demucscpp::glu(y, freq_or_time_idx);
 
     demucscppdebug::debug_tensor_3dxf(y, "y after glu");
 
@@ -835,16 +863,67 @@ void demucscpp_v3::apply_common_decoder(
 
     // 2D Convolution operation
     if ((freq_or_time_idx == 0) && (decoder_idx == 0)) {
-        y = demucscpp::conv1d_tr<192, 384, 8, 4, 0, 1>(
-            y, model.decoder_0_conv_tr_weight,
-            model.decoder_0_1_conv_tr_bias[decoder_idx]);
+        y = demucscpp::conv2d_tr<384, 192, 8, 1, 4, 1, 0, 0, 1, 1>(
+            y, model.freq_decoders_conv_tr_weight[decoder_idx],
+            model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
+    } else if ((freq_or_time_idx == 1) && (decoder_idx == 0)) {
+        y = demucscpp::conv1d_tr<384, 192, 8, 4, 0, 1>(
+            y, model.time_decoders_conv_tr_weight[decoder_idx],
+            model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
+    } else if ((freq_or_time_idx == 0) && (decoder_idx == 1)) {
+        y = demucscpp::conv2d_tr<192, 96, 8, 1, 4, 1, 0, 0, 1, 1>(
+            y, model.freq_decoders_conv_tr_weight[decoder_idx],
+            model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
+    } else if ((freq_or_time_idx == 1) && (decoder_idx == 1)) {
+        y = demucscpp::conv1d_tr<192, 96, 8, 4, 0, 1>(
+            y, model.time_decoders_conv_tr_weight[decoder_idx],
+            model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
+    } else if ((freq_or_time_idx == 0) && (decoder_idx == 2)) {
+        y = demucscpp::conv2d_tr<96, 48, 8, 1, 4, 1, 0, 0, 1, 1>(
+            y, model.freq_decoders_conv_tr_weight[decoder_idx],
+            model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
+    } else if ((freq_or_time_idx == 1) && (decoder_idx == 2)) {
+        y = demucscpp::conv1d_tr<96, 48, 8, 4, 0, 1>(
+            y, model.time_decoders_conv_tr_weight[decoder_idx],
+            model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
+    } else if ((freq_or_time_idx == 0) && (decoder_idx == 3)) {
+        y = demucscpp::conv2d_tr<48, 8, 8, 1, 4, 1, 0, 0, 1, 1>(
+            y, model.freq_decoders_conv_tr_weight[decoder_idx],
+            model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
+    } else if ((freq_or_time_idx == 1) && (decoder_idx == 3)) {
+        y = demucscpp::conv1d_tr<48, 8, 8, 4, 0, 1>(
+            y, model.time_decoders_conv_tr_weight[decoder_idx],
+            model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
     }
 
     demucscppdebug::debug_tensor_3dxf(y, "y after conv1d_tr");
 
-    y = demucscpp::gelu(y);
+    // apply gelu activation unless it's the last layer
+    // self.last in pytorch
+    if (decoder_idx < 3) {
+        y = demucscpp::gelu(y);
+    }
 
     demucscppdebug::debug_tensor_3dxf(y, "y after gelu");
 
-    x_out = y;
+    if (freq_or_time_idx == 1) {
+        // for time branch
+        // remove padding
+        // 2:2+length
+        int out_length = x_out.dimension(2);
+        x_out = y.slice(Eigen::array<Eigen::Index, 3>({0, 0, 2}),
+                        Eigen::array<Eigen::Index, 3>(
+                            {y.dimension(0), y.dimension(1), out_length}));
+
+    } else {
+        // for freq branch
+        int y_dim1_begin = 2;
+        int y_dim1_end = y.dimension(1) - 4;
+
+        // remove 2 elements from begin and end of y along dimension 1 (0, 1, 2)
+        x_out = y.slice(Eigen::array<Eigen::Index, 3>({0, y_dim1_begin, 0}),
+                        Eigen::array<Eigen::Index, 3>(
+                            {y.dimension(0), y_dim1_end, y.dimension(2)}));
+
+    }
 }

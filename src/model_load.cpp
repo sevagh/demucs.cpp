@@ -1958,8 +1958,13 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
 
                 // Load conv_tr.weight
                 if (name == base_name + ".conv_tr.weight") {
-                    loaded_size = load_single_tensor4d(
-                        f, name, model->decoders_conv_tr_weight[freq_time][layer], ne, nelements);
+                    if (freq_time == 0) {
+                        loaded_size = load_single_tensor4d(
+                            f, name, model->freq_decoders_conv_tr_weight[layer], ne, nelements);
+                    } else {
+                        loaded_size = load_single_tensor3d(
+                            f, name, model->time_decoders_conv_tr_weight[layer], ne, nelements);
+                    }
                 }
                 // Load conv_tr.bias
                 else if (name == base_name + ".conv_tr.bias") {
@@ -1968,8 +1973,13 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 }
                 // Load rewrite.weight
                 else if (name == base_name + ".rewrite.weight") {
-                    loaded_size = load_single_tensor4d(
-                        f, name, model->decoders_rewrite_weight[freq_time][layer], ne, nelements);
+                    if (freq_time == 0) {
+                        loaded_size = load_single_tensor4d(
+                            f, name, model->freq_decoders_rewrite_weight[layer], ne, nelements);
+                    } else {
+                        loaded_size = load_single_tensor3d(
+                            f, name, model->time_decoders_rewrite_weight[layer], ne, nelements);
+                    }
                 }
                 // Load rewrite.bias
                 else if (name == base_name + ".rewrite.bias") {
