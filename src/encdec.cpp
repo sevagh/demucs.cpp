@@ -887,7 +887,7 @@ void demucscpp_v3::apply_common_decoder(
             y, model.time_decoders_conv_tr_weight[decoder_idx],
             model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
     } else if ((freq_or_time_idx == 0) && (decoder_idx == 3)) {
-        y = demucscpp::conv2d_tr<48, 8, 8, 1, 4, 1, 0, 0, 1, 1>(
+        y = demucscpp::conv2d_tr<48, 16, 8, 1, 4, 1, 0, 0, 1, 1>(
             y, model.freq_decoders_conv_tr_weight[decoder_idx],
             model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
     } else if ((freq_or_time_idx == 1) && (decoder_idx == 3)) {

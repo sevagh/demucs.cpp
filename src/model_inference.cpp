@@ -716,19 +716,19 @@ void demucscpp_v3::model_v3_inference(
 
     demucscppdebug::debug_tensor_3dxf(buffers.xt_1, "buffers.xt tdecoder-3");
 
-    apply_common_decoder(model, 0, 1, buffers.x_1, buffers.x_0, buffers.saved_1);
+    apply_common_decoder(model, 0, 2, buffers.x_1, buffers.x_0, buffers.saved_1);
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_0, "buffers.x decoder-4");
 
-    apply_common_decoder(model, 1, 1, buffers.xt_1, buffers.xt_0, buffers.savedt_1);
+    apply_common_decoder(model, 1, 2, buffers.xt_1, buffers.xt_0, buffers.savedt_1);
 
     demucscppdebug::debug_tensor_3dxf(buffers.xt_0, "buffers.xt tdecoder-4");
 
-    apply_common_decoder(model, 0, 2, buffers.x_0, buffers.x_out, buffers.saved_0);
+    apply_common_decoder(model, 0, 3, buffers.x_0, buffers.x_out, buffers.saved_0);
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_out, "buffers.x decoder-5");
 
-    apply_common_decoder(model, 1, 1, buffers.xt_0, buffers.xt_out, buffers.savedt_0);
+    apply_common_decoder(model, 1, 3, buffers.xt_0, buffers.xt_out, buffers.savedt_0);
 
     demucscppdebug::debug_tensor_3dxf(buffers.xt_out, "buffers.xt tdecoder-5");
 
