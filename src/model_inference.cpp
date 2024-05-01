@@ -732,8 +732,6 @@ void demucscpp_v3::model_v3_inference(
 
     demucscppdebug::debug_tensor_3dxf(buffers.xt_out, "buffers.xt tdecoder-5");
 
-    return;
-
     cb(current_progress + segment_progress, "Mask + istft");
 
     // xt dim 1 is a fake dim of 1
