@@ -638,7 +638,6 @@ inline void debug_vector_xf(const Eigen::VectorXf &x, const std::string &name)
     std::cout << "\tmax idx: (" << x_max_idx_0 << ")" << std::endl;
 
     std::cout << "FINISHED DEBUG for tensor: " << name << std::endl;
-    // std::cin.ignore();
 }
 
 inline void debug_tensor_3dxd(const Eigen::Tensor<double, 3> &x,
@@ -816,19 +815,16 @@ TEST(DemucsCPP_V3_Layers, TimeEncoders03)
     demucscpp_v3::apply_time_encoder_v3(model, 0, xt_fake, xt_fake_enc_0);
 
     demucscppdebug::debug_tensor_3dxf(xt_fake_enc_0, "xt_fake_enc_0");
-    std::cin.ignore();
 
     Eigen::Tensor3dXf xt_fake_enc_1(1, 96, 21499);
     demucscpp_v3::apply_time_encoder_v3(model, 1, xt_fake_enc_0, xt_fake_enc_1);
 
     demucscppdebug::debug_tensor_3dxf(xt_fake_enc_1, "xt_fake_enc_1");
-    std::cin.ignore();
 
     Eigen::Tensor3dXf xt_fake_enc_2(1, 192, 5375);
 
     demucscpp_v3::apply_time_encoder_v3(model, 2, xt_fake_enc_1, xt_fake_enc_2);
     demucscppdebug::debug_tensor_3dxf(xt_fake_enc_2, "xt_fake_enc_2");
-    std::cin.ignore();
 
     Eigen::Tensor3dXf xt_fake_enc_3(1, 384, 1344);
 
@@ -935,15 +931,24 @@ TEST(DemucsCPP_V3_Layers, Encoders45)
     demucscpp_v3::apply_time_encoder_v3(model, 3, xt_fake_enc_2, xt_fake_enc_3);
     demucscppdebug::debug_tensor_3dxf(xt_fake_enc_3, "xt_fake_enc_3");
 
+    Eigen::Tensor3dXf xt_fake_enc_4(1, 768, 336);
+    demucscpp_v3::apply_time_encoder_4(model, xt_fake_enc_3, xt_fake_enc_4);
+
+    demucscppdebug::debug_tensor_3dxf(xt_fake_enc_4, "xt_fake_enc_4");
+
     // now apply the shared encoders with time inject
 
     Eigen::Tensor3dXf x_fake_enc_4(768, 1, 336);
-    demucscpp_v3::apply_freq_shared_encoder_4_5(model, x_fake_enc_3, xt_fake_enc_3, 0,
+    demucscpp_v3::apply_freq_shared_encoder_4_5(model, x_fake_enc_3, xt_fake_enc_4, 0,
                                                   x_fake_enc_4, buffers);
+
+    demucscppdebug::debug_tensor_3dxf(x_fake_enc_4, "x_fake_enc_4");
 
     Eigen::Tensor3dXf x_fake_shared_enc_5(1536, 1, 168);
     demucscpp_v3::apply_freq_shared_encoder_4_5(model, x_fake_enc_4, buffers.x_shared_5_empty_inject, 1,
                                                   x_fake_shared_enc_5, buffers);
+
+    demucscppdebug::debug_tensor_3dxf(x_fake_shared_enc_5, "x_fake_shared_enc_5");
 }
 
 //TEST(DemucsCPPLayers, FreqDecoders)

@@ -80,24 +80,100 @@ if __name__ == '__main__':
         xt_enc_0 = htenclayer_0(xt)
 
         debug_tensor_demucscpp(xt_enc_0, "xt_enc_0")
-        input()
 
         htenclayer_1 = model.models[0].tencoder[1]
         xt_enc_1 = htenclayer_1(xt_enc_0)
 
         debug_tensor_demucscpp(xt_enc_1, "xt_enc_1")
-        input()
 
         htenclayer_2 = model.models[0].tencoder[2]
         xt_enc_2 = htenclayer_2(xt_enc_1)
 
         debug_tensor_demucscpp(xt_enc_2, "xt_enc_2")
-        input()
 
         htenclayer_3 = model.models[0].tencoder[3]
         xt_enc_3 = htenclayer_3(xt_enc_2)
 
         debug_tensor_demucscpp(xt_enc_3, "xt_enc_3")
+
+    if test_name == "all" or test_name == "all-enc":
+        # get the henclayer
+        henclayer_0 = model.models[0].encoder[0]
+
+        # create a fake tensor of shape (1, 4, 2048, 336)
+        x = torch.ones((1, 4, 2048, 336))
+
+        # set alternating odd index values to -1
+        x[..., ::2] = -1
+
+        debug_tensor_demucscpp(x, "x")
+
+        x_enc_0 = henclayer_0(x)
+
+        debug_tensor_demucscpp(x_enc_0, "x_enc_0")
+
+        # continue for the rest of the encoder layers
+        # generate tensors for each layer
+        # shapes are:
+        #    (96, 128, 336) -> (192, 32, 336) -> (384, 8, 336)
+        # continue with x_enc_1,2,3
+
+        henclayer_1 = model.models[0].encoder[1]
+        x_enc_1 = henclayer_1(x_enc_0)
+
+        debug_tensor_demucscpp(x_enc_1, "x_enc_1")
+
+        henclayer_2 = model.models[0].encoder[2]
+        x_enc_2 = henclayer_2(x_enc_1)
+
+        debug_tensor_demucscpp(x_enc_2, "x_enc_2")
+
+        henclayer_3 = model.models[0].encoder[3]
+        x_enc_3 = henclayer_3(x_enc_2)
+
+        debug_tensor_demucscpp(x_enc_3, "x_enc_3")
+
+        # create fake xt tensor of shape (1, 2, 343980)
+        xt = torch.ones((1, 2, 343980))
+        xt[..., ::2] = -1
+
+        htenclayer_0 = model.models[0].tencoder[0]
+
+        debug_tensor_demucscpp(xt, "xt")
+
+        xt_enc_0 = htenclayer_0(xt)
+
+        debug_tensor_demucscpp(xt_enc_0, "xt_enc_0")
+
+        htenclayer_1 = model.models[0].tencoder[1]
+        xt_enc_1 = htenclayer_1(xt_enc_0)
+
+        debug_tensor_demucscpp(xt_enc_1, "xt_enc_1")
+
+        htenclayer_2 = model.models[0].tencoder[2]
+        xt_enc_2 = htenclayer_2(xt_enc_1)
+
+        debug_tensor_demucscpp(xt_enc_2, "xt_enc_2")
+
+        htenclayer_3 = model.models[0].tencoder[3]
+        xt_enc_3 = htenclayer_3(xt_enc_2)
+
+        debug_tensor_demucscpp(xt_enc_3, "xt_enc_3")
+
+        htenclayer_4 = model.models[0].tencoder[4]
+        xt_enc_4 = htenclayer_4(xt_enc_3)
+
+        debug_tensor_demucscpp(xt_enc_4, "xt_enc_4")
+
+        henclayer_4 = model.models[0].encoder[4]
+        x_enc_4 = henclayer_4(x_enc_3, inject=xt_enc_4)
+
+        debug_tensor_demucscpp(x_enc_4, "x_enc_4")
+
+        henclayer_5 = model.models[0].encoder[5]
+        x_shared_enc_5 = henclayer_5(x_enc_4)
+
+        debug_tensor_demucscpp(x_shared_enc_5, "x_shared_enc_5")
 
     #if test_name == "all" or test_name == "time-dec":
     #    htdeclayer_0 = model.models[0].tdecoder[0]
