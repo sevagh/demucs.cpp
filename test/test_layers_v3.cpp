@@ -834,7 +834,6 @@ TEST(DemucsCPP_V3_Layers, TimeEncoders03)
 
     demucscpp_v3::apply_time_encoder_v3(model, 3, xt_fake_enc_2, xt_fake_enc_3);
     demucscppdebug::debug_tensor_3dxf(xt_fake_enc_3, "xt_fake_enc_3");
-    std::cin.ignore();
 }
 
 TEST(DemucsCPP_V3_Layers, Encoders45)

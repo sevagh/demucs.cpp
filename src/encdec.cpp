@@ -488,12 +488,8 @@ void demucscpp_v3::apply_time_encoder_v3(const struct demucscpp_v3::demucs_v3_mo
         break;
     };
 
-    demucscppdebug::debug_tensor_3dxf(yt, "y post-conv + gelu");
-
     // now dconv time
     demucscpp_v3::apply_dconv_v3(model, yt, 1, tencoder_idx, crop);
-
-    demucscppdebug::debug_tensor_3dxf(yt, "y post-dconv");
 
     // end of dconv?
 
@@ -522,11 +518,7 @@ void demucscpp_v3::apply_time_encoder_v3(const struct demucscpp_v3::demucs_v3_mo
         break;
     };
 
-    demucscppdebug::debug_tensor_3dxf(yt, "y post-rewrite");
-
     xt_out = demucscpp::glu(yt, 1);
-
-    demucscppdebug::debug_tensor_3dxf(xt_out, "y post-glu");
 }
 
 void demucscpp_v3::apply_time_encoder_4(const struct demucscpp_v3::demucs_v3_model &model,
