@@ -399,7 +399,7 @@ void demucscpp_v3::apply_freq_encoder_v3(const struct demucscpp_v3::demucs_v3_mo
 
     // reverse all dims
     Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({2, 1, 0}));
-    demucscpp_v3::apply_dconv_v3(model, y_shuff, 0, 0, encoder_idx,
+    demucscpp_v3::apply_dconv_v3(model, y_shuff, 0, encoder_idx,
                            y_shuff.dimension(2));
 
     // swap back from H,C,W to C,H,W
@@ -488,10 +488,12 @@ void demucscpp_v3::apply_time_encoder_v3(const struct demucscpp_v3::demucs_v3_mo
         break;
     };
 
-    std::cout << "first conv!" << std::endl;
+    demucscppdebug::debug_tensor_3dxf(yt, "y post-conv + gelu");
 
     // now dconv time
-    demucscpp_v3::apply_dconv_v3(model, yt, 1, 0, tencoder_idx, crop);
+    demucscpp_v3::apply_dconv_v3(model, yt, 1, tencoder_idx, crop);
+
+    demucscppdebug::debug_tensor_3dxf(yt, "y post-dconv");
 
     // end of dconv?
 
@@ -520,7 +522,11 @@ void demucscpp_v3::apply_time_encoder_v3(const struct demucscpp_v3::demucs_v3_mo
         break;
     };
 
+    demucscppdebug::debug_tensor_3dxf(yt, "y post-rewrite");
+
     xt_out = demucscpp::glu(yt, 1);
+
+    demucscppdebug::debug_tensor_3dxf(xt_out, "y post-glu");
 }
 
 void demucscpp_v3::apply_time_encoder_4(const struct demucscpp_v3::demucs_v3_model &model,

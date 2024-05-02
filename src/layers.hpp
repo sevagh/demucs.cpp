@@ -11,7 +11,7 @@
 namespace demucscpp_v3
 {
 void apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &model,
-                 Eigen::Tensor3dXf &y, int freq_idx, int encdec_idx,
+                 Eigen::Tensor3dXf &y, int freq_idx,
                  int layer_idx, int mid_crop);
 
 void apply_dconv_v3_encoder_4_5(

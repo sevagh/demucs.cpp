@@ -745,187 +745,145 @@ struct demucs_v3_model
 
     // DConv layers
     // first index: time or frequency
-    // second index: encoder or decoder
-    // third index: enc/dec layer number
-    // fourth index: dconv 0 or 1
+    // second index: enc/dec layer number
+    // third index: dconv 0 or 1
     // this takes care of 4 freq encoders and 4 time encoders
     // each with 2 dconv layers
-    Eigen::Tensor3dXf dconv_layers_0_conv1d_weight[2][2][4][2]{
+    Eigen::Tensor3dXf dconv_layers_0_conv1d_weight[2][4][2]{
         {
-            {{Eigen::Tensor3dXf(12, 48, 3), Eigen::Tensor3dXf(12, 48, 3)},
-             {Eigen::Tensor3dXf(24, 96, 3), Eigen::Tensor3dXf(24, 96, 3)},
-             {Eigen::Tensor3dXf(48, 192, 3), Eigen::Tensor3dXf(48, 192, 3)},
-             {Eigen::Tensor3dXf(96, 384, 3), Eigen::Tensor3dXf(96, 384, 3)}},
-            {{Eigen::Tensor3dXf(12, 48, 3), Eigen::Tensor3dXf(12, 48, 3)},
-             {Eigen::Tensor3dXf(24, 96, 3), Eigen::Tensor3dXf(24, 96, 3)},
-             {Eigen::Tensor3dXf(48, 192, 3), Eigen::Tensor3dXf(48, 192, 3)},
-             {Eigen::Tensor3dXf(96, 384, 3), Eigen::Tensor3dXf(96, 384, 3)}},
+            {Eigen::Tensor3dXf(12, 48, 3), Eigen::Tensor3dXf(12, 48, 3)},
+            {Eigen::Tensor3dXf(24, 96, 3), Eigen::Tensor3dXf(24, 96, 3)},
+            {Eigen::Tensor3dXf(48, 192, 3), Eigen::Tensor3dXf(48, 192, 3)},
+            {Eigen::Tensor3dXf(96, 384, 3), Eigen::Tensor3dXf(96, 384, 3)}
         },
         {
-            {{Eigen::Tensor3dXf(12, 48, 3), Eigen::Tensor3dXf(12, 48, 3)},
-             {Eigen::Tensor3dXf(24, 96, 3), Eigen::Tensor3dXf(24, 96, 3)},
-             {Eigen::Tensor3dXf(48, 192, 3), Eigen::Tensor3dXf(48, 192, 3)},
-             {Eigen::Tensor3dXf(96, 384, 3), Eigen::Tensor3dXf(96, 384, 3)}},
-            {{Eigen::Tensor3dXf(12, 48, 3), Eigen::Tensor3dXf(12, 48, 3)},
-             {Eigen::Tensor3dXf(24, 96, 3), Eigen::Tensor3dXf(24, 96, 3)},
-             {Eigen::Tensor3dXf(48, 192, 3), Eigen::Tensor3dXf(48, 192, 3)},
-             {Eigen::Tensor3dXf(96, 384, 3), Eigen::Tensor3dXf(96, 384, 3)}},
-        }};
+            {Eigen::Tensor3dXf(12, 48, 3), Eigen::Tensor3dXf(12, 48, 3)},
+            {Eigen::Tensor3dXf(24, 96, 3), Eigen::Tensor3dXf(24, 96, 3)},
+            {Eigen::Tensor3dXf(48, 192, 3), Eigen::Tensor3dXf(48, 192, 3)},
+            {Eigen::Tensor3dXf(96, 384, 3), Eigen::Tensor3dXf(96, 384, 3)}
+        }
+    };
 
-    Eigen::Tensor1dXf dconv_layers_0_conv1d_bias[2][2][4][2]{
-        {{{Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
-          {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
-          {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-          {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}},
-         {{Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
-          {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
-          {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-          {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}}},
-        {{{Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
-          {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
-          {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-          {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}},
-         {{Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
-          {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
-          {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-          {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}}
-        }};
-
-    Eigen::Tensor1dXf dconv_layers_1_groupnorm_weight[2][2][4][2]{
-        {{{Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
-          {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
-          {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-          {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}},
-         {{Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
-          {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
-          {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-          {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}}},
-        {{{Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
-          {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
-          {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-          {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}},
-         {{Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
-          {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
-          {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-          {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}}}};
-
-    Eigen::Tensor1dXf dconv_layers_1_groupnorm_bias[2][2][4][2]{
-        {{{Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
-          {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
-          {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-          {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}},
-         {{Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
-          {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
-          {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-          {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}}},
-        {{{Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
-          {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
-          {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-          {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}},
-         {{Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
-          {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
-          {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-          {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}}}};
-
-    Eigen::Tensor3dXf dconv_layers_3_conv1d_weight[2][2][4][2]{
-        {{{Eigen::Tensor3dXf(96, 12, 1), Eigen::Tensor3dXf(96, 12, 1)},
-          {Eigen::Tensor3dXf(192, 24, 1), Eigen::Tensor3dXf(192, 24, 1)},
-          {Eigen::Tensor3dXf(384, 48, 1), Eigen::Tensor3dXf(384, 48, 1)},
-          {Eigen::Tensor3dXf(768, 96, 1), Eigen::Tensor3dXf(768, 96, 1)}},
-         {{Eigen::Tensor3dXf(96, 12, 1), Eigen::Tensor3dXf(96, 12, 1)},
-          {Eigen::Tensor3dXf(192, 24, 1), Eigen::Tensor3dXf(192, 24, 1)},
-          {Eigen::Tensor3dXf(384, 48, 1), Eigen::Tensor3dXf(384, 48, 1)},
-          {Eigen::Tensor3dXf(768, 96, 1), Eigen::Tensor3dXf(768, 96, 1)}}},
-        {{{Eigen::Tensor3dXf(96, 12, 1), Eigen::Tensor3dXf(96, 12, 1)},
-          {Eigen::Tensor3dXf(192, 24, 1), Eigen::Tensor3dXf(192, 24, 1)},
-          {Eigen::Tensor3dXf(384, 48, 1), Eigen::Tensor3dXf(384, 48, 1)},
-          {Eigen::Tensor3dXf(768, 96, 1), Eigen::Tensor3dXf(768, 96, 1)}},
-         {{Eigen::Tensor3dXf(96, 12, 1), Eigen::Tensor3dXf(96, 12, 1)},
-          {Eigen::Tensor3dXf(192, 24, 1), Eigen::Tensor3dXf(192, 24, 1)},
-          {Eigen::Tensor3dXf(384, 48, 1), Eigen::Tensor3dXf(384, 48, 1)},
-          {Eigen::Tensor3dXf(768, 96, 1), Eigen::Tensor3dXf(768, 96, 1)}}}};
-
-    Eigen::Tensor1dXf dconv_layers_3_conv1d_bias[2][2][4][2]{
+    Eigen::Tensor1dXf dconv_layers_0_conv1d_bias[2][4][2]{
         {
-            {{Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-             {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-             {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
-             {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}},
-            {{Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-             {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-             {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
-             {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}},
-        },
-        {{{Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-          {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-          {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
-          {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}},
-         {{Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-          {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-          {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
-          {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}}}};
-
-    Eigen::Tensor1dXf dconv_layers_4_groupnorm_weight[2][2][4][2]{
-        {
-            {{Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-             {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-             {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
-             {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}},
-            {{Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-             {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-             {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
-             {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}},
-        },
-        {{{Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-          {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-          {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
-          {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}},
-         {{Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-          {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-          {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
-          {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}}}};
-
-    Eigen::Tensor1dXf dconv_layers_4_groupnorm_bias[2][2][4][2]{
-        {
-            {{Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-             {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-             {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
-             {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}},
-            {{Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-             {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-             {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
-             {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}},
-        },
-        {{{Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-          {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-          {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
-          {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}},
-         {{Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-          {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-          {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
-          {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}}}};
-
-    Eigen::Tensor1dXf dconv_layers_6_scale[2][2][4][2]{
-        {
-            {{Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-             {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-             {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-             {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)}},
-            {{Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-             {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-             {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-             {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)}},
+            {Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
+            {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
+            {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
+            {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}
         },
         {
-            {{Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-             {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-             {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-             {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)}},
-            {{Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
-             {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
-             {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
-             {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)}},
-        }};
+            {Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
+            {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
+            {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
+            {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}
+        }
+    };
+
+    Eigen::Tensor1dXf dconv_layers_1_groupnorm_weight[2][4][2]{
+        {
+            {Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
+            {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
+            {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
+            {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}
+        },
+        {
+            {Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
+            {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
+            {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
+            {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}
+        }
+    };
+
+    Eigen::Tensor1dXf dconv_layers_1_groupnorm_bias[2][4][2]{
+        {
+            {Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
+            {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
+            {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
+            {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}
+        },
+        {
+            {Eigen::Tensor1dXf(12), Eigen::Tensor1dXf(12)},
+            {Eigen::Tensor1dXf(24), Eigen::Tensor1dXf(24)},
+            {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
+            {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)}
+        }
+    };
+
+    Eigen::Tensor3dXf dconv_layers_3_conv1d_weight[2][4][2]{
+        {
+            {Eigen::Tensor3dXf(96, 12, 1), Eigen::Tensor3dXf(96, 12, 1)},
+            {Eigen::Tensor3dXf(192, 24, 1), Eigen::Tensor3dXf(192, 24, 1)},
+            {Eigen::Tensor3dXf(384, 48, 1), Eigen::Tensor3dXf(384, 48, 1)},
+            {Eigen::Tensor3dXf(768, 96, 1), Eigen::Tensor3dXf(768, 96, 1)}
+        },
+        {
+            {Eigen::Tensor3dXf(96, 12, 1), Eigen::Tensor3dXf(96, 12, 1)},
+            {Eigen::Tensor3dXf(192, 24, 1), Eigen::Tensor3dXf(192, 24, 1)},
+            {Eigen::Tensor3dXf(384, 48, 1), Eigen::Tensor3dXf(384, 48, 1)},
+            {Eigen::Tensor3dXf(768, 96, 1), Eigen::Tensor3dXf(768, 96, 1)}
+        }
+    };
+
+    Eigen::Tensor1dXf dconv_layers_3_conv1d_bias[2][4][2]{
+        {
+            {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
+            {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
+            {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
+            {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}
+        },
+        {
+            {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
+            {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
+            {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
+            {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}
+        }
+    };
+
+    Eigen::Tensor1dXf dconv_layers_4_groupnorm_weight[2][4][2]{
+        {
+            {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
+            {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
+            {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
+            {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}
+        },
+        {
+            {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
+            {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
+            {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
+            {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}
+        }
+    };
+
+    Eigen::Tensor1dXf dconv_layers_4_groupnorm_bias[2][4][2]{
+        {
+            {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
+            {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
+            {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
+            {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}
+        },
+        {
+            {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
+            {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
+            {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)},
+            {Eigen::Tensor1dXf(768), Eigen::Tensor1dXf(768)}
+        }
+    };
+
+    Eigen::Tensor1dXf dconv_layers_6_scale[2][4][2]{
+        {
+            {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
+            {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
+            {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
+            {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)}
+        },
+        {
+            {Eigen::Tensor1dXf(48), Eigen::Tensor1dXf(48)},
+            {Eigen::Tensor1dXf(96), Eigen::Tensor1dXf(96)},
+            {Eigen::Tensor1dXf(192), Eigen::Tensor1dXf(192)},
+            {Eigen::Tensor1dXf(384), Eigen::Tensor1dXf(384)}
+        }
+    };
+
 
     // time encoder 4 is super simple, just 1 conv
     Eigen::Tensor3dXf tencoder_4_conv_weight{
@@ -1354,8 +1312,8 @@ struct demucs_v3_segment_buffers
     Eigen::Tensor3dXf x_decode;
     Eigen::Tensor3dXf xt_decode;
 
-    // empty skip conn for encoder 5
-    Eigen::Tensor3dXf x_shared_5_empty_skip;
+    // empty inject for encoder 5
+    Eigen::Tensor3dXf x_shared_5_empty_inject;
 
     // skip conns for frequency and time
     // easier as hardcoded matrix sizes

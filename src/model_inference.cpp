@@ -672,7 +672,7 @@ void demucscpp_v3::model_v3_inference(
     demucscppdebug::debug_tensor_3dxf(buffers.x_4, "buffers.x encoder-4");
 
     // shared: unique encoder 5 (bistlm local attn)
-    apply_freq_shared_encoder_4_5(model, buffers.x_4, buffers.x_shared_5_empty_skip, 1, buffers.x_shared_5, buffers);
+    apply_freq_shared_encoder_4_5(model, buffers.x_4, buffers.x_shared_5_empty_inject, 1, buffers.x_shared_5, buffers);
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_shared_5, "shared encoder-5");
 

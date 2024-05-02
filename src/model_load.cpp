@@ -1463,7 +1463,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 {
                     loaded_size = load_single_tensor3d(
                         f, name,
-                        model->dconv_layers_0_conv1d_weight[0][0][i][j], ne,
+                        model->dconv_layers_0_conv1d_weight[0][i][j], ne,
                         nelements);
                 }
                 else if (name == "encoder." + std::to_string(i) +
@@ -1471,7 +1471,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                                      ".0.bias")
                 {
                     loaded_size = load_single_tensor1d(
-                        f, name, model->dconv_layers_0_conv1d_bias[0][0][i][j],
+                        f, name, model->dconv_layers_0_conv1d_bias[0][i][j],
                         ne, nelements);
                 }
                 else if (name == "encoder." + std::to_string(i) +
@@ -1480,7 +1480,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->dconv_layers_1_groupnorm_weight[0][0][i][j], ne,
+                        model->dconv_layers_1_groupnorm_weight[0][i][j], ne,
                         nelements);
                 }
                 else if (name == "encoder." + std::to_string(i) +
@@ -1489,7 +1489,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->dconv_layers_1_groupnorm_bias[0][0][i][j], ne,
+                        model->dconv_layers_1_groupnorm_bias[0][i][j], ne,
                         nelements);
                 }
                 else if (name == "encoder." + std::to_string(i) +
@@ -1498,7 +1498,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 {
                     loaded_size = load_single_tensor3d(
                         f, name,
-                        model->dconv_layers_3_conv1d_weight[0][0][i][j], ne,
+                        model->dconv_layers_3_conv1d_weight[0][i][j], ne,
                         nelements);
                 }
                 else if (name == "encoder." + std::to_string(i) +
@@ -1506,7 +1506,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                                      ".3.bias")
                 {
                     loaded_size = load_single_tensor1d(
-                        f, name, model->dconv_layers_3_conv1d_bias[0][0][i][j],
+                        f, name, model->dconv_layers_3_conv1d_bias[0][i][j],
                         ne, nelements);
                 }
                 else if (name == "encoder." + std::to_string(i) +
@@ -1515,7 +1515,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->dconv_layers_4_groupnorm_weight[0][0][i][j], ne,
+                        model->dconv_layers_4_groupnorm_weight[0][i][j], ne,
                         nelements);
                 }
                 else if (name == "encoder." + std::to_string(i) +
@@ -1524,7 +1524,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->dconv_layers_4_groupnorm_bias[0][0][i][j], ne,
+                        model->dconv_layers_4_groupnorm_bias[0][i][j], ne,
                         nelements);
                 }
                 else if (name == "encoder." + std::to_string(i) +
@@ -1532,7 +1532,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                                      ".6.scale")
                 {
                     loaded_size = load_single_tensor1d(
-                        f, name, model->dconv_layers_6_scale[0][0][i][j], ne,
+                        f, name, model->dconv_layers_6_scale[0][i][j], ne,
                         nelements);
                 }
             }
@@ -1798,7 +1798,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 {
                     loaded_size = load_single_tensor3d(
                         f, name,
-                        model->dconv_layers_0_conv1d_weight[1][0][i][j], ne,
+                        model->dconv_layers_0_conv1d_weight[1][i][j], ne,
                         nelements);
                 }
                 else if (name == "tencoder." + std::to_string(i) +
@@ -1806,7 +1806,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                                      ".0.bias")
                 {
                     loaded_size = load_single_tensor1d(
-                        f, name, model->dconv_layers_0_conv1d_bias[1][0][i][j],
+                        f, name, model->dconv_layers_0_conv1d_bias[1][i][j],
                         ne, nelements);
                 }
                 else if (name == "tencoder." + std::to_string(i) +
@@ -1815,7 +1815,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->dconv_layers_1_groupnorm_weight[1][0][i][j], ne,
+                        model->dconv_layers_1_groupnorm_weight[1][i][j], ne,
                         nelements);
                 }
                 else if (name == "tencoder." + std::to_string(i) +
@@ -1824,7 +1824,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->dconv_layers_1_groupnorm_bias[1][0][i][j], ne,
+                        model->dconv_layers_1_groupnorm_bias[1][i][j], ne,
                         nelements);
                 }
                 else if (name == "tencoder." + std::to_string(i) +
@@ -1833,7 +1833,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 {
                     loaded_size = load_single_tensor3d(
                         f, name,
-                        model->dconv_layers_3_conv1d_weight[1][0][i][j], ne,
+                        model->dconv_layers_3_conv1d_weight[1][i][j], ne,
                         nelements);
                 }
                 else if (name == "tencoder." + std::to_string(i) +
@@ -1841,7 +1841,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                                      ".3.bias")
                 {
                     loaded_size = load_single_tensor1d(
-                        f, name, model->dconv_layers_3_conv1d_bias[1][0][i][j],
+                        f, name, model->dconv_layers_3_conv1d_bias[1][i][j],
                         ne, nelements);
                 }
                 else if (name == "tencoder." + std::to_string(i) +
@@ -1850,7 +1850,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->dconv_layers_4_groupnorm_weight[1][0][i][j], ne,
+                        model->dconv_layers_4_groupnorm_weight[1][i][j], ne,
                         nelements);
                 }
                 else if (name == "tencoder." + std::to_string(i) +
@@ -1859,7 +1859,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                 {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->dconv_layers_4_groupnorm_bias[1][0][i][j], ne,
+                        model->dconv_layers_4_groupnorm_bias[1][i][j], ne,
                         nelements);
                 }
                 else if (name == "tencoder." + std::to_string(i) +
@@ -1867,7 +1867,7 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                                      ".6.scale")
                 {
                     loaded_size = load_single_tensor1d(
-                        f, name, model->dconv_layers_6_scale[1][0][i][j], ne,
+                        f, name, model->dconv_layers_6_scale[1][i][j], ne,
                         nelements);
                 }
             }

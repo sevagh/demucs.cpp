@@ -17,21 +17,22 @@ inline Eigen::MatrixXf im2col(const Eigen::Tensor3dXf &input)
 {
     // Adjust the calculation of height_col and width_col for dilation
     int in_channels = input.dimension(0);
-    int height_col = (input.dimension(1) + 2 * pad_height -
-                      dilation_height * (kernel_height - 1) - 1) /
-                         stride_height +
-                     1;
-    int width_col = (input.dimension(2) + 2 * pad_width -
-                     dilation_width * (kernel_width - 1) - 1) /
-                        stride_width +
-                    1;
-
     int in_height = input.dimension(1);
     int in_width = input.dimension(2);
+
+    // Apply floating point division before ceiling to correctly calculate dimensions
+    int height_col = static_cast<int>(std::ceil((in_height + 2 * pad_height - dilation_height * (kernel_height - 1) - 1) / float(stride_height)) + 1);
+    int width_col = static_cast<int>(std::ceil((in_width + 2 * pad_width - dilation_width * (kernel_width - 1) - 1) / float(stride_width)) + 1);
+
+    std::cout << "in_channels: " << in_channels << " in_height: " << in_height
+              << " in_width: " << in_width << " height_col: " << height_col
+              << " width_col: " << width_col << std::endl;
 
     Eigen::MatrixXf output(height_col * width_col,
                            in_channels * kernel_height * kernel_width);
     output.setZero();
+
+    demucscppdebug::debug_matrix_xf(output, "output");
 
     for (int c = 0; c < in_channels; c++)
     {
@@ -143,20 +144,23 @@ Eigen::Tensor3dXf conv2d_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
     int in_height = x.dimension(1);
     int in_width = x.dimension(2);
 
-    // Calculate output dimensions
-    int out_height = static_cast<int>(std::floor(in_height + 2 * pad_height -
-                                                 kernel_height) /
-                                      stride_height) +
-                     1;
-    int out_width =
-        static_cast<int>(std::floor(in_width + 2 * pad_width - kernel_width) /
-                         stride_width) +
-        1;
+    std::cout << "in_height: " << in_height << " in_width: " << in_width
+              << " kernel_height: " << kernel_height << " kernel_width: " << " pad_height: " << pad_height << " pad_width: " << pad_width << " stride_height: " << stride_height << " stride_width: " << stride_width << " dilation_height: " << dilation_height << " dilation_width: " << dilation_width << std::endl;
+
+    // Calculate output dimensions with the correct application of ceil
+    int out_height = static_cast<int>(std::ceil((float)(in_height + 2 * pad_height - (kernel_height - 1) - 1) / stride_height)) + 1;
+    int out_width = static_cast<int>(std::ceil((float)(in_width + 2 * pad_width - (kernel_width - 1) - 1) / stride_width)) + 1;
+
+    std::cout << "out_height: " << out_height << " out_width: " << out_width
+              << std::endl;
+    std::cin.ignore();
 
     // Apply im2col
     Eigen::MatrixXf im2col_matrix =
         im2col<kernel_height, kernel_width, stride_height, stride_width,
                pad_height, pad_width, dilation_height, dilation_width>(x);
+
+    std::cout << "post im2col" << std::endl;
 
     // Reshape weights
     // reverse last 3 axes (out chanel x in chan x kernel height x kernel width
@@ -173,15 +177,22 @@ Eigen::Tensor3dXf conv2d_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
     // Perform matrix multiplication with GEMM
     Eigen::MatrixXf result = im2col_matrix * reshaped_weights.transpose();
 
+    std::cout << "post-gemm-mult" << std::endl;
+
     // Add bias to each column of the result matrix
     for (int chout = 0; chout < out_channels; ++chout)
     {
         result.col(chout).array() += b(chout);
     }
 
+    std::cout << "post-bias-add" << std::endl;
+
     // Reshape result to 3D output tensor
     Eigen::Tensor3dXf y_out(out_channels, out_height, out_width);
     y_out.setZero();
+
+    demucscppdebug::debug_matrix_xf(result, "result");
+    demucscppdebug::debug_tensor_3dxf(y_out, "y_out");
 
     for (int chout = 0; chout < out_channels; ++chout)
     {
@@ -200,6 +211,8 @@ Eigen::Tensor3dXf conv2d_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
             }
         }
     }
+
+    std::cout << "post-assignment" << std::endl;
 
     return y_out;
 }
