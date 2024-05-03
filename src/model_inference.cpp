@@ -702,35 +702,27 @@ void demucscpp_v3::model_v3_inference(
     demucscppdebug::debug_tensor_3dxf(buffers.xt_3, "buffers.xt tdecoder-1");
 
     apply_common_decoder(model, 0, 0, buffers.x_3, buffers.x_2, buffers.saved_3);
-
-    demucscppdebug::debug_tensor_3dxf(buffers.x_2, "buffers.x decoder-2");
-
     apply_common_decoder(model, 1, 0, buffers.xt_3, buffers.xt_2, buffers.savedt_3);
 
+    demucscppdebug::debug_tensor_3dxf(buffers.x_2, "buffers.x decoder-2");
     demucscppdebug::debug_tensor_3dxf(buffers.xt_2, "buffers.xt tdecoder-2");
 
     apply_common_decoder(model, 0, 1, buffers.x_2, buffers.x_1, buffers.saved_2);
-
-    demucscppdebug::debug_tensor_3dxf(buffers.x_1, "buffers.x decoder-3");
-
     apply_common_decoder(model, 1, 1, buffers.xt_2, buffers.xt_1, buffers.savedt_2);
 
+    demucscppdebug::debug_tensor_3dxf(buffers.x_1, "buffers.x decoder-3");
     demucscppdebug::debug_tensor_3dxf(buffers.xt_1, "buffers.xt tdecoder-3");
 
     apply_common_decoder(model, 0, 2, buffers.x_1, buffers.x_0, buffers.saved_1);
-
-    demucscppdebug::debug_tensor_3dxf(buffers.x_0, "buffers.x decoder-4");
-
     apply_common_decoder(model, 1, 2, buffers.xt_1, buffers.xt_0, buffers.savedt_1);
 
+    demucscppdebug::debug_tensor_3dxf(buffers.x_0, "buffers.x decoder-4");
     demucscppdebug::debug_tensor_3dxf(buffers.xt_0, "buffers.xt tdecoder-4");
 
     apply_common_decoder(model, 0, 3, buffers.x_0, buffers.x_out, buffers.saved_0);
-
-    demucscppdebug::debug_tensor_3dxf(buffers.x_out, "buffers.x decoder-5");
-
     apply_common_decoder(model, 1, 3, buffers.xt_0, buffers.xt_out, buffers.savedt_0);
 
+    demucscppdebug::debug_tensor_3dxf(buffers.x_out, "buffers.x decoder-5");
     demucscppdebug::debug_tensor_3dxf(buffers.xt_out, "buffers.xt tdecoder-5");
 
     std::cin.ignore();
@@ -842,6 +834,10 @@ void demucscpp_v3::model_v3_inference(
         // sum with xt
         // choose a different source to sum with in case
         // they're in different orders...
+
+        demucscppdebug::debug_matrix_xf(unpadded_waveform, "z waveform");
+        demucscppdebug::debug_matrix_xf(xt_3d[source], "xt waveform");
+        std::cin.ignore();
         unpadded_waveform += xt_3d[source];
 
         ss << "mix: " << buffers.mix.rows() << ", " << buffers.mix.cols();

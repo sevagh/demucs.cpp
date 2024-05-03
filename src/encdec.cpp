@@ -660,6 +660,11 @@ Eigen::Tensor3dXf demucscpp_v3::apply_freq_shared_decoder_0_1(
         y = demucscpp::conv2d<768, 1536, 3, 3, 1, 1, 1, 1, 1, 1>(
             y, model.decoder_1_rewrite_weight,
             model.decoder_0_1_rewrite_bias[decoder_idx]);
+
+        // debug weight and bias
+        //demucscppdebug::debug_tensor_4dxf(model.decoder_1_rewrite_weight, "decoder_1_rewrite_weight");
+        //demucscppdebug::debug_tensor_1dxf(model.decoder_0_1_rewrite_bias[decoder_idx], "decoder_0_1_rewrite_bias");
+
         break;
     };
 
@@ -692,6 +697,8 @@ Eigen::Tensor3dXf demucscpp_v3::apply_freq_shared_decoder_0_1(
     // return pre, to be used optionally (as first input to time decoder)
     Eigen::Tensor3dXf pre_ret = y;
 
+    Eigen::Tensor3dXf y2;
+
     // no dconv for decoders
     // simply conv_tr -> norm2
 
@@ -705,9 +712,22 @@ Eigen::Tensor3dXf demucscpp_v3::apply_freq_shared_decoder_0_1(
 
         //demucscppdebug::debug_tensor_3dxf(y, "y after conv_tr");
 
+        // make a y2 first which does group norm and gelu separately for debugging
+        // group_norm_2 should be similar to group_norm but operating on the flipped first two axes
+        // to avoid needing to shuffle
+        y2 = demucscpp::group_norm(y, model.decoder_0_1_norm2_weight[decoder_idx],
+                                model.decoder_0_1_norm2_bias[decoder_idx], 4, 1e-05);
+
+        //demucscppdebug::debug_tensor_3dxf(y2, "y2 after group norm");
+
+        y2 = demucscpp::gelu(y2);
+
+        //demucscppdebug::debug_tensor_3dxf(y2, "y2 after group norm + gelu");
+
         // now apply groupnorm2 with norm2 weights
         y = demucscpp_v3::group_norm_fused_gelu_2(y, model.decoder_0_1_norm2_weight[decoder_idx],
                                 model.decoder_0_1_norm2_bias[decoder_idx], 4, 1e-05);
+
 
         break;
     case 1:
@@ -805,15 +825,7 @@ void demucscpp_v3::apply_common_decoder(
 
     Eigen::Tensor3dXf y = x_in + skip;
 
-    // assign skip with first two axes swapped to y
-    //if ((freq_or_time_idx == 0) && (decoder_idx == 0)) {
-    //    y = x_in + skip;
-    //}
-
     //demucscppdebug::debug_tensor_3dxf(y, "y post-skip");
-
-    // swap first two dims
-    //Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
 
     // first glu(norm1(rewrite))
     if ((freq_or_time_idx == 0) && (decoder_idx == 0)) {

@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
         debug_tensor_demucscpp(xt_enc_3, "xt_enc_3")
 
-    if test_name == "all" or test_name == "all-enc":
+    if test_name == "all" or test_name == "encoder45":
         # get the henclayer
         henclayer_0 = model.models[0].encoder[0]
 
@@ -175,240 +175,164 @@ if __name__ == '__main__':
 
         debug_tensor_demucscpp(x_shared_enc_5, "x_shared_enc_5")
 
-    #if test_name == "all" or test_name == "time-dec":
-    #    htdeclayer_0 = model.models[0].tdecoder[0]
+    if test_name == "all" or test_name == "decoder01":
+        x_fake_shared_enc_5 = torch.ones((1, 1536, 168))
+        skip_fake_dec_4 = torch.ones((768, 1, 336))
 
-    #    xt_dec_0 = torch.ones((1, 384, 1344))
-    #    xt_dec_0[..., ::2] = -1
+        # set even index values to -1
+        x_fake_shared_enc_5[..., ::2] = -1
 
-    #    skip_tdec_0 = torch.ones((1, 384, 1344))*0.5
-    #    skip_tdec_0[..., 1::2] = -0.5
+        # for the skip, set even index values to 0.5, odd to -0.5
+        skip_fake_dec_4[..., ::2] = 0.5
+        skip_fake_dec_4[..., 1::2] = -0.5
 
-    #    skip_tdec_1 = torch.ones((1, 192, 5375))*0.5
-    #    skip_tdec_1[..., 1::2] = -0.5
+        debug_tensor_demucscpp(x_fake_shared_enc_5, "x_fake_shared_enc_5")
+        debug_tensor_demucscpp(skip_fake_dec_4, "skip_fake_dec_4")
 
-    #    skip_tdec_2 = torch.ones((1, 96, 21499))*0.5
-    #    skip_tdec_2[..., 1::2] = -0.5
+        hdecoder_0 = model.models[0].decoder[0]
+        x_empty = torch.zeros((1, 1536, 168))
+        x_fake_dec_4, pre_t_unused = hdecoder_0(x_empty, x_fake_shared_enc_5, 336, log=True)
 
-    #    skip_tdec_3 = torch.ones((1, 48, 85995))*0.5
-    #    skip_tdec_3[..., 1::2] = -0.5
+        debug_tensor_demucscpp(x_fake_dec_4, "x_fake_dec_4")
+        debug_tensor_demucscpp(pre_t_unused, "pre_t_unused")
 
-    #    xt_dec_1, _ = htdeclayer_0(xt_dec_0, skip=skip_tdec_0, length=skip_tdec_1.shape[-1])
+        hdecoder_1 = model.models[0].decoder[1]
+        x_fake_dec_3, pre_t = hdecoder_1(x_fake_dec_4, skip_fake_dec_4, 336, log=True)
 
-    #    debug_tensor_demucscpp(xt_dec_0, "xt_dec_0")
-    #    debug_tensor_demucscpp(xt_dec_1, "xt_dec_1")
+        debug_tensor_demucscpp(x_fake_dec_3, "x_fake_dec_3")
+        debug_tensor_demucscpp(pre_t, "pre_t")
+        input()
 
-    #    htdeclayer_1 = model.models[0].tdecoder[1]
-    #    xt_dec_2, _ = htdeclayer_1(xt_dec_1, skip=skip_tdec_1, length=skip_tdec_2.shape[-1])
+        tdecoder_0 = model.models[0].tdecoder[0]
+        pre_t = pre_t[:, :, 0]
+        debug_tensor_demucscpp(pre_t, "pre_t")
+        xt_fake_dec_3, _ = tdecoder_0(pre_t, None, 1344)
 
-    #    debug_tensor_demucscpp(xt_dec_2, "xt_dec_2")
+        debug_tensor_demucscpp(xt_fake_dec_3, "xt_fake_dec_3")
 
-    #    htdeclayer_2 = model.models[0].tdecoder[2]
-    #    xt_dec_3, _ = htdeclayer_2(xt_dec_2, skip=skip_tdec_2, length=skip_tdec_3.shape[-1])
+    if test_name == "all" or test_name == "decoder1isolated":
+        x_fake_dec_4 = torch.ones((1, 768, 336))
+        skip_fake_dec_4 = torch.ones((768, 1, 336))
 
-    #    debug_tensor_demucscpp(xt_dec_3, "xt_dec_3")
+        # set even index values to -1
+        x_fake_dec_4[..., ::2] = -1
 
-    #    htdeclayer_3 = model.models[0].tdecoder[3]
-    #    xt_dec_4, _ = htdeclayer_3(xt_dec_3, skip=skip_tdec_3, length=343980)
+        # for the skip, set even index values to 0.5, odd to -0.5
+        skip_fake_dec_4[..., ::2] = 0.5
+        skip_fake_dec_4[..., 1::2] = -0.5
 
-    #    debug_tensor_demucscpp(xt_dec_4, "xt_dec_4")
+        hdecoder_1 = model.models[0].decoder[1]
+        x_fake_dec_3, pre_t = hdecoder_1(x_fake_dec_4, skip_fake_dec_4, 336, log=True)
 
-    #if test_name == "all" or test_name == "full-crosstransformer":
-    #    x = torch.ones((1, 384, 8, 336))
-    #    x[..., ::2] = -1
+        debug_tensor_demucscpp(x_fake_dec_3, "x_fake_dec_3")
+        debug_tensor_demucscpp(pre_t, "pre_t")
+        input()
 
-    #    xt = torch.ones((1, 384, 1344))
-    #    xt[..., ::2] = -1
+        tdecoder_0 = model.models[0].tdecoder[0]
+        pre_t = pre_t[:, :, 0]
+        debug_tensor_demucscpp(pre_t, "pre_t")
+        xt_fake_dec_3, _ = tdecoder_0(pre_t, None, 1344)
 
-    #    debug_tensor_demucscpp(x, "x")
-    #    debug_tensor_demucscpp(xt, "xt")
+        debug_tensor_demucscpp(xt_fake_dec_3, "xt_fake_dec_3")
 
-    #    b, c, f, t = x.shape
-    #    x = rearrange(x, "b c f t-> b c (f t)")
-    #    x_upsampled = model.models[0].channel_upsampler(x)
-    #    x_upsampled = rearrange(x_upsampled, "b c (f t)-> b c f t", f=f)
+    if test_name == "all" or test_name == "alldecoders":
+        x_fake_shared_enc_5 = torch.ones((1, 1536, 168))
+        skip_fake_dec_4 = torch.ones((768, 1, 336))
 
-    #    xt_upsampled = model.models[0].channel_upsampler_t(xt)
+        # set even index values to -1
+        x_fake_shared_enc_5[..., ::2] = -1
 
-    #    debug_tensor_demucscpp(x_upsampled, "x pre-crosstransformer")
-    #    debug_tensor_demucscpp(xt_upsampled, "xt pre-crosstransformer")
+        # for the skip, set even index values to 0.5, odd to -0.5
+        skip_fake_dec_4[..., ::2] = 0.5
+        skip_fake_dec_4[..., 1::2] = -0.5
 
-    #    x_crosstrans, xt_crosstrans = model.models[0].crosstransformer(x_upsampled, xt_upsampled)
-    #    debug_tensor_demucscpp(x_crosstrans, "x post-crosstransformer")
-    #    debug_tensor_demucscpp(xt_crosstrans, "xt post-crosstransformer")
+        debug_tensor_demucscpp(x_fake_shared_enc_5, "x_fake_shared_enc_5")
+        debug_tensor_demucscpp(skip_fake_dec_4, "skip_fake_dec_4")
 
-    #    x_crosstrans = rearrange(x_crosstrans, "b c f t-> b c (f t)")
-    #    x_downsampled = model.models[0].channel_downsampler(x_crosstrans)
-    #    x_downsampled = rearrange(x_downsampled, "b c (f t)-> b c f t", f=f)
+        x_fake_dec_4 = torch.ones((1, 768, 336))
 
-    #    xt_downsampled = model.models[0].channel_downsampler_t(xt_crosstrans)
+        # set even index values to -1
+        x_fake_dec_4[..., ::2] = -1
 
-    #    debug_tensor_demucscpp(x_downsampled, "x post-crosstransformer")
-    #    debug_tensor_demucscpp(xt_downsampled, "xt post-crosstransformer")
+        skip_fake_dec_3 = torch.ones((384, 8, 336))
 
-    #if test_name == "all" or test_name == "crosstransformer":
-    #    x_2 = torch.ones((1, 512, 8, 336))
-    #    x_2[..., ::2] = -1
+        # 0.5, -0.5 again
+        skip_fake_dec_3[..., ::2] = 0.5
+        skip_fake_dec_3[..., 1::2] = -0.5
 
-    #    xt_2 = torch.ones((1, 512, 1344))
-    #    xt_2[..., ::2] = -1
+        skip_fake_dec_2 = torch.ones((192, 32, 336))
 
-    #    debug_tensor_demucscpp(x_2, "x pre-crosstransformer")
-    #    debug_tensor_demucscpp(xt_2, "xt pre-crosstransformer")
+        # 0.5, -0.5 again
+        skip_fake_dec_2[..., ::2] = 0.5
+        skip_fake_dec_2[..., 1::2] = -0.5
 
-    #    x_crosstrans, xt_crosstrans = model.models[0].crosstransformer(x_2, xt_2)
+        skip_fake_dec_1 = torch.ones((96, 128, 336))
 
-    #    debug_tensor_demucscpp(x_crosstrans, "x post-crosstransformer")
-    #    debug_tensor_demucscpp(xt_crosstrans, "xt post-crosstransformer")
+        # 0.5, -0.5 again
+        skip_fake_dec_1[..., ::2] = 0.5
+        skip_fake_dec_1[..., 1::2] = -0.5
 
-    #if test_name == "all" or test_name == "upsamplers":
-    #    x_3 = torch.ones((1, 384, 8, 336))
-    #    x_3[..., ::2] = -1
+        skip_fake_dec_0 = torch.ones((48, 512, 336))
 
-    #    xt_3 = torch.ones((1, 384, 1344))
-    #    xt_3[..., ::2] = -1
+        # 0.5, -0.5 again
+        skip_fake_dec_0[..., ::2] = 0.5
+        skip_fake_dec_0[..., 1::2] = -0.5
 
-    #    debug_tensor_demucscpp(x_3, "x_3")
-    #    debug_tensor_demucscpp(xt_3, "xt_3")
+        skip_fake_tdec_3 = torch.ones((1, 384, 1344))
 
-    #    b, c, f, t = x_3.shape
-    #    x_3 = rearrange(x_3, "b c f t-> b c (f t)")
-    #    x_3_upsampled = model.models[0].channel_upsampler(x_3)
-    #    x_3_upsampled = rearrange(x_3_upsampled, "b c (f t)-> b c f t", f=f)
+        # 0.5, -0.5 again
+        skip_fake_tdec_3[..., ::2] = 0.5
+        skip_fake_tdec_3[..., 1::2] = -0.5
 
-    #    xt_3_upsampled = model.models[0].channel_upsampler_t(xt_3)
+        skip_fake_tdec_2 = torch.ones((1, 192, 5375))
 
-    #    debug_tensor_demucscpp(x_3_upsampled, "x channel upsampled")
-    #    debug_tensor_demucscpp(xt_3_upsampled, "xt channel upsampled")
+        # 0.5, -0.5 again
+        skip_fake_tdec_2[..., ::2] = 0.5
+        skip_fake_tdec_2[..., 1::2] = -0.5
 
-    #    x_3_upsampled = rearrange(x_3_upsampled, "b c f t-> b c (f t)")
-    #    x_3_downsampled = model.models[0].channel_downsampler(x_3_upsampled)
-    #    x_3_downsampled = rearrange(x_3_downsampled, "b c (f t)-> b c f t", f=f)
+        skip_fake_tdec_1 = torch.ones((1, 96, 21499))
 
-    #    xt_3_downsampled = model.models[0].channel_downsampler_t(xt_3_upsampled)
+        # 0.5, -0.5 again
+        skip_fake_tdec_1[..., ::2] = 0.5
+        skip_fake_tdec_1[..., 1::2] = -0.5
 
-    #    debug_tensor_demucscpp(x_3_downsampled, "x channel downsampled")
-    #    debug_tensor_demucscpp(xt_3_downsampled, "xt channel downsampled")
+        skip_fake_tdec_0 = torch.ones((1, 48, 85995))
 
-    #if test_name == "all" or test_name == "ct-layer":
-    #    x_2 = torch.ones((1, 2688, 512))
-    #    x_2[..., ::2] = -1
+        # 0.5, -0.5 again
+        skip_fake_tdec_0[..., ::2] = 0.5
+        skip_fake_tdec_0[..., 1::2] = -0.5
 
-    #    xt_2 = torch.ones((1, 1344, 512))
-    #    xt_2[..., ::2] = -1
+        hdecoder_0 = model.models[0].decoder[0]
+        x_empty = torch.zeros((1, 1536, 168))
+        x_fake_dec_4, pre_t_unused = hdecoder_0(x_empty, x_fake_shared_enc_5, 336, log=False)
 
-    #    debug_tensor_demucscpp(x_2, "x pre-crosstransformer")
-    #    debug_tensor_demucscpp(xt_2, "xt pre-crosstransformer")
+        debug_tensor_demucscpp(x_fake_dec_4, "x_fake_dec_4")
+        debug_tensor_demucscpp(pre_t_unused, "pre_t_unused")
 
-    #    x_layer_0 = model.models[0].crosstransformer.layers[0](x_2)
-    #    xt_layer_0 = model.models[0].crosstransformer.layers_t[0](xt_2)
+        hdecoder_1 = model.models[0].decoder[1]
+        x_fake_dec_3, pre_t = hdecoder_1(x_fake_dec_4, skip_fake_dec_4, 336, log=False)
 
-    #    debug_tensor_demucscpp(x_layer_0, "x crosstran-layer-0")
-    #    debug_tensor_demucscpp(xt_layer_0, "xt crosstran-tlayer-0")
+        debug_tensor_demucscpp(x_fake_dec_3, "x_fake_dec_3")
+        debug_tensor_demucscpp(pre_t, "pre_t")
 
-    #    #debug_tensor_demucscpp(model.models[0].crosstransformer.norm_in.weight, "x norm-in weight")
-    #    #debug_tensor_demucscpp(model.models[0].crosstransformer.norm_in.bias, "x norm-in bias")
-    #    #debug_tensor_demucscpp(model.models[0].crosstransformer.norm_in_t.weight, "xt norm-in-t weight")
-    #    #debug_tensor_demucscpp(model.models[0].crosstransformer.norm_in_t.bias, "xt norm-in-t bias")
+        hdecoder_1 = model.models[0].decoder[1]
+        x_fake_dec_3, pre_t = hdecoder_1(x_fake_dec_4, skip_fake_dec_4, 336, log=False)
 
-    #    #x_norm_in = model.models[0].crosstransformer.norm_in(x_2)
-    #    #xt_norm_in = model.models[0].crosstransformer.norm_in_t(xt_2)
-    #    #x_norm_in_t = model.models[0].crosstransformer.norm_in(xt_2)
-    #    #xt_norm_in_f = model.models[0].crosstransformer.norm_in_t(x_2)
+        debug_tensor_demucscpp(x_fake_dec_3, "x_fake_dec_3")
+        debug_tensor_demucscpp(pre_t, "pre_t")
 
-    #    #x_norm_in = torch.nn.functional.layer_norm(
-    #    #    x_2,
-    #    #    (x_2.shape[-1],),
-    #    #    weight=model.models[0].crosstransformer.norm_in.weight,
-    #    #    bias=None,
-    #    #    eps=1e-5
-    #    #)
-    #    #xt_norm_in = torch.nn.functional.layer_norm(
-    #    #    xt_2,
-    #    #    (xt_2.shape[-1],),
-    #    #    weight=model.models[0].crosstransformer.norm_in_t.weight,
-    #    #    bias=None,
-    #    #    eps=1e-5
-    #    #)
-    #    #x_norm_in_t = torch.nn.functional.layer_norm(
-    #    #    xt_2,
-    #    #    (xt_2.shape[-1],),
-    #    #    weight=model.models[0].crosstransformer.norm_in.weight,
-    #    #    bias=None,
-    #    #    eps=1e-5
-    #    #)
-    #    #xt_norm_in_f = torch.nn.functional.layer_norm(
-    #    #    x_2,
-    #    #    (x_2.shape[-1],),
-    #    #    weight=model.models[0].crosstransformer.norm_in_t.weight,
-    #    #    bias=None,
-    #    #    eps=1e-5
-    #    #)
+        tdecoder_0 = model.models[0].tdecoder[0]
+        pre_t = pre_t[:, :, 0]
+        debug_tensor_demucscpp(pre_t, "pre_t")
+        xt_fake_dec_3, _ = tdecoder_0(pre_t, None, 1344)
 
-    #    #debug_tensor_demucscpp(x_norm_in, "x norm-in")
-    #    #debug_tensor_demucscpp(xt_norm_in, "xt norm-in-t")
-    #    #debug_tensor_demucscpp(x_norm_in_t, "x norm-in_t")
-    #    #debug_tensor_demucscpp(xt_norm_in_f, "xt norm-in-t_f")
+        debug_tensor_demucscpp(xt_fake_dec_3, "xt_fake_dec_3")
 
-    #if test_name == "all" or test_name == "layer-norm-basic":
-    #    x = torch.ones((1, 2, 3))
-    #    w = torch.ones((3))
-    #    b = torch.ones((3))
+        hdecoder_2 = model.models[0].decoder[2]
+        x_fake_dec_2, _ = hdecoder_2(x_fake_dec_3, skip_fake_dec_3, 1344, log=False)
 
-    #    x[0, 0, 0] = 1.0
-    #    x[0, 0, 1] = 2.0
-    #    x[0, 0, 2] = 3.0
-    #    x[0, 1, 0] = 4.0
-    #    x[0, 1, 1] = 5.0
-    #    x[0, 1, 2] = 6.0
+        tdecoder_1 = model.models[0].tdecoder[1]
+        xt_fake_dec_2, _ = tdecoder_1(xt_fake_dec_3, skip_fake_tdec_3, 5375)
 
-    #    w[0] = 0.75
-    #    w[1] = -0.5
-    #    w[2] = -1.35
-
-    #    b[0] = 0.5
-    #    b[1] = -0.25
-    #    b[2] = 0.75
-
-    #    debug_tensor_demucscpp(x, "x")
-    #    debug_tensor_demucscpp(w, "w")
-    #    debug_tensor_demucscpp(b, "b")
-
-    #    x_out = torch.nn.functional.layer_norm(
-    #        x,
-    #        (x.shape[-1],),
-    #        weight=w,
-    #        bias=b,
-    #        eps=1e-5
-    #    )
-
-    #    debug_tensor_demucscpp(x_out, "x_out")
-
-    #if test_name == "all" or test_name == "layer-norm-bigger":
-    #    x = torch.ones((1, 2688, 512))
-    #    w = torch.ones((512))
-    #    b = torch.ones((512))
-
-    #    x[..., ::2] = -1
-
-    #    for i in range(512):
-    #        if i % 2 == 0:
-    #            w[i] = -0.25 + i*0.03
-    #            b[i] = 0.5
-    #        else:
-    #            w[i] = 0.25
-    #            b[i] = -0.5 + i*0.57
-
-    #    debug_tensor_demucscpp(x, "x")
-    #    debug_tensor_demucscpp(w, "w")
-    #    debug_tensor_demucscpp(b, "b")
-
-    #    x_out = torch.nn.functional.layer_norm(
-    #        x,
-    #        (x.shape[-1],),
-    #        weight=w,
-    #        bias=b,
-    #        eps=1e-5
-    #    )
-
-    #    debug_tensor_demucscpp(x_out, "x_out")
+        debug_tensor_demucscpp(x_fake_dec_2, "x_fake_dec_2")
+        debug_tensor_demucscpp(xt_fake_dec_2, "xt_fake_dec_2")
