@@ -678,9 +678,6 @@ void demucscpp_v3::model_v3_inference(
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_shared_5, "shared encoder-5");
 
-    std::cout << "wait here!" << std::endl;
-    std::cin.ignore();
-
     // now decoder time!
 
     // shared decoder 5, which is one of the two unique decoder_0_1
@@ -691,7 +688,6 @@ void demucscpp_v3::model_v3_inference(
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_4, "buffers.x decoder-0");
     //demucscppdebug::debug_tensor_3dxf(pre_t_unused, "pre_t decoder-0");
-    std::cin.ignore();
 
     Eigen::Tensor3dXf pre_t = apply_freq_decoder_1(model, buffers.x_4, buffers.x_3, buffers.saved_4);
 
@@ -701,37 +697,30 @@ void demucscpp_v3::model_v3_inference(
     apply_time_decoder_0(model, pre_t, buffers.xt_3);
 
     demucscppdebug::debug_tensor_3dxf(buffers.xt_3, "buffers.xt tdecoder-1");
-    std::cin.ignore();
 
     apply_common_decoder(model, 0, 0, buffers.x_3, buffers.x_2, buffers.saved_3);
     apply_common_decoder(model, 1, 0, buffers.xt_3, buffers.xt_2, buffers.savedt_3);
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_2, "buffers.x decoder-2");
     demucscppdebug::debug_tensor_3dxf(buffers.xt_2, "buffers.xt tdecoder-2");
-    std::cin.ignore();
 
     apply_common_decoder(model, 0, 1, buffers.x_2, buffers.x_1, buffers.saved_2);
     apply_common_decoder(model, 1, 1, buffers.xt_2, buffers.xt_1, buffers.savedt_2);
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_1, "buffers.x decoder-3");
     demucscppdebug::debug_tensor_3dxf(buffers.xt_1, "buffers.xt tdecoder-3");
-    std::cin.ignore();
 
     apply_common_decoder(model, 0, 2, buffers.x_1, buffers.x_0, buffers.saved_1);
     apply_common_decoder(model, 1, 2, buffers.xt_1, buffers.xt_0, buffers.savedt_1);
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_0, "buffers.x decoder-4");
     demucscppdebug::debug_tensor_3dxf(buffers.xt_0, "buffers.xt tdecoder-4");
-    std::cin.ignore();
 
     apply_common_decoder(model, 0, 3, buffers.x_0, buffers.x_out, buffers.saved_0);
     apply_common_decoder(model, 1, 3, buffers.xt_0, buffers.xt_out, buffers.savedt_0);
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_out, "buffers.x decoder-5");
     demucscppdebug::debug_tensor_3dxf(buffers.xt_out, "buffers.xt tdecoder-5");
-
-    std::cout << "wait here!" << std::endl;
-    std::cin.ignore();
 
     cb(current_progress + segment_progress, "Mask + istft");
 
