@@ -1312,7 +1312,6 @@ struct demucs_v3_segment_buffers
     // empty tensors to hold decoded output
     // in conjunction with skip connections
     Eigen::Tensor3dXf x_decode;
-    Eigen::Tensor3dXf xt_decode;
 
     // empty inject for encoder 5
     Eigen::Tensor3dXf x_shared_5_empty_inject;
@@ -1329,7 +1328,6 @@ struct demucs_v3_segment_buffers
     Eigen::Tensor3dXf savedt_1;
     Eigen::Tensor3dXf savedt_2;
     Eigen::Tensor3dXf savedt_3;
-    Eigen::Tensor3dXf savedt_4;
 
     // LSTM data
     // 2 encoders, 2 dconv layers, 2 layers, 2 directions
@@ -1374,19 +1372,21 @@ struct demucs_v3_segment_buffers
           x_shared_5(1, 1536, SHARED_BRANCH_LEN), // merged freq and time
           xt(1, nb_channels, segment_samples),
           xt_out(1, nb_sources * nb_channels, segment_samples),
-          xt_decoded_out(1, 8, segment_samples), xt_0(1, 48, TIME_BRANCH_LEN_0),
-          xt_1(1, 96, TIME_BRANCH_LEN_1), xt_2(1, 192, TIME_BRANCH_LEN_2),
-          xt_3(1, 384, TIME_BRANCH_LEN_3), xt_4(1, 768, TIME_BRANCH_LEN_4),
+          xt_0(1, 48, TIME_BRANCH_LEN_0),
+          xt_1(1, 96, TIME_BRANCH_LEN_1),
+          xt_2(1, 192, TIME_BRANCH_LEN_2),
+          xt_3(1, 384, TIME_BRANCH_LEN_3),
+          xt_4(1, 768, TIME_BRANCH_LEN_4),
           x_decode(1536, 1, SHARED_BRANCH_LEN),
-          xt_decode(768, 1, FREQ_BRANCH_LEN),
-          saved_0(48, 512, FREQ_BRANCH_LEN), saved_1(96, 128, FREQ_BRANCH_LEN),
-          saved_2(192, 32, FREQ_BRANCH_LEN), saved_3(384, 8, FREQ_BRANCH_LEN),
+          saved_0(48, 512, FREQ_BRANCH_LEN),
+          saved_1(96, 128, FREQ_BRANCH_LEN),
+          saved_2(192, 32, FREQ_BRANCH_LEN),
+          saved_3(384, 8, FREQ_BRANCH_LEN),
           saved_4(768, 1, FREQ_BRANCH_LEN),
           savedt_0(1, 48, TIME_BRANCH_LEN_0),
           savedt_1(1, 96, TIME_BRANCH_LEN_1),
           savedt_2(1, 192, TIME_BRANCH_LEN_2),
           savedt_3(1, 384, TIME_BRANCH_LEN_3),
-          savedt_4(1, 768, TIME_BRANCH_LEN_4),
           local_attn_index(FREQ_BRANCH_LEN),
           local_attn_delta(FREQ_BRANCH_LEN, FREQ_BRANCH_LEN),
           local_attn_decays(LOCAL_ATTN_N_DECAY),
