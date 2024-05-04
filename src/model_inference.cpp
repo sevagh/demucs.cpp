@@ -690,13 +690,12 @@ void demucscpp_v3::model_v3_inference(
     Eigen::Tensor3dXf pre_t_unused = apply_shared_decoder_0(model, buffers.x_decode, buffers.x_4, buffers.x_shared_5);
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_4, "buffers.x decoder-0");
-    demucscppdebug::debug_tensor_3dxf(pre_t_unused, "pre_t decoder-0");
+    //demucscppdebug::debug_tensor_3dxf(pre_t_unused, "pre_t decoder-0");
     std::cin.ignore();
 
     Eigen::Tensor3dXf pre_t = apply_freq_decoder_1(model, buffers.x_4, buffers.x_3, buffers.saved_4);
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_3, "buffers.x decoder-1");
-    demucscppdebug::debug_tensor_3dxf(pre_t, "pre_t decoder-1");
 
     // we're skipping the inject branch i.e. xt_4, leapfrogging to xt_3
     apply_time_decoder_0(model, pre_t, buffers.xt_3);

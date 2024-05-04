@@ -123,6 +123,7 @@ void local_attention(
 namespace groupnorm {
     using ActivationFunc = std::function<float(float)>;
 
+    // this  applies the group norm on the second dimension
     template<typename ActivationFunc>
     inline Eigen::Tensor3dXf generalized_group_norm(
         const Eigen::Tensor3dXf &x,
