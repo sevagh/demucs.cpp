@@ -766,20 +766,20 @@ TEST(DemucsCPP_V3_Layers, FreqEncoders03)
     Eigen::Tensor3dXf x_fake_enc_0(48, 512, 336);
     demucscpp_v3::apply_freq_encoder_v3(model, 0, x_fake, x_fake_enc_0);
 
-    demucscppdebug::debug_tensor_3dxf(x_fake, "x_fake");
-    demucscppdebug::debug_tensor_3dxf(x_fake_enc_0, "x_fake_enc_0");
+    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake, "x_fake");
+    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_enc_0, "x_fake_enc_0");
 
     Eigen::Tensor3dXf x_fake_enc_1(96, 128, 336);
     demucscpp_v3::apply_freq_encoder_v3(model, 1, x_fake_enc_0, x_fake_enc_1);
-    demucscppdebug::debug_tensor_3dxf(x_fake_enc_1, "x_fake_enc_1");
+    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_enc_1, "x_fake_enc_1");
 
     Eigen::Tensor3dXf x_fake_enc_2(192, 32, 336);
     demucscpp_v3::apply_freq_encoder_v3(model, 2, x_fake_enc_1, x_fake_enc_2);
-    demucscppdebug::debug_tensor_3dxf(x_fake_enc_2, "x_fake_enc_2");
+    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_enc_2, "x_fake_enc_2");
 
     Eigen::Tensor3dXf x_fake_enc_3(384, 8, 336);
     demucscpp_v3::apply_freq_encoder_v3(model, 3, x_fake_enc_2, x_fake_enc_3);
-    demucscppdebug::debug_tensor_3dxf(x_fake_enc_3, "x_fake_enc_3");
+    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_enc_3, "x_fake_enc_3");
 }
 
 // write a basic test case for a stereo file
@@ -809,27 +809,27 @@ TEST(DemucsCPP_V3_Layers, TimeEncoders03)
         }
     }
 
-    demucscppdebug::debug_tensor_3dxf(xt_fake, "xt_fake");
+    demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake, "xt_fake");
 
     Eigen::Tensor3dXf xt_fake_enc_0(1, 48, 85995);
     demucscpp_v3::apply_time_encoder_v3(model, 0, xt_fake, xt_fake_enc_0);
 
-    demucscppdebug::debug_tensor_3dxf(xt_fake_enc_0, "xt_fake_enc_0");
+    demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_enc_0, "xt_fake_enc_0");
 
     Eigen::Tensor3dXf xt_fake_enc_1(1, 96, 21499);
     demucscpp_v3::apply_time_encoder_v3(model, 1, xt_fake_enc_0, xt_fake_enc_1);
 
-    demucscppdebug::debug_tensor_3dxf(xt_fake_enc_1, "xt_fake_enc_1");
+    demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_enc_1, "xt_fake_enc_1");
 
     Eigen::Tensor3dXf xt_fake_enc_2(1, 192, 5375);
 
     demucscpp_v3::apply_time_encoder_v3(model, 2, xt_fake_enc_1, xt_fake_enc_2);
-    demucscppdebug::debug_tensor_3dxf(xt_fake_enc_2, "xt_fake_enc_2");
+    demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_enc_2, "xt_fake_enc_2");
 
     Eigen::Tensor3dXf xt_fake_enc_3(1, 384, 1344);
 
     demucscpp_v3::apply_time_encoder_v3(model, 3, xt_fake_enc_2, xt_fake_enc_3);
-    demucscppdebug::debug_tensor_3dxf(xt_fake_enc_3, "xt_fake_enc_3");
+    demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_enc_3, "xt_fake_enc_3");
 }
 
 TEST(DemucsCPP_V3_Layers, Encoders45)
@@ -880,27 +880,27 @@ TEST(DemucsCPP_V3_Layers, Encoders45)
         }
     }
 
-    demucscppdebug::debug_tensor_3dxf(x_fake, "x_fake");
-    demucscppdebug::debug_tensor_3dxf(xt_fake, "xt_fake");
+    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake, "x_fake");
+    demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake, "xt_fake");
 
     // first 4 freq encoders
     Eigen::Tensor3dXf x_fake_enc_0(48, 512, 336);
     demucscpp_v3::apply_freq_encoder_v3(model, 0, x_fake, x_fake_enc_0);
 
-    demucscppdebug::debug_tensor_3dxf(x_fake, "x_fake");
-    demucscppdebug::debug_tensor_3dxf(x_fake_enc_0, "x_fake_enc_0");
+    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake, "x_fake");
+    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_enc_0, "x_fake_enc_0");
 
     Eigen::Tensor3dXf x_fake_enc_1(96, 128, 336);
     demucscpp_v3::apply_freq_encoder_v3(model, 1, x_fake_enc_0, x_fake_enc_1);
-    demucscppdebug::debug_tensor_3dxf(x_fake_enc_1, "x_fake_enc_1");
+    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_enc_1, "x_fake_enc_1");
 
     Eigen::Tensor3dXf x_fake_enc_2(192, 32, 336);
     demucscpp_v3::apply_freq_encoder_v3(model, 2, x_fake_enc_1, x_fake_enc_2);
-    demucscppdebug::debug_tensor_3dxf(x_fake_enc_2, "x_fake_enc_2");
+    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_enc_2, "x_fake_enc_2");
 
     Eigen::Tensor3dXf x_fake_enc_3(384, 8, 336);
     demucscpp_v3::apply_freq_encoder_v3(model, 3, x_fake_enc_2, x_fake_enc_3);
-    demucscppdebug::debug_tensor_3dxf(x_fake_enc_3, "x_fake_enc_3");
+    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_enc_3, "x_fake_enc_3");
 
     // calculate segment in samples
     int segment_samples =
@@ -914,27 +914,27 @@ TEST(DemucsCPP_V3_Layers, Encoders45)
     Eigen::Tensor3dXf xt_fake_enc_0(1, 48, 85995);
     demucscpp_v3::apply_time_encoder_v3(model, 0, xt_fake, xt_fake_enc_0);
 
-    demucscppdebug::debug_tensor_3dxf(xt_fake_enc_0, "xt_fake_enc_0");
+    demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_enc_0, "xt_fake_enc_0");
 
     Eigen::Tensor3dXf xt_fake_enc_1(1, 96, 21499);
     demucscpp_v3::apply_time_encoder_v3(model, 1, xt_fake_enc_0, xt_fake_enc_1);
 
-    demucscppdebug::debug_tensor_3dxf(xt_fake_enc_1, "xt_fake_enc_1");
+    demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_enc_1, "xt_fake_enc_1");
 
     Eigen::Tensor3dXf xt_fake_enc_2(1, 192, 5375);
 
     demucscpp_v3::apply_time_encoder_v3(model, 2, xt_fake_enc_1, xt_fake_enc_2);
-    demucscppdebug::debug_tensor_3dxf(xt_fake_enc_2, "xt_fake_enc_2");
+    demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_enc_2, "xt_fake_enc_2");
 
     Eigen::Tensor3dXf xt_fake_enc_3(1, 384, 1344);
 
     demucscpp_v3::apply_time_encoder_v3(model, 3, xt_fake_enc_2, xt_fake_enc_3);
-    demucscppdebug::debug_tensor_3dxf(xt_fake_enc_3, "xt_fake_enc_3");
+    demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_enc_3, "xt_fake_enc_3");
 
     Eigen::Tensor3dXf xt_fake_enc_4(1, 768, 336);
     demucscpp_v3::apply_time_encoder_4(model, xt_fake_enc_3, xt_fake_enc_4);
 
-    demucscppdebug::debug_tensor_3dxf(xt_fake_enc_4, "xt_fake_enc_4");
+    demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_enc_4, "xt_fake_enc_4");
 
     // now apply the shared encoders with time inject
 
@@ -942,406 +942,407 @@ TEST(DemucsCPP_V3_Layers, Encoders45)
     demucscpp_v3::apply_freq_shared_encoder_4_5(model, x_fake_enc_3, xt_fake_enc_4, 0,
                                                   x_fake_enc_4, buffers);
 
-    demucscppdebug::debug_tensor_3dxf(x_fake_enc_4, "x_fake_enc_4");
+    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_enc_4, "x_fake_enc_4");
 
     Eigen::Tensor3dXf x_fake_shared_enc_5(1536, 1, 168);
     demucscpp_v3::apply_freq_shared_encoder_4_5(model, x_fake_enc_4, buffers.x_shared_5_empty_inject, 1,
                                                   x_fake_shared_enc_5, buffers);
 
-    demucscppdebug::debug_tensor_3dxf(x_fake_shared_enc_5, "x_fake_shared_enc_5");
+    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_shared_enc_5, "x_fake_shared_enc_5");
 }
 
-TEST(DemucsCPP_V3_Layers, Decoders01)
-{
-    setUpTestSuite();
-
-    std::cout << std::fixed << std::setprecision(20) << std::endl;
-
-    // calculate segment in samples
-    int segment_samples =
-        (int)(demucscpp::SEGMENT_LEN_SECS * demucscpp::SUPPORTED_SAMPLE_RATE);
-
-    // let's create reusable buffers with padded sizes
-    struct demucscpp_v3::demucs_v3_segment_buffers buffers(2, segment_samples,
-                                                     4);
-
-    Eigen::Tensor3dXf x_fake_shared_enc_5(1, 1536, 168);
-
-    // fill with -1, 1 alternating
-    for (long j = 0; j < 1536; ++j)
-    {
-        for (long k = 0; k < 168; ++k)
-        {
-            if (k % 2 == 0)
-            {
-                x_fake_shared_enc_5(0, j, k) = -1.0;
-            }
-            else
-            {
-                x_fake_shared_enc_5(0, j, k) = 1.0;
-            }
-        }
-    }
-
-    Eigen::Tensor3dXf skip_fake_dec_4(768, 1, 336);
-    // fill with alternating -0.5, 0.5
-
-    for (long j = 0; j < 768; ++j)
-    {
-        for (long k = 0; k < 336; ++k)
-        {
-            if (k % 2 == 0)
-            {
-                skip_fake_dec_4(j, 0, k) = 0.5;
-            }
-            else
-            {
-                skip_fake_dec_4(j, 0, k) = -0.5;
-            }
-        }
-    }
-
-    demucscppdebug::debug_tensor_3dxf(x_fake_shared_enc_5, "x_fake_shared_enc_5");
-    demucscppdebug::debug_tensor_3dxf(skip_fake_dec_4, "skip_fake_dec_4");
-
-    Eigen::Tensor3dXf x_fake_dec_4(768, 1, 336);
-    Eigen::Tensor3dXf pre_t_unused = demucscpp_v3::apply_freq_shared_decoder_0_1(model, 0, buffers.x_decode, x_fake_dec_4, x_fake_shared_enc_5);
-
-    demucscppdebug::debug_tensor_3dxf(x_fake_dec_4, "x_fake_dec_4");
-    demucscppdebug::debug_tensor_3dxf(pre_t_unused, "pre_t_unused");
-
-    Eigen::Tensor3dXf x_fake_dec_3(384, 8, 336);
-
-    Eigen::Tensor3dXf pre_t = demucscpp_v3::apply_freq_shared_decoder_0_1(
-        model, 1, x_fake_dec_4, x_fake_dec_3, skip_fake_dec_4);
-
-    demucscppdebug::debug_tensor_3dxf(x_fake_dec_3, "x_fake_dec_3");
-    demucscppdebug::debug_tensor_3dxf(pre_t, "pre_t");
-
-    // remember we leapfrog xt_fake_dec_4
-    Eigen::Tensor3dXf xt_fake_dec_3(1, 768, 336);
-
-    demucscpp_v3::apply_time_decoder_0(model, pre_t, xt_fake_dec_3, buffers.xt_decode);
-
-    demucscppdebug::debug_tensor_3dxf(xt_fake_dec_3, "xt_fake_dec_3");
-}
-
-TEST(DemucsCPP_V3_Layers, Decoder1Isolated)
-{
-    setUpTestSuite();
-
-    std::cout << std::fixed << std::setprecision(20) << std::endl;
-
-    // calculate segment in samples
-    int segment_samples =
-        (int)(demucscpp::SEGMENT_LEN_SECS * demucscpp::SUPPORTED_SAMPLE_RATE);
-
-    // let's create reusable buffers with padded sizes
-    struct demucscpp_v3::demucs_v3_segment_buffers buffers(2, segment_samples,
-                                                     4);
-
-    Eigen::Tensor3dXf x_fake_dec_4(1, 768, 336);
-
-    // fill with -1, 1 alternating
-    for (long j = 0; j < 768; ++j)
-    {
-        for (long k = 0; k < 336; ++k)
-        {
-            if (k % 2 == 0)
-            {
-                x_fake_dec_4(0, j, k) = -1.0;
-            }
-            else
-            {
-                x_fake_dec_4(0, j, k) = 1.0;
-            }
-        }
-    }
-
-    Eigen::Tensor3dXf skip_fake_dec_4(768, 1, 336);
-    // fill with alternating -0.5, 0.5
-
-    for (long j = 0; j < 768; ++j)
-    {
-        for (long k = 0; k < 336; ++k)
-        {
-            if (k % 2 == 0)
-            {
-                skip_fake_dec_4(j, 0, k) = 0.5;
-            }
-            else
-            {
-                skip_fake_dec_4(j, 0, k) = -0.5;
-            }
-        }
-    }
-
-    Eigen::Tensor3dXf x_fake_dec_3(384, 8, 336);
-
-    Eigen::Tensor3dXf pre_t = demucscpp_v3::apply_freq_shared_decoder_0_1(
-        model, 1, x_fake_dec_4, x_fake_dec_3, skip_fake_dec_4);
-
-    demucscppdebug::debug_tensor_3dxf(x_fake_dec_3, "x_fake_dec_3");
-    demucscppdebug::debug_tensor_3dxf(pre_t, "pre_t");
-
-    // remember we leapfrog xt_fake_dec_4
-    Eigen::Tensor3dXf xt_fake_dec_3(1, 768, 336);
-
-    demucscpp_v3::apply_time_decoder_0(model, pre_t, xt_fake_dec_3, buffers.xt_decode);
-
-    demucscppdebug::debug_tensor_3dxf(xt_fake_dec_3, "xt_fake_dec_3");
-}
-
-TEST(DemucsCPP_V3_Layers, AllDecoders)
-{
-    setUpTestSuite();
-
-    std::cout << std::fixed << std::setprecision(20) << std::endl;
-
-    // calculate segment in samples
-    int segment_samples =
-        (int)(demucscpp::SEGMENT_LEN_SECS * demucscpp::SUPPORTED_SAMPLE_RATE);
-
-    // let's create reusable buffers with padded sizes
-    struct demucscpp_v3::demucs_v3_segment_buffers buffers(2, segment_samples,
-                                                     4);
-
-    Eigen::Tensor3dXf x_fake_shared_enc_5(1, 1536, 168);
-
-    // fill with -1, 1 alternating
-    for (long j = 0; j < 1536; ++j)
-    {
-        for (long k = 0; k < 168; ++k)
-        {
-            if (k % 2 == 0)
-            {
-                x_fake_shared_enc_5(0, j, k) = -1.0;
-            }
-            else
-            {
-                x_fake_shared_enc_5(0, j, k) = 1.0;
-            }
-        }
-    }
-
-    Eigen::Tensor3dXf skip_fake_dec_4(768, 1, 336);
-    // fill with alternating -0.5, 0.5
-
-    for (long j = 0; j < 768; ++j)
-    {
-        for (long k = 0; k < 336; ++k)
-        {
-            if (k % 2 == 0)
-            {
-                skip_fake_dec_4(j, 0, k) = 0.5;
-            }
-            else
-            {
-                skip_fake_dec_4(j, 0, k) = -0.5;
-            }
-        }
-    }
-
-    Eigen::Tensor3dXf skip_fake_dec_3(384, 8, 336);
-    // fill with alternating -0.5, 0.5
-
-    for (long i = 0; i < 8; ++i)
-    {
-        for (long j = 0; j < 384; ++j)
-        {
-            for (long k = 0; k < 336; ++k)
-            {
-                if (k % 2 == 0)
-                {
-                    skip_fake_dec_3(j, i, k) = 0.5;
-                }
-                else
-                {
-                    skip_fake_dec_3(j, i, k) = -0.5;
-                }
-            }
-        }
-    }
-
-    Eigen::Tensor3dXf skip_fake_dec_2(192, 32, 336);
-
-    // fill with alternating -0.5, 0.5
-    for (long i = 0; i < 32; ++i)
-    {
-        for (long j = 0; j < 192; ++j)
-        {
-            for (long k = 0; k < 336; ++k)
-            {
-                if (k % 2 == 0)
-                {
-                    skip_fake_dec_2(j, i, k) = 0.5;
-                }
-                else
-                {
-                    skip_fake_dec_2(j, i, k) = -0.5;
-                }
-            }
-        }
-    }
-
-    Eigen::Tensor3dXf skip_fake_dec_1(96, 128, 336);
-
-    // fill with alternating -0.5, 0.5
-    for (long i = 0; i < 128; ++i)
-    {
-        for (long j = 0; j < 96; ++j)
-        {
-            for (long k = 0; k < 336; ++k)
-            {
-                if (k % 2 == 0)
-                {
-                    skip_fake_dec_1(j, i, k) = 0.5;
-                }
-                else
-                {
-                    skip_fake_dec_1(j, i, k) = -0.5;
-                }
-            }
-        }
-    }
-
-    Eigen::Tensor3dXf skip_fake_dec_0(48, 512, 336);
-
-    // fill with alternating -0.5, 0.5
-    for (long i = 0; i < 512; ++i)
-    {
-        for (long j = 0; j < 48; ++j)
-        {
-            for (long k = 0; k < 336; ++k)
-            {
-                if (k % 2 == 0)
-                {
-                    skip_fake_dec_0(j, i, k) = 0.5;
-                }
-                else
-                {
-                    skip_fake_dec_0(j, i, k) = -0.5;
-                }
-            }
-        }
-    }
-
-    Eigen::Tensor3dXf skip_fake_tdec_3(1, 384, 1344);
-
-    // fill with alternating -0.5, 0.5
-    for (long i = 0; i < 384; ++i)
-    {
-        for (long j = 0; j < 1; ++j)
-        {
-            for (long k = 0; k < 1344; ++k)
-            {
-                if (k % 2 == 0)
-                {
-                    skip_fake_tdec_3(j, i, k) = 0.5;
-                }
-                else
-                {
-                    skip_fake_tdec_3(j, i, k) = -0.5;
-                }
-            }
-        }
-    }
-
-    Eigen::Tensor3dXf skip_fake_tdec_2(1, 192, 5375);
-
-    // fill with alternating -0.5, 0.5
-    for (long i = 0; i < 192; ++i)
-    {
-        for (long j = 0; j < 1; ++j)
-        {
-            for (long k = 0; k < 5375; ++k)
-            {
-                if (k % 2 == 0)
-                {
-                    skip_fake_tdec_2(j, i, k) = 0.5;
-                }
-                else
-                {
-                    skip_fake_tdec_2(j, i, k) = -0.5;
-                }
-            }
-        }
-    }
-
-    Eigen::Tensor3dXf skip_fake_tdec_1(1, 96, 21499);
-
-    // fill with alternating -0.5, 0.5
-    for (long i = 0; i < 96; ++i)
-    {
-        for (long j = 0; j < 1; ++j)
-        {
-            for (long k = 0; k < 21499; ++k)
-            {
-                if (k % 2 == 0)
-                {
-                    skip_fake_tdec_1(j, i, k) = 0.5;
-                }
-                else
-                {
-                    skip_fake_tdec_1(j, i, k) = -0.5;
-                }
-            }
-        }
-    }
-
-    Eigen::Tensor3dXf skip_fake_tdec_0(1, 48, 85995);
-
-    // fill with alternating -0.5, 0.5
-    for (long i = 0; i < 48; ++i)
-    {
-        for (long j = 0; j < 1; ++j)
-        {
-            for (long k = 0; k < 85995; ++k)
-            {
-                if (k % 2 == 0)
-                {
-                    skip_fake_tdec_0(j, i, k) = 0.5;
-                }
-                else
-                {
-                    skip_fake_tdec_0(j, i, k) = -0.5;
-                }
-            }
-        }
-    }
-
-    demucscppdebug::debug_tensor_3dxf(x_fake_shared_enc_5, "x_fake_shared_enc_5");
-    demucscppdebug::debug_tensor_3dxf(skip_fake_dec_4, "skip_fake_dec_4");
-
-    Eigen::Tensor3dXf x_fake_dec_4(768, 1, 336);
-    Eigen::Tensor3dXf pre_t_unused = demucscpp_v3::apply_freq_shared_decoder_0_1(model, 0, buffers.x_decode, x_fake_dec_4, x_fake_shared_enc_5);
-
-    demucscppdebug::debug_tensor_3dxf(x_fake_dec_4, "x_fake_dec_4");
-    demucscppdebug::debug_tensor_3dxf(pre_t_unused, "pre_t_unused");
-
-    Eigen::Tensor3dXf x_fake_dec_3(384, 8, 336);
-    Eigen::Tensor3dXf pre_t = demucscpp_v3::apply_freq_shared_decoder_0_1(
-        model, 1, x_fake_dec_4, x_fake_dec_3, skip_fake_dec_4);
-
-    demucscppdebug::debug_tensor_3dxf(x_fake_dec_3, "x_fake_dec_3");
-    demucscppdebug::debug_tensor_3dxf(pre_t, "pre_t");
-
-    // remember we leapfrog xt_fake_dec_4
-    Eigen::Tensor3dXf xt_fake_dec_3(1, 768, 336);
-    demucscpp_v3::apply_time_decoder_0(model, pre_t, xt_fake_dec_3, buffers.xt_decode);
-
-    demucscppdebug::debug_tensor_3dxf(xt_fake_dec_3, "xt_fake_dec_3");
-
-    Eigen::Tensor3dXf x_fake_dec_2(192, 32, 336);
-
-    demucscppdebug::debug_tensor_3dxf(x_fake_dec_3, "x_fake_dec_3");
-    demucscppdebug::debug_tensor_3dxf(skip_fake_dec_3, "skip_fake_dec_3");
-
-    demucscpp_v3::apply_common_decoder(model, 0, 0, x_fake_dec_3, x_fake_dec_2, skip_fake_dec_3);
-
-    Eigen::Tensor3dXf xt_fake_dec_2(1, 384, 1344);
-    demucscpp_v3::apply_common_decoder(model, 1, 0, xt_fake_dec_3, xt_fake_dec_2, skip_fake_tdec_3);
-
-    demucscppdebug::debug_tensor_3dxf(x_fake_dec_2, "x_fake_dec_2");
-    demucscppdebug::debug_tensor_3dxf(xt_fake_dec_2, "xt_fake_dec_2");
-}
+//TEST(DemucsCPP_V3_Layers, Decoders01)
+//{
+//    setUpTestSuite();
+//
+//    std::cout << std::fixed << std::setprecision(20) << std::endl;
+//
+//    // calculate segment in samples
+//    int segment_samples =
+//        (int)(demucscpp::SEGMENT_LEN_SECS * demucscpp::SUPPORTED_SAMPLE_RATE);
+//
+//    // let's create reusable buffers with padded sizes
+//    struct demucscpp_v3::demucs_v3_segment_buffers buffers(2, segment_samples,
+//                                                     4);
+//
+//    Eigen::Tensor3dXf x_fake_shared_enc_5(1, 1536, 168);
+//
+//    // fill with -1, 1 alternating
+//    for (long j = 0; j < 1536; ++j)
+//    {
+//        for (long k = 0; k < 168; ++k)
+//        {
+//            if (k % 2 == 0)
+//            {
+//                x_fake_shared_enc_5(0, j, k) = -1.0;
+//            }
+//            else
+//            {
+//                x_fake_shared_enc_5(0, j, k) = 1.0;
+//            }
+//        }
+//    }
+//
+//    Eigen::Tensor3dXf skip_fake_dec_4(768, 1, 336);
+//    // fill with alternating -0.5, 0.5
+//
+//    for (long j = 0; j < 768; ++j)
+//    {
+//        for (long k = 0; k < 336; ++k)
+//        {
+//            if (k % 2 == 0)
+//            {
+//                skip_fake_dec_4(j, 0, k) = 0.5;
+//            }
+//            else
+//            {
+//                skip_fake_dec_4(j, 0, k) = -0.5;
+//            }
+//        }
+//    }
+//
+//    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_shared_enc_5, "x_fake_shared_enc_5");
+//    demucscppdebug_test_v3::debug_tensor_3dxf(skip_fake_dec_4, "skip_fake_dec_4");
+//
+//    Eigen::Tensor3dXf x_fake_dec_4(768, 1, 336);
+//    Eigen::Tensor3dXf pre_t_unused = demucscpp_v3::apply_freq_shared_decoder_0_1(model, 0, buffers.x_decode, x_fake_dec_4, x_fake_shared_enc_5);
+//
+//    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_dec_4, "x_fake_dec_4");
+//    demucscppdebug_test_v3::debug_tensor_3dxf(pre_t_unused, "pre_t_unused");
+//
+//    Eigen::Tensor3dXf x_fake_dec_3(384, 8, 336);
+//
+//    Eigen::Tensor3dXf pre_t = demucscpp_v3::apply_freq_shared_decoder_0_1(
+//        model, 1, x_fake_dec_4, x_fake_dec_3, skip_fake_dec_4);
+//
+//    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_dec_3, "x_fake_dec_3");
+//    demucscppdebug_test_v3::debug_tensor_3dxf(pre_t, "pre_t");
+//
+//    // remember we leapfrog xt_fake_dec_4
+//    Eigen::Tensor3dXf xt_fake_dec_3(1, 768, 336);
+//
+//    demucscpp_v3::apply_time_decoder_0(model, pre_t, xt_fake_dec_3, buffers.xt_decode);
+//
+//    demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_dec_3, "xt_fake_dec_3");
+//}
+//
+//TEST(DemucsCPP_V3_Layers, Decoder1Isolated)
+//{
+//    setUpTestSuite();
+//
+//    std::cout << std::fixed << std::setprecision(20) << std::endl;
+//
+//    // calculate segment in samples
+//    int segment_samples =
+//        (int)(demucscpp::SEGMENT_LEN_SECS * demucscpp::SUPPORTED_SAMPLE_RATE);
+//
+//    // let's create reusable buffers with padded sizes
+//    struct demucscpp_v3::demucs_v3_segment_buffers buffers(2, segment_samples,
+//                                                     4);
+//
+//    Eigen::Tensor3dXf x_fake_dec_4(1, 768, 336);
+//
+//    // fill with -1, 1 alternating
+//    for (long j = 0; j < 768; ++j)
+//    {
+//        for (long k = 0; k < 336; ++k)
+//        {
+//            if (k % 2 == 0)
+//            {
+//                x_fake_dec_4(0, j, k) = -1.0;
+//            }
+//            else
+//            {
+//                x_fake_dec_4(0, j, k) = 1.0;
+//            }
+//        }
+//    }
+//
+//    Eigen::Tensor3dXf skip_fake_dec_4(768, 1, 336);
+//    // fill with alternating -0.5, 0.5
+//
+//    for (long j = 0; j < 768; ++j)
+//    {
+//        for (long k = 0; k < 336; ++k)
+//        {
+//            if (k % 2 == 0)
+//            {
+//                skip_fake_dec_4(j, 0, k) = 0.5;
+//            }
+//            else
+//            {
+//                skip_fake_dec_4(j, 0, k) = -0.5;
+//            }
+//        }
+//    }
+//
+//    Eigen::Tensor3dXf x_fake_dec_3(384, 8, 336);
+//
+//    Eigen::Tensor3dXf pre_t = demucscpp_v3::apply_freq_shared_decoder_0_1(
+//        model, 1, x_fake_dec_4, x_fake_dec_3, skip_fake_dec_4);
+//
+//    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_dec_3, "x_fake_dec_3");
+//    demucscppdebug_test_v3::debug_tensor_3dxf(pre_t, "pre_t");
+//
+//    // remember we leapfrog xt_fake_dec_4
+//    Eigen::Tensor3dXf xt_fake_dec_3(1, 768, 336);
+//
+//    demucscpp_v3::apply_time_decoder_0(model, pre_t, xt_fake_dec_3, buffers.xt_decode);
+//
+//    demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_dec_3, "xt_fake_dec_3");
+//}
+//
+//TEST(DemucsCPP_V3_Layers, AllDecoders)
+//{
+//    setUpTestSuite();
+//
+//    std::cout << std::fixed << std::setprecision(20) << std::endl;
+//
+//    // calculate segment in samples
+//    int segment_samples =
+//        (int)(demucscpp::SEGMENT_LEN_SECS * demucscpp::SUPPORTED_SAMPLE_RATE);
+//
+//    // let's create reusable buffers with padded sizes
+//    struct demucscpp_v3::demucs_v3_segment_buffers buffers(2, segment_samples,
+//                                                     4);
+//
+//    Eigen::Tensor3dXf x_fake_shared_enc_5(1, 1536, 168);
+//
+//    // fill with -1, 1 alternating
+//    for (long j = 0; j < 1536; ++j)
+//    {
+//        for (long k = 0; k < 168; ++k)
+//        {
+//            if (k % 2 == 0)
+//            {
+//                x_fake_shared_enc_5(0, j, k) = -1.0;
+//            }
+//            else
+//            {
+//                x_fake_shared_enc_5(0, j, k) = 1.0;
+//            }
+//        }
+//    }
+//
+//    Eigen::Tensor3dXf skip_fake_dec_4(768, 1, 336);
+//    // fill with alternating -0.5, 0.5
+//
+//    for (long j = 0; j < 768; ++j)
+//    {
+//        for (long k = 0; k < 336; ++k)
+//        {
+//            if (k % 2 == 0)
+//            {
+//                skip_fake_dec_4(j, 0, k) = 0.5;
+//            }
+//            else
+//            {
+//                skip_fake_dec_4(j, 0, k) = -0.5;
+//            }
+//        }
+//    }
+//
+//    Eigen::Tensor3dXf skip_fake_dec_3(384, 8, 336);
+//    // fill with alternating -0.5, 0.5
+//
+//    for (long i = 0; i < 8; ++i)
+//    {
+//        for (long j = 0; j < 384; ++j)
+//        {
+//            for (long k = 0; k < 336; ++k)
+//            {
+//                if (k % 2 == 0)
+//                {
+//                    skip_fake_dec_3(j, i, k) = 0.5;
+//                }
+//                else
+//                {
+//                    skip_fake_dec_3(j, i, k) = -0.5;
+//                }
+//            }
+//        }
+//    }
+//
+//    Eigen::Tensor3dXf skip_fake_dec_2(192, 32, 336);
+//
+//    // fill with alternating -0.5, 0.5
+//    for (long i = 0; i < 32; ++i)
+//    {
+//        for (long j = 0; j < 192; ++j)
+//        {
+//            for (long k = 0; k < 336; ++k)
+//            {
+//                if (k % 2 == 0)
+//                {
+//                    skip_fake_dec_2(j, i, k) = 0.5;
+//                }
+//                else
+//                {
+//                    skip_fake_dec_2(j, i, k) = -0.5;
+//                }
+//            }
+//        }
+//    }
+//
+//    Eigen::Tensor3dXf skip_fake_dec_1(96, 128, 336);
+//
+//    // fill with alternating -0.5, 0.5
+//    for (long i = 0; i < 128; ++i)
+//    {
+//        for (long j = 0; j < 96; ++j)
+//        {
+//            for (long k = 0; k < 336; ++k)
+//            {
+//                if (k % 2 == 0)
+//                {
+//                    skip_fake_dec_1(j, i, k) = 0.5;
+//                }
+//                else
+//                {
+//                    skip_fake_dec_1(j, i, k) = -0.5;
+//                }
+//            }
+//        }
+//    }
+//
+//    Eigen::Tensor3dXf skip_fake_dec_0(48, 512, 336);
+//
+//    // fill with alternating -0.5, 0.5
+//    for (long i = 0; i < 512; ++i)
+//    {
+//        for (long j = 0; j < 48; ++j)
+//        {
+//            for (long k = 0; k < 336; ++k)
+//            {
+//                if (k % 2 == 0)
+//                {
+//                    skip_fake_dec_0(j, i, k) = 0.5;
+//                }
+//                else
+//                {
+//                    skip_fake_dec_0(j, i, k) = -0.5;
+//                }
+//            }
+//        }
+//    }
+//
+//    Eigen::Tensor3dXf skip_fake_tdec_3(1, 384, 1344);
+//
+//    // fill with alternating -0.5, 0.5
+//    for (long i = 0; i < 384; ++i)
+//    {
+//        for (long j = 0; j < 1; ++j)
+//        {
+//            for (long k = 0; k < 1344; ++k)
+//            {
+//                if (k % 2 == 0)
+//                {
+//                    skip_fake_tdec_3(j, i, k) = 0.5;
+//                }
+//                else
+//                {
+//                    skip_fake_tdec_3(j, i, k) = -0.5;
+//                }
+//            }
+//        }
+//    }
+//
+//    Eigen::Tensor3dXf skip_fake_tdec_2(1, 192, 5375);
+//
+//    // fill with alternating -0.5, 0.5
+//    for (long i = 0; i < 192; ++i)
+//    {
+//        for (long j = 0; j < 1; ++j)
+//        {
+//            for (long k = 0; k < 5375; ++k)
+//            {
+//                if (k % 2 == 0)
+//                {
+//                    skip_fake_tdec_2(j, i, k) = 0.5;
+//                }
+//                else
+//                {
+//                    skip_fake_tdec_2(j, i, k) = -0.5;
+//                }
+//            }
+//        }
+//    }
+//
+//    Eigen::Tensor3dXf skip_fake_tdec_1(1, 96, 21499);
+//
+//    // fill with alternating -0.5, 0.5
+//    for (long i = 0; i < 96; ++i)
+//    {
+//        for (long j = 0; j < 1; ++j)
+//        {
+//            for (long k = 0; k < 21499; ++k)
+//            {
+//                if (k % 2 == 0)
+//                {
+//                    skip_fake_tdec_1(j, i, k) = 0.5;
+//                }
+//                else
+//                {
+//                    skip_fake_tdec_1(j, i, k) = -0.5;
+//                }
+//            }
+//        }
+//    }
+//
+//    Eigen::Tensor3dXf skip_fake_tdec_0(1, 48, 85995);
+//
+//    // fill with alternating -0.5, 0.5
+//    for (long i = 0; i < 48; ++i)
+//    {
+//        for (long j = 0; j < 1; ++j)
+//        {
+//            for (long k = 0; k < 85995; ++k)
+//            {
+//                if (k % 2 == 0)
+//                {
+//                    skip_fake_tdec_0(j, i, k) = 0.5;
+//                }
+//                else
+//                {
+//                    skip_fake_tdec_0(j, i, k) = -0.5;
+//                }
+//            }
+//        }
+//    }
+//
+//    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_shared_enc_5, "x_fake_shared_enc_5");
+//    demucscppdebug_test_v3::debug_tensor_3dxf(skip_fake_dec_4, "skip_fake_dec_4");
+//
+//    Eigen::Tensor3dXf x_fake_dec_4(768, 1, 336);
+//    Eigen::Tensor3dXf pre_t_unused = demucscpp_v3::apply_freq_shared_decoder_0_1(model, 0, buffers.x_decode, x_fake_dec_4, x_fake_shared_enc_5);
+//
+//    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_dec_4, "x_fake_dec_4");
+//    demucscppdebug_test_v3::debug_tensor_3dxf(pre_t_unused, "pre_t_unused");
+//
+//    Eigen::Tensor3dXf x_fake_dec_3(384, 8, 336);
+//    Eigen::Tensor3dXf pre_t = demucscpp_v3::apply_freq_shared_decoder_0_1(
+//        model, 1, x_fake_dec_4, x_fake_dec_3, skip_fake_dec_4);
+//
+//    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_dec_3, "x_fake_dec_3");
+//    demucscppdebug_test_v3::debug_tensor_3dxf(pre_t, "pre_t");
+//
+//    // remember we leapfrog xt_fake_dec_4
+//    Eigen::Tensor3dXf xt_fake_dec_3(1, 768, 336);
+//    demucscpp_v3::apply_time_decoder_0(model, pre_t, xt_fake_dec_3, buffers.xt_decode);
+//
+//    demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_dec_3, "xt_fake_dec_3");
+//
+//    Eigen::Tensor3dXf x_fake_dec_2(192, 32, 336);
+//
+//    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_dec_3, "x_fake_dec_3");
+//    demucscppdebug_test_v3::debug_tensor_3dxf(skip_fake_dec_3, "skip_fake_dec_3");
+//
+//    demucscpp_v3::apply_common_decoder(model, 0, 0, x_fake_dec_3, x_fake_dec_2, skip_fake_dec_3);
+//
+//    Eigen::Tensor3dXf xt_fake_dec_2(1, 384, 1344);
+//    demucscpp_v3::apply_common_decoder(model, 1, 0, xt_fake_dec_3, xt_fake_dec_2, skip_fake_tdec_3);
+//
+//    demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_dec_2, "x_fake_dec_2");
+//    demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_dec_2, "xt_fake_dec_2");
+//}
+//

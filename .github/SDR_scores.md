@@ -60,7 +60,7 @@ bass            ==> SDR:   4.584  SIR:   9.359  ISR:   9.068  SAR:   4.885
 other           ==> SDR:   7.426  SIR:  12.793  ISR:  12.975  SAR:   7.830
 ```
 
-### Performance of v3 hdemucs_mmi model
+### Performance of v3 (hdemucs_mmi) model
 
 Track 'Zeno - Signs' from MUSDB18-HQ test set
 
@@ -80,10 +80,10 @@ other           ==> SDR:   7.123  SIR:  11.373  ISR:  14.373  SAR:   7.907
 ```
 CPP inference (this codebase, `demucs_v3.cpp`):
 ```
-vocals          ==> SDR:   8.331  SIR:  18.783  ISR:  16.027  SAR:   8.476
-drums           ==> SDR:   7.546  SIR:  13.867  ISR:  13.572  SAR:   8.524
-bass            ==> SDR:   1.737  SIR:   7.808  ISR:   3.990  SAR:   0.628
-other           ==> SDR:   6.689  SIR:   9.831  ISR:  14.362  SAR:   8.026
+vocals          ==> SDR:   7.834  SIR:  19.127  ISR:  13.911  SAR:   8.061
+drums           ==> SDR:   8.991  SIR:  16.733  ISR:  15.951  SAR:   9.992
+bass            ==> SDR:   3.500  SIR:  10.056  ISR:   6.891  SAR:   3.020
+other           ==> SDR:   6.983  SIR:  10.488  ISR:  13.674  SAR:   7.750
 ```
 
 ### Performance of multi-threaded inference
