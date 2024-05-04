@@ -613,6 +613,8 @@ void demucscpp_v3::model_v3_inference(
         }
     }
 
+    demucscppdebug::debug_tensor_3dxf(buffers.x_0, "buffers.x freq-emb");
+
     buffers.saved_0 = buffers.x_0;
     buffers.savedt_0 = buffers.xt_0;
 
@@ -676,7 +678,7 @@ void demucscpp_v3::model_v3_inference(
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_shared_5, "shared encoder-5");
 
-    std::cout << "\nwaiting here..." << std::endl;
+    std::cout << "wait here!" << std::endl;
     std::cin.ignore();
 
     // now decoder time!
@@ -692,8 +694,6 @@ void demucscpp_v3::model_v3_inference(
     Eigen::Tensor3dXf pre_t = apply_freq_shared_decoder_0_1(model, 1, buffers.x_4, buffers.x_3, buffers.saved_4);
 
     demucscppdebug::debug_tensor_3dxf(buffers.x_3, "buffers.x decoder-1");
-    //demucscppdebug::debug_tensor_3dxf(pre_t, "pre (input to tdecoder-0)");
-    //demucscppdebug::debug_tensor_3dxf(buffers.xt_4, "output storage of tdecoder-0");
 
     // we're skipping the inject branch i.e. xt_4
     // leapfrogging to xt_3
@@ -725,6 +725,7 @@ void demucscpp_v3::model_v3_inference(
     demucscppdebug::debug_tensor_3dxf(buffers.x_out, "buffers.x decoder-5");
     demucscppdebug::debug_tensor_3dxf(buffers.xt_out, "buffers.xt tdecoder-5");
 
+    std::cout << "wait here!" << std::endl;
     std::cin.ignore();
 
     cb(current_progress + segment_progress, "Mask + istft");
@@ -832,12 +833,8 @@ void demucscpp_v3::model_v3_inference(
             padded_waveform.block(0, buffers.pad, 2, buffers.segment_samples);
 
         // sum with xt
-        // choose a different source to sum with in case
-        // they're in different orders...
-
         demucscppdebug::debug_matrix_xf(unpadded_waveform, "z waveform");
         demucscppdebug::debug_matrix_xf(xt_3d[source], "xt waveform");
-        std::cin.ignore();
         unpadded_waveform += xt_3d[source];
 
         ss << "mix: " << buffers.mix.rows() << ", " << buffers.mix.cols();

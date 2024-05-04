@@ -593,7 +593,6 @@ struct demucs_segment_buffers
     // time branch
     Eigen::Tensor3dXf xt;             // input
     Eigen::Tensor3dXf xt_out;         // output
-    Eigen::Tensor3dXf xt_decoded_out; // hold time decoder output
     Eigen::Tensor3dXf xt_0;
     Eigen::Tensor3dXf xt_1;
     Eigen::Tensor3dXf xt_2;
@@ -631,13 +630,16 @@ struct demucs_segment_buffers
           // complex-as-channels implies 2*nb_channels for real+imag
           x(2 * nb_channels, nb_stft_bins - 1, nb_stft_frames),
           x_out(nb_sources * 2 * nb_channels, nb_stft_bins - 1, nb_stft_frames),
-          x_0(48, 512, FREQ_BRANCH_LEN), x_1(96, 128, FREQ_BRANCH_LEN),
-          x_2(192, 32, FREQ_BRANCH_LEN), x_3(384, 8, FREQ_BRANCH_LEN),
+          x_0(48, 512, FREQ_BRANCH_LEN),
+          x_1(96, 128, FREQ_BRANCH_LEN),
+          x_2(192, 32, FREQ_BRANCH_LEN),
+          x_3(384, 8, FREQ_BRANCH_LEN),
           x_3_channel_upsampled(512, 8, FREQ_BRANCH_LEN),
           xt(1, nb_channels, segment_samples),
           xt_out(1, nb_sources * nb_channels, segment_samples),
-          xt_decoded_out(1, 8, segment_samples), xt_0(1, 48, TIME_BRANCH_LEN_0),
-          xt_1(1, 96, TIME_BRANCH_LEN_1), xt_2(1, 192, TIME_BRANCH_LEN_2),
+          xt_0(1, 48, TIME_BRANCH_LEN_0),
+          xt_1(1, 96, TIME_BRANCH_LEN_1),
+          xt_2(1, 192, TIME_BRANCH_LEN_2),
           xt_3(1, 384, TIME_BRANCH_LEN_3),
           xt_3_channel_upsampled(1, 512, TIME_BRANCH_LEN_3),
           saved_0(48, 512, FREQ_BRANCH_LEN), saved_1(96, 128, FREQ_BRANCH_LEN),
