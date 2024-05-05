@@ -27,8 +27,8 @@ Inference for the **Demucs v3 Hybrid model weights** `hdemucs_mmi` is also suppo
 1. `demucs_ft.cpp.main`: run all four fine-tuned models for `htdemucs_ft` inference, same as the BagOfModels idea of PyTorch Demucs
 1. `demucs_mt.cpp.main`: run a single model, multi-threaded
 1. `demucs_ft_mt.cpp.main`: run all four fine-tuned models, multi-threaded
-1. `demucs_v3.cpp.main`: run a single model for v3 (`hdemucs_mmi`)
-1. `demucs_v3_mt.cpp.main`: run a single model for v3 (`hdemucs_mmi`), multi-threaded
+1. `demucs_v3.cpp.main`: run a single model for v3 `hdemucs_mmi`
+1. `demucs_v3_mt.cpp.main`: run a single model for v3 `hdemucs_mmi`, multi-threaded
 
 See the [PERFORMANCE doc](./.github/PERFORMANCE.md) for details on multi-threading, external BLAS libraries, etc..
 
@@ -51,10 +51,6 @@ $ sudo apt-get install gcc g++ cmake clang-tools libopenblas0-openmp libopenblas
 Compile with CMake:
 ```
 $ mkdir -p build && cd build && cmake .. && make -j16
-libdemucs.cpp.lib.a <--- library
-demucs.cpp.main     <--- single-model (4s, 6s, ft)
-demucs_ft.cpp.main  <--- bag of ft models
-demucs.cpp.test     <--- unit tests
 ```
 
 ### Convert weights
@@ -82,14 +78,15 @@ Done. Output file:  ggml-demucs/ggml-model-htdemucs-4s-f16.bin
 
 All supported models would look like this:
 ```
-$ ls ../ggml-demucs/
-total 133M
- 81M Jan 10 22:40 ggml-model-htdemucs-4s-f16.bin
- 53M Jan 10 22:41 ggml-model-htdemucs-6s-f16.bin
- 81M Jan 10 22:41 ggml-model-htdemucs_ft_drums-4s-f16.bin
- 81M Jan 10 22:43 ggml-model-htdemucs_ft_bass-4s-f16.bin
- 81M Jan 10 22:43 ggml-model-htdemucs_ft_other-4s-f16.bin
- 81M Jan 10 22:43 ggml-model-htdemucs_ft_vocals-4s-f16.bin
+$ ls ./ggml-demucs/
+total 613M
+160M May  5 14:38 ggml-model-hdemucs_mmi-v3-f16.bin
+ 53M May  5 16:50 ggml-model-htdemucs-6s-f16.bin
+ 81M May  5 16:50 ggml-model-htdemucs_ft_vocals-4s-f16.bin
+ 81M May  5 16:50 ggml-model-htdemucs_ft_bass-4s-f16.bin
+ 81M May  5 16:50 ggml-model-htdemucs_ft_drums-4s-f16.bin
+ 81M May  5 16:50 ggml-model-htdemucs_ft_other-4s-f16.bin
+ 81M May  5 16:51 ggml-model-htdemucs-4s-f16.bin
 ```
 
 ### Run demucs.cpp
