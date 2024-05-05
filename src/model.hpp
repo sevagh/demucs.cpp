@@ -1309,13 +1309,6 @@ struct demucs_v3_segment_buffers
     Eigen::Tensor3dXf xt_3;
     Eigen::Tensor3dXf xt_4;
 
-    // empty tensors to hold decoded output
-    // in conjunction with skip connections
-    Eigen::Tensor3dXf x_decode;
-
-    // empty inject for encoder 5
-    Eigen::Tensor3dXf x_shared_5_empty_inject;
-
     // skip conns for frequency and time
     // easier as hardcoded matrix sizes
     Eigen::Tensor3dXf saved_0;
@@ -1377,7 +1370,6 @@ struct demucs_v3_segment_buffers
           xt_2(1, 192, TIME_BRANCH_LEN_2),
           xt_3(1, 384, TIME_BRANCH_LEN_3),
           xt_4(1, 768, TIME_BRANCH_LEN_4),
-          x_decode(1536, 1, SHARED_BRANCH_LEN),
           saved_0(48, 512, FREQ_BRANCH_LEN),
           saved_1(96, 128, FREQ_BRANCH_LEN),
           saved_2(192, 32, FREQ_BRANCH_LEN),
@@ -1445,9 +1437,6 @@ struct demucs_v3_segment_buffers
                     local_attn_decay_kernel(d, t) = -local_attn_decays(d) * std::abs(local_attn_delta(0, t)) / std::sqrt(LOCAL_ATTN_N_DECAY);
                 }
             }
-
-            x_decode.setZero();
-            x_shared_5_empty_inject.setZero();
         };
 };
 

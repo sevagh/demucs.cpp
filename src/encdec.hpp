@@ -47,16 +47,19 @@ void apply_time_encoder_4(const struct demucscpp_v3::demucs_v3_model &model,
 
 // freq encoder 4, shared encoder 5
 // uniquely contain bilstm, localattn
-void apply_freq_shared_encoder_4_5(const struct demucscpp_v3::demucs_v3_model &model,
-                                   const Eigen::Tensor3dXf &x_in,
-                                   const Eigen::Tensor3dXf &x_inject,
-                                   const int encoder_idx,
-                                   Eigen::Tensor3dXf &x_out,
-                                   struct demucscpp_v3::demucs_v3_segment_buffers &buffers);
+void apply_freq_encoder_4(const struct demucscpp_v3::demucs_v3_model &model,
+                          const Eigen::Tensor3dXf &x_in,
+                          const Eigen::Tensor3dXf &x_inject,
+                          Eigen::Tensor3dXf &x_out,
+                          struct demucscpp_v3::demucs_v3_segment_buffers &buffers);
+
+void apply_shared_encoder_5(const struct demucscpp_v3::demucs_v3_model &model,
+                          const Eigen::Tensor3dXf &x_in,
+                          Eigen::Tensor3dXf &x_out,
+                          struct demucscpp_v3::demucs_v3_segment_buffers &buffers);
 
 Eigen::Tensor3dXf apply_shared_decoder_0(
     const struct demucscpp_v3::demucs_v3_model &model,
-    const Eigen::Tensor3dXf &x_in,
     Eigen::Tensor3dXf &x_out,
     const Eigen::Tensor3dXf &skip);
 

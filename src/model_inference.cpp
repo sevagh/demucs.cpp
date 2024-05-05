@@ -651,13 +651,13 @@ void demucscpp_v3::model_v3_inference(
 
     // z/spec branch: unique encoder 4 (bilstm, local attn)
     // merge time and frequency with the inject parameter
-    apply_freq_shared_encoder_4_5(model, buffers.x_3, buffers.xt_4, 0, buffers.x_4, buffers);
+    apply_freq_encoder_4(model, buffers.x_3, buffers.xt_4, buffers.x_4, buffers);
     cb(current_progress + segment_progress * 10.0f / float_steps, "Freq encoder 4");
 
     buffers.saved_4 = buffers.x_4;
 
     // shared: unique encoder 5 (bistlm local attn)
-    apply_freq_shared_encoder_4_5(model, buffers.x_4, buffers.x_shared_5_empty_inject, 1, buffers.x_shared_5, buffers);
+    apply_shared_encoder_5(model, buffers.x_4, buffers.x_shared_5, buffers);
     cb(current_progress + segment_progress * 11.0f / float_steps, "Shared encoder 5");
 
     // now decoder time!
@@ -666,7 +666,7 @@ void demucscpp_v3::model_v3_inference(
 
     // start from 0 tensors
 
-    Eigen::Tensor3dXf pre_t_unused = apply_shared_decoder_0(model, buffers.x_decode, buffers.x_4, buffers.x_shared_5);
+    Eigen::Tensor3dXf pre_t_unused = apply_shared_decoder_0(model, buffers.x_4, buffers.x_shared_5);
     cb(current_progress + segment_progress * 12.0f / float_steps, "Shared decoder 0");
 
     Eigen::Tensor3dXf pre_t = apply_freq_decoder_1(model, buffers.x_4, buffers.x_3, buffers.saved_4);
