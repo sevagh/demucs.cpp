@@ -1,8 +1,8 @@
 # demucs.cpp
 
-C++17 library that implements the inference of the [Demucs v4 hybrid transformer model](https://github.com/facebookresearch/demucs), a PyTorch neural network for music demixing.
+C++17 library that implements the inference of the [Demucs v4 hybrid transformer](https://github.com/facebookresearch/demucs) and [Demucs v3 hybrid](https://github.com/facebookresearch/demucs/tree/v3) models, which are high-performance PyTorch neural networks for music source separation.
 
-It uses only the standard library and the header-only library [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) as dependencies, making it suitable to compile and run on many platforms. It was designed for low-memory environments by sacrificing the speed of the Torch implementation.
+It uses only the standard library (C++17) and the header-only library [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) as dependencies, making it suitable to compile and run on many platforms. It was designed for low-memory environments by sacrificing the speed of the Torch implementation.
 
 Demucs.cpp powers my websites (<https://freemusicdemixer.com>, <https://pro.freemusicdemixer.com>) and now my new Android app [Music Demixer](https://play.google.com/store/apps/details?id=com.freemusicdemixer.pro) to bring Demucs to your pocket!
 
@@ -12,9 +12,13 @@ See my other project [umx.cpp](https://github.com/sevagh/umx.cpp) for a similar 
 
 ### Library design
 
-It uses [libnyquist](https://github.com/ddiakopoulos/libnyquist) to load audio files, the [ggml](https://github.com/ggerganov/ggml) file format to serialize the PyTorch weights of `htdemucs`, `htdemucs_6s`, and `htdemucs_ft` (4-source, 6-source, fine-tuned) to a binary file format, and [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) (+ OpenMP) to implement the inference. There are also programs for multi-threaded Demucs inference using C++11's `std::thread`.
+The inference library (in `src/`) uses the [ggml](https://github.com/ggerganov/ggml) file format to serialize the PyTorch weights of `htdemucs`, `htdemucs_6s`, and `htdemucs_ft` (4-source, 6-source, fine-tuned) to a binary file format, and [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) to implement the inference (with OpenMP as a requirement).
+
+The cli programs (in `cli-apps/`) additionally use [libnyquist](https://github.com/ddiakopoulos/libnyquist) to read and write audio files, and the multithreaded cli programs use C++11's `std::thread`.
 
 **All Hybrid-Transformer weights** (4-source, 6-source, fine-tuned) are supported. See the [Convert weights](#convert-weights) section below. Demixing quality is nearly identical to PyTorch as shown in the [SDR scores doc](./.github/SDR_scores.md).
+
+Inference for the **Demucs v3 Hybrid model weights** `hdemucs_mmi` is also supported.
 
 ### Directory structure
 
@@ -23,6 +27,8 @@ It uses [libnyquist](https://github.com/ddiakopoulos/libnyquist) to load audio f
 1. `demucs_ft.cpp.main`: run all four fine-tuned models for `htdemucs_ft` inference, same as the BagOfModels idea of PyTorch Demucs
 1. `demucs_mt.cpp.main`: run a single model, multi-threaded
 1. `demucs_ft_mt.cpp.main`: run all four fine-tuned models, multi-threaded
+1. `demucs_v3.cpp.main`: run a single model for v3 (`hdemucs_mmi`)
+1. `demucs_v3_mt.cpp.main`: run a single model for v3 (`hdemucs_mmi`), multi-threaded
 
 See the [PERFORMANCE doc](./.github/PERFORMANCE.md) for details on multi-threading, external BLAS libraries, etc..
 
@@ -62,7 +68,7 @@ $ mamba activate demucscpp
 $ python -m pip install -r ./scripts/requirements.txt
 ```
 
-Dump Demucs weights to ggml file, with flag `--six-source` for the 6-source variant, and all of `--ft-drums, --ft-vocals, --ft-bass, --ft-other` for the fine-tuned models:
+Dump Demucs weights to ggml file, with flag `--six-source` for the 6-source variant, all of `--ft-drums, --ft-vocals, --ft-bass, --ft-other` for the fine-tuned models, and `--v3` for the v3 model:
 ```
 $ python ./scripts/convert-pth-to-ggml.py ./ggml-demucs
 ...

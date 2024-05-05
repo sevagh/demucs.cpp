@@ -372,7 +372,6 @@ if __name__ == '__main__':
         x_enc_0 = henclayer_0(x)
 
         debug_tensor_demucscpp(x_enc_0, "x_enc_0")
-        input("DEBUG HERE!")
 
         # continue for the rest of the encoder layers
         # generate tensors for each layer
@@ -384,19 +383,16 @@ if __name__ == '__main__':
         x_enc_1 = henclayer_1(x_enc_0)
 
         debug_tensor_demucscpp(x_enc_1, "x_enc_1")
-        input("DEBUG HERE!")
 
         henclayer_2 = model.models[0].encoder[2]
         x_enc_2 = henclayer_2(x_enc_1)
 
         debug_tensor_demucscpp(x_enc_2, "x_enc_2")
-        input("DEBUG HERE!")
 
         henclayer_3 = model.models[0].encoder[3]
         x_enc_3 = henclayer_3(x_enc_2)
 
         debug_tensor_demucscpp(x_enc_3, "x_enc_3")
-        input("DEBUG HERE!")
 
         # create fake xt tensor of shape (1, 2, 343980)
         xt = torch.ones((1, 2, 343980))
@@ -409,43 +405,36 @@ if __name__ == '__main__':
         xt_enc_0 = htenclayer_0(xt)
 
         debug_tensor_demucscpp(xt_enc_0, "xt_enc_0")
-        input("DEBUG HERE!")
 
         htenclayer_1 = model.models[0].tencoder[1]
         xt_enc_1 = htenclayer_1(xt_enc_0)
 
         debug_tensor_demucscpp(xt_enc_1, "xt_enc_1")
-        input("DEBUG HERE!")
 
         htenclayer_2 = model.models[0].tencoder[2]
         xt_enc_2 = htenclayer_2(xt_enc_1)
 
         debug_tensor_demucscpp(xt_enc_2, "xt_enc_2")
-        input("DEBUG HERE!")
 
         htenclayer_3 = model.models[0].tencoder[3]
         xt_enc_3 = htenclayer_3(xt_enc_2)
 
         debug_tensor_demucscpp(xt_enc_3, "xt_enc_3")
-        input("DEBUG HERE!")
 
         htenclayer_4 = model.models[0].tencoder[4]
         xt_enc_4 = htenclayer_4(xt_enc_3)
 
         debug_tensor_demucscpp(xt_enc_4, "xt_enc_4")
-        input("DEBUG HERE!")
 
         henclayer_4 = model.models[0].encoder[4]
         x_enc_4 = henclayer_4(x_enc_3, inject=xt_enc_4)
 
         debug_tensor_demucscpp(x_enc_4, "x_enc_4")
-        input("DEBUG HERE!")
 
         henclayer_5 = model.models[0].encoder[5]
         x_shared_enc_5 = henclayer_5(x_enc_4, inject=None)
 
         debug_tensor_demucscpp(x_shared_enc_5, "x_shared_enc_5")
-        input("DEBUG HERE!")
 
         skip_fake_dec_4 = torch.ones((768, 1, 336))
 
@@ -527,8 +516,6 @@ if __name__ == '__main__':
         xt_fake_dec_3, _ = tdecoder_1(pre_t, None, 1344)
 
         debug_tensor_demucscpp(xt_fake_dec_3, "xt_fake_dec_3")
-
-        input("DEBUG HERE!")
 
         hdecoder_2 = model.models[0].decoder[2]
         x_fake_dec_2, _ = hdecoder_2(x_fake_dec_3, skip_fake_dec_3, 336)
