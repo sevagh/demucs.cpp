@@ -16,9 +16,7 @@ The inference library (in `src/`) uses the [ggml](https://github.com/ggerganov/g
 
 The cli programs (in `cli-apps/`) additionally use [libnyquist](https://github.com/ddiakopoulos/libnyquist) to read and write audio files, and the multithreaded cli programs use C++11's `std::thread`.
 
-**All Hybrid-Transformer weights** (4-source, 6-source, fine-tuned) are supported. See the [Convert weights](#convert-weights) section below. Demixing quality is nearly identical to PyTorch as shown in the [SDR scores doc](./.github/SDR_scores.md).
-
-Inference for the **Demucs v3 Hybrid model weights** `hdemucs_mmi` is also supported.
+**All Hybrid-Transformer weights** (4-source, 6-source, fine-tuned) are supported. See the [Convert weights](#convert-weights) section below. Inference for the **Demucs v3 Hybrid model weights** `hdemucs_mmi` is also supported. Demixing quality is practically identical to PyTorch as shown in the [SDR scores doc](./.github/SDR_scores.md).
 
 ### Directory structure
 
@@ -30,7 +28,7 @@ Inference for the **Demucs v3 Hybrid model weights** `hdemucs_mmi` is also suppo
 1. `demucs_v3.cpp.main`: run a single model for v3 `hdemucs_mmi`
 1. `demucs_v3_mt.cpp.main`: run a single model for v3 `hdemucs_mmi`, multi-threaded
 
-See the [PERFORMANCE doc](./.github/PERFORMANCE.md) for details on multi-threading, external BLAS libraries, etc..
+See the [PERFORMANCE doc](./.github/PERFORMANCE.md) for time measurements, benchmarks, details on multi-threading, external BLAS libraries, etc.
 
 ## Instructions
 
