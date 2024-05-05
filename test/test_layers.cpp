@@ -948,7 +948,7 @@ TEST(DemucsCPPLayers, GemmConv)
 
     // apply conv2d_gemm with some params
     Eigen::Tensor3dXf y_gemm =
-        demucscpp::conv2d_gemm<in_channels, out_channels, kernel_height,
+        demucscpp::conv2d<in_channels, out_channels, kernel_height,
                                kernel_width, 1, 1, 0, 0, 1, 1>(x, w, b);
 
     // apply regular conv2d with some params
@@ -1131,7 +1131,7 @@ TEST(DemucsCPPLayers, GemmConv2)
 
     // apply conv2d_gemm with some params
     Eigen::Tensor3dXf y_gemm =
-        demucscpp::conv2d_gemm<in_channels, out_channels, kernel_height,
+        demucscpp::conv2d<in_channels, out_channels, kernel_height,
                                kernel_width, 1, 1, 0, 0, 1, 1>(x, w, b);
 
     // apply regular conv2d with some params
@@ -1314,7 +1314,7 @@ TEST(DemucsCPPLayers, GemmTrConv)
 
     // apply conv2d_gemm with some params
     Eigen::Tensor3dXf y_gemm =
-        demucscpp::conv2d_tr_gemm<in_channels, out_channels, kernel_height,
+        demucscpp::conv2d_tr<in_channels, out_channels, kernel_height,
                                   kernel_width, 1, 1, 0, 0, 1, 1>(x, w, b);
 
     // apply regular conv2d with some params

@@ -71,9 +71,8 @@ inline Eigen::MatrixXf im2col(const Eigen::Tensor3dXf &input)
 template <int in_channels, int out_channels, int kernel_height,
           int kernel_width, int stride_height, int stride_width, int pad_height,
           int pad_width, int dilation_height, int dilation_width>
-Eigen::Tensor3dXf conv2d_gemm(const Eigen::Tensor3dXf &x,
-                              const Eigen::Tensor4dXf &w,
-                              const Eigen::Tensor1dXf &b)
+Eigen::Tensor3dXf conv2d(const Eigen::Tensor3dXf &x, const Eigen::Tensor4dXf &w,
+                         const Eigen::Tensor1dXf &b)
 {
     int in_height = x.dimension(1);
     int in_width = x.dimension(2);
@@ -142,9 +141,9 @@ Eigen::Tensor3dXf conv2d_gemm(const Eigen::Tensor3dXf &x,
 template <int in_channels, int out_channels, int kernel_height,
           int kernel_width, int stride_height, int stride_width, int pad_height,
           int pad_width, int dilation_height, int dilation_width>
-Eigen::Tensor3dXf conv2d_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
-                                         const Eigen::Tensor4dXf &w,
-                                         const Eigen::Tensor1dXf &b)
+Eigen::Tensor3dXf conv2d_fused_gelu(const Eigen::Tensor3dXf &x,
+                                    const Eigen::Tensor4dXf &w,
+                                    const Eigen::Tensor1dXf &b)
 {
     int in_height = x.dimension(1);
     int in_width = x.dimension(2);
@@ -212,17 +211,6 @@ Eigen::Tensor3dXf conv2d_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
     return y_out;
 }
 
-template <int in_channels, int out_channels, int kernel_height,
-          int kernel_width, int stride_height, int stride_width, int pad_height,
-          int pad_width, int dilation_height, int dilation_width>
-Eigen::Tensor3dXf conv2d(const Eigen::Tensor3dXf &x, const Eigen::Tensor4dXf &w,
-                         const Eigen::Tensor1dXf &b)
-{
-    return conv2d_gemm<in_channels, out_channels, kernel_height, kernel_width,
-                       stride_height, stride_width, pad_height, pad_width,
-                       dilation_height, dilation_width>(x, w, b);
-}
-
 template <int in_channels, int out_channels, int kernel_size, int stride,
           int pad, int dilation>
 Eigen::Tensor3dXf conv1d(const Eigen::Tensor3dXf &x, const Eigen::Tensor3dXf &w,
@@ -263,9 +251,9 @@ Eigen::Tensor3dXf conv1d_fused_gelu(const Eigen::Tensor3dXf &x,
     // do 2d convolution inference here
     // treating the in_freq dimension as a width dimension with a no-op kernel
     Eigen::Tensor3dXf y_out =
-        demucscpp::conv2d_gemm_fused_gelu<in_channels, out_channels,
-                                          kernel_size, 1, stride, 1, pad, 0,
-                                          dilation, 1>(x_shuff, w_4d, b);
+        demucscpp::conv2d_fused_gelu<in_channels, out_channels, kernel_size, 1,
+                                     stride, 1, pad, 0, dilation, 1>(x_shuff,
+                                                                     w_4d, b);
 
     // move end axis to the front
     Eigen::Tensor3dXf y_out_shuf =
@@ -339,9 +327,9 @@ Eigen::MatrixXf im2col_transposed(const Eigen::Tensor3dXf &input)
 template <int in_channels, int out_channels, int kernel_height,
           int kernel_width, int stride_height, int stride_width, int pad_height,
           int pad_width, int dilation_height, int dilation_width>
-Eigen::Tensor3dXf conv2d_tr_gemm(const Eigen::Tensor3dXf &x,
-                                 const Eigen::Tensor4dXf &w,
-                                 const Eigen::Tensor1dXf &b)
+Eigen::Tensor3dXf conv2d_tr(const Eigen::Tensor3dXf &x,
+                            const Eigen::Tensor4dXf &w,
+                            const Eigen::Tensor1dXf &b)
 {
     int in_height = x.dimension(1);
     int in_width = x.dimension(2);
@@ -410,9 +398,9 @@ Eigen::Tensor3dXf conv2d_tr_gemm(const Eigen::Tensor3dXf &x,
 template <int in_channels, int out_channels, int kernel_height,
           int kernel_width, int stride_height, int stride_width, int pad_height,
           int pad_width, int dilation_height, int dilation_width>
-Eigen::Tensor3dXf conv2d_tr_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
-                                            const Eigen::Tensor4dXf &w,
-                                            const Eigen::Tensor1dXf &b)
+Eigen::Tensor3dXf conv2d_tr_fused_gelu(const Eigen::Tensor3dXf &x,
+                                       const Eigen::Tensor4dXf &w,
+                                       const Eigen::Tensor1dXf &b)
 {
     int in_height = x.dimension(1);
     int in_width = x.dimension(2);
@@ -485,18 +473,6 @@ Eigen::Tensor3dXf conv2d_tr_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
     return y_out;
 }
 
-template <int in_channels, int out_channels, int kernel_height,
-          int kernel_width, int stride_height, int stride_width, int pad_height,
-          int pad_width, int dilation_height, int dilation_width>
-Eigen::Tensor3dXf conv2d_tr(const Eigen::Tensor3dXf &x,
-                            const Eigen::Tensor4dXf &w,
-                            const Eigen::Tensor1dXf &b)
-{
-    return conv2d_tr_gemm<in_channels, out_channels, kernel_height,
-                          kernel_width, stride_height, stride_width, pad_height,
-                          pad_width, dilation_height, dilation_width>(x, w, b);
-}
-
 template <int in_channels, int out_channels, int kernel_size, int stride,
           int pad, int dilation>
 Eigen::Tensor3dXf conv1d_tr(const Eigen::Tensor3dXf &x,
@@ -512,8 +488,8 @@ Eigen::Tensor3dXf conv1d_tr(const Eigen::Tensor3dXf &x,
 
     // Call the 2D transposed convolution function
     Eigen::Tensor3dXf y_out =
-        conv2d_tr_gemm<in_channels, out_channels, kernel_size, 1, stride, 1,
-                       pad, 0, dilation, 1>(x_shuff, w_4d, b);
+        conv2d_tr<in_channels, out_channels, kernel_size, 1, stride, 1, pad, 0,
+                  dilation, 1>(x_shuff, w_4d, b);
 
     // Move end axis to the front
     Eigen::Tensor3dXf y_out_shuf =
@@ -537,9 +513,8 @@ Eigen::Tensor3dXf conv1d_tr_fused_gelu(const Eigen::Tensor3dXf &x,
 
     // Call the 2D transposed convolution function
     Eigen::Tensor3dXf y_out =
-        conv2d_tr_gemm_fused_gelu<in_channels, out_channels, kernel_size, 1,
-                                  stride, 1, pad, 0, dilation, 1>(x_shuff, w_4d,
-                                                                  b);
+        conv2d_tr_fused_gelu<in_channels, out_channels, kernel_size, 1, stride,
+                             1, pad, 0, dilation, 1>(x_shuff, w_4d, b);
 
     // Move end axis to the front
     Eigen::Tensor3dXf y_out_shuf =

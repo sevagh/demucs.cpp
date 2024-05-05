@@ -26,23 +26,23 @@ static void my_fprintf(const std::FILE *stream, const char *format, ...)
 }
 
 // forward declaration
-static size_t load_single_tensor1d(FILE *f, std::string &name,
+static size_t load_single_tensor1d(FILE *f, const std::string &name,
                                    Eigen::Tensor1dXf &matrix, int *ne,
                                    int32_t nelements);
 
-static size_t load_single_vector(FILE *f, std::string &name,
+static size_t load_single_vector(FILE *f, const std::string &name,
                                  Eigen::VectorXf &matrix, int *ne,
                                  int32_t nelements);
 
-static size_t load_single_matrix(FILE *f, std::string &name,
+static size_t load_single_matrix(FILE *f, const std::string &name,
                                  Eigen::MatrixXf &matrix, int *ne,
                                  int32_t nelements);
 
-static size_t load_single_tensor3d(FILE *f, std::string &name,
+static size_t load_single_tensor3d(FILE *f, const std::string &name,
                                    Eigen::Tensor3dXf &tensor, int *ne,
                                    int32_t nelements);
 
-static size_t load_single_tensor4d(FILE *f, std::string &name,
+static size_t load_single_tensor4d(FILE *f, const std::string &name,
                                    Eigen::Tensor4dXf &tensor, int *ne,
                                    int32_t nelements);
 
@@ -1089,7 +1089,7 @@ bool demucscpp::load_demucs_model(const std::string &model_file,
     return true;
 }
 
-static size_t load_single_matrix(FILE *f, std::string &name,
+static size_t load_single_matrix(FILE *f, const std::string &name,
                                  Eigen::MatrixXf &matrix, int *ne,
                                  int32_t nelements)
 {
@@ -1133,7 +1133,7 @@ static size_t load_single_matrix(FILE *f, std::string &name,
     return nbytes_tensor;
 }
 
-static size_t load_single_tensor3d(FILE *f, std::string &name,
+static size_t load_single_tensor3d(FILE *f, const std::string &name,
                                    Eigen::Tensor3dXf &tensor, int *ne,
                                    int32_t nelements)
 {
@@ -1178,7 +1178,7 @@ static size_t load_single_tensor3d(FILE *f, std::string &name,
     return nbytes_tensor;
 }
 
-static size_t load_single_tensor4d(FILE *f, std::string &name,
+static size_t load_single_tensor4d(FILE *f, const std::string &name,
                                    Eigen::Tensor4dXf &tensor, int *ne,
                                    int32_t nelements)
 {
@@ -1229,7 +1229,7 @@ static size_t load_single_tensor4d(FILE *f, std::string &name,
     return nbytes_tensor;
 }
 
-static size_t load_single_tensor1d(FILE *f, std::string &name,
+static size_t load_single_tensor1d(FILE *f, const std::string &name,
                                    Eigen::Tensor1dXf &tensor, int *ne,
                                    int32_t nelements)
 {
@@ -1264,7 +1264,7 @@ static size_t load_single_tensor1d(FILE *f, std::string &name,
     return nbytes_tensor;
 }
 
-static size_t load_single_vector(FILE *f, std::string &name,
+static size_t load_single_vector(FILE *f, const std::string &name,
                                  Eigen::VectorXf &vector, int *ne,
                                  int32_t nelements)
 {

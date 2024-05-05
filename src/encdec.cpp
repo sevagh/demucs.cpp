@@ -217,20 +217,17 @@ void demucscpp::apply_freq_decoder(const struct demucscpp::demucs_model &model,
     switch (decoder_idx)
     {
     case 0:
-        y = demucscpp::conv2d_tr_gemm_fused_gelu<384, 192, 8, 1, 4, 1, 0, 0, 1,
-                                                 1>(
+        y = demucscpp::conv2d_tr_fused_gelu<384, 192, 8, 1, 4, 1, 0, 0, 1, 1>(
             y_shuff_2, model.decoder_conv_tr_weight[decoder_idx],
             model.decoder_conv_tr_bias[decoder_idx]);
         break;
     case 1:
-        y = demucscpp::conv2d_tr_gemm_fused_gelu<192, 96, 8, 1, 4, 1, 0, 0, 1,
-                                                 1>(
+        y = demucscpp::conv2d_tr_fused_gelu<192, 96, 8, 1, 4, 1, 0, 0, 1, 1>(
             y_shuff_2, model.decoder_conv_tr_weight[decoder_idx],
             model.decoder_conv_tr_bias[decoder_idx]);
         break;
     case 2:
-        y = demucscpp::conv2d_tr_gemm_fused_gelu<96, 48, 8, 1, 4, 1, 0, 0, 1,
-                                                 1>(
+        y = demucscpp::conv2d_tr_fused_gelu<96, 48, 8, 1, 4, 1, 0, 0, 1, 1>(
             y_shuff_2, model.decoder_conv_tr_weight[decoder_idx],
             model.decoder_conv_tr_bias[decoder_idx]);
         break;
@@ -797,8 +794,7 @@ void demucscpp_v3::apply_common_decoder(
     // 2D Convolution operation
     if ((freq_or_time_idx == 0) && (decoder_idx == 0))
     {
-        y = demucscpp::conv2d_tr_gemm_fused_gelu<384, 192, 8, 1, 4, 1, 0, 0, 1,
-                                                 1>(
+        y = demucscpp::conv2d_tr_fused_gelu<384, 192, 8, 1, 4, 1, 0, 0, 1, 1>(
             y, model.freq_decoders_conv_tr_weight[decoder_idx],
             model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
     }
@@ -810,8 +806,7 @@ void demucscpp_v3::apply_common_decoder(
     }
     else if ((freq_or_time_idx == 0) && (decoder_idx == 1))
     {
-        y = demucscpp::conv2d_tr_gemm_fused_gelu<192, 96, 8, 1, 4, 1, 0, 0, 1,
-                                                 1>(
+        y = demucscpp::conv2d_tr_fused_gelu<192, 96, 8, 1, 4, 1, 0, 0, 1, 1>(
             y, model.freq_decoders_conv_tr_weight[decoder_idx],
             model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
     }
@@ -823,8 +818,7 @@ void demucscpp_v3::apply_common_decoder(
     }
     else if ((freq_or_time_idx == 0) && (decoder_idx == 2))
     {
-        y = demucscpp::conv2d_tr_gemm_fused_gelu<96, 48, 8, 1, 4, 1, 0, 0, 1,
-                                                 1>(
+        y = demucscpp::conv2d_tr_fused_gelu<96, 48, 8, 1, 4, 1, 0, 0, 1, 1>(
             y, model.freq_decoders_conv_tr_weight[decoder_idx],
             model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
     }
