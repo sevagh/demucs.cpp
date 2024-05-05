@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from demucs.apply import apply_model
-from demucs.utils import debug_tensor_demucscpp
+#from demucs.utils import debug_tensor_demucscpp
 from demucs.pretrained import get_model
 from demucs.pretrained import SOURCES
 import torch
@@ -45,12 +45,12 @@ if __name__ == '__main__':
     nb_out_sources = 6 if args.six_source else 4
     print(model)
 
-    debug_tensor_demucscpp(audio, "input audio")
+    #debug_tensor_demucscpp(audio, "input audio")
 
     ref = audio.mean(0)
     audio = (audio - ref.mean()) / ref.std()
 
-    debug_tensor_demucscpp(audio, "audio post-normalization")
+    #debug_tensor_demucscpp(audio, "audio post-normalization")
 
     sources = apply_model(model, audio[None])[0]
     sources = sources * ref.std() + ref.mean()
@@ -61,7 +61,7 @@ if __name__ == '__main__':
         print(f"Saving target {target_name}")
         out_audio = sources[target_idx]
 
-        debug_tensor_demucscpp(out_audio, f"target {target_name}")
+        #debug_tensor_demucscpp(out_audio, f"target {target_name}")
 
         # write to file in directory
         if args.dest_dir is not None:
