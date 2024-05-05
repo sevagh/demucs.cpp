@@ -1386,13 +1386,22 @@ TEST(DemucsCPP_V3_Layers, End2End)
     demucscpp_v3::apply_freq_encoder_v3(model, 1, x_fake_enc_0, x_fake_enc_1);
     demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_enc_1, "x_fake_enc_1");
 
+    std::cout << "DEBUG HERE!" << std::endl;
+    std::cin.ignore();
+
     Eigen::Tensor3dXf x_fake_enc_2(192, 32, 336);
     demucscpp_v3::apply_freq_encoder_v3(model, 2, x_fake_enc_1, x_fake_enc_2);
     demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_enc_2, "x_fake_enc_2");
 
+    std::cout << "DEBUG HERE!" << std::endl;
+    std::cin.ignore();
+
     Eigen::Tensor3dXf x_fake_enc_3(384, 8, 336);
     demucscpp_v3::apply_freq_encoder_v3(model, 3, x_fake_enc_2, x_fake_enc_3);
     demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_enc_3, "x_fake_enc_3");
+
+    std::cout << "DEBUG HERE!" << std::endl;
+    std::cin.ignore();
 
     Eigen::Tensor3dXf xt_fake(1, 2, 343980);
 
@@ -1422,20 +1431,32 @@ TEST(DemucsCPP_V3_Layers, End2End)
 
     demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_enc_0, "xt_fake_enc_0");
 
+    std::cout << "DEBUG HERE!" << std::endl;
+    std::cin.ignore();
+
     Eigen::Tensor3dXf xt_fake_enc_1(1, 96, 21499);
     demucscpp_v3::apply_time_encoder_v3(model, 1, xt_fake_enc_0, xt_fake_enc_1);
 
     demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_enc_1, "xt_fake_enc_1");
+
+    std::cout << "DEBUG HERE!" << std::endl;
+    std::cin.ignore();
 
     Eigen::Tensor3dXf xt_fake_enc_2(1, 192, 5375);
 
     demucscpp_v3::apply_time_encoder_v3(model, 2, xt_fake_enc_1, xt_fake_enc_2);
     demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_enc_2, "xt_fake_enc_2");
 
+    std::cout << "DEBUG HERE!" << std::endl;
+    std::cin.ignore();
+
     Eigen::Tensor3dXf xt_fake_enc_3(1, 384, 1344);
 
     demucscpp_v3::apply_time_encoder_v3(model, 3, xt_fake_enc_2, xt_fake_enc_3);
     demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_enc_3, "xt_fake_enc_3");
+
+    std::cout << "DEBUG HERE!" << std::endl;
+    std::cin.ignore();
 
     // calculate segment in samples
     int segment_samples =
@@ -1450,6 +1471,9 @@ TEST(DemucsCPP_V3_Layers, End2End)
 
     demucscppdebug_test_v3::debug_tensor_3dxf(xt_fake_enc_4, "xt_fake_enc_4");
 
+    std::cout << "DEBUG HERE!" << std::endl;
+    std::cin.ignore();
+
     // now apply the shared encoders with time inject
 
     Eigen::Tensor3dXf x_fake_enc_4(768, 1, 336);
@@ -1457,6 +1481,9 @@ TEST(DemucsCPP_V3_Layers, End2End)
                                        x_fake_enc_4, buffers);
 
     demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_enc_4, "x_fake_enc_4");
+
+    std::cout << "DEBUG HERE!" << std::endl;
+    std::cin.ignore();
 
     Eigen::Tensor3dXf x_fake_shared_enc_5(1536, 1, 168);
     demucscpp_v3::apply_shared_encoder_5(model, x_fake_enc_4, x_fake_shared_enc_5, buffers);

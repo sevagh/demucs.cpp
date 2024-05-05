@@ -750,12 +750,19 @@ void demucscpp_v3::apply_dconv_v3(const struct demucscpp_v3::demucs_v3_model &mo
         break;
     };
 
-    y = demucscpp_v3::groupnorm::group_norm_fused_gelu(
+    //y = demucscpp_v3::groupnorm::group_norm_fused_gelu(
+    //    y,
+    //    model.dconv_layers_1_groupnorm_weight[freq_idx][layer_idx]
+    //                                         [0],
+    //    model.dconv_layers_1_groupnorm_bias[freq_idx][layer_idx][0],
+    //    1,
+    //    1e-05);
+
+    y = demucscpp::group_norm_fused_gelu(
         y,
         model.dconv_layers_1_groupnorm_weight[freq_idx][layer_idx]
                                              [0],
         model.dconv_layers_1_groupnorm_bias[freq_idx][layer_idx][0],
-        1,
         1e-05);
 
     switch (layer_idx)
