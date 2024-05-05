@@ -1445,6 +1445,9 @@ struct demucs_v3_segment_buffers
                     local_attn_decay_kernel(d, t) = -local_attn_decays(d) * std::abs(local_attn_delta(0, t)) / std::sqrt(LOCAL_ATTN_N_DECAY);
                 }
             }
+
+            x_decode.setZero();
+            x_shared_5_empty_inject.setZero();
         };
 };
 

@@ -601,7 +601,7 @@ void demucscpp_v3::apply_freq_shared_encoder_4_5(const struct demucscpp_v3::demu
     };
 
     // apply groupnorm
-    y = demucscpp::group_norm(y, model.encoder_4_5_norm2_weight[encoder_idx],
+    y = demucscpp_v3::groupnorm::group_norm(y, model.encoder_4_5_norm2_weight[encoder_idx],
                              model.encoder_4_5_norm2_bias[encoder_idx], 4, 1e-05);
 
     // copy into x_out
@@ -629,7 +629,7 @@ Eigen::Tensor3dXf demucscpp_v3::apply_shared_decoder_0(
         model.decoder_0_1_rewrite_bias[decoder_idx]);
 
     // apply groupnorm1 with norm1 weights
-    y = demucscpp::group_norm(y, model.decoder_0_1_norm1_weight[decoder_idx],
+    y = demucscpp_v3::groupnorm::group_norm(y, model.decoder_0_1_norm1_weight[decoder_idx],
                             model.decoder_0_1_norm1_bias[decoder_idx], 4, 1e-05);
 
     y = demucscpp::glu(y, 1);

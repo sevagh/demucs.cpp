@@ -80,10 +80,10 @@ other           ==> SDR:   7.123  SIR:  11.373  ISR:  14.373  SAR:   7.907
 ```
 CPP inference (this codebase, `demucs_v3.cpp`):
 ```
-vocals          ==> SDR:   7.834  SIR:  19.127  ISR:  13.911  SAR:   8.061
-drums           ==> SDR:   8.991  SIR:  16.733  ISR:  15.951  SAR:   9.992
-bass            ==> SDR:   3.500  SIR:  10.056  ISR:   6.891  SAR:   3.020
-other           ==> SDR:   6.983  SIR:  10.488  ISR:  13.674  SAR:   7.750
+vocals          ==> SDR:   7.907  SIR:  19.652  ISR:  15.472  SAR:   8.066
+drums           ==> SDR:   9.376  SIR:  17.794  ISR:  16.601  SAR:  10.040
+bass            ==> SDR:   3.677  SIR:   9.981  ISR:   6.944  SAR:   2.886
+other           ==> SDR:   7.034  SIR:  11.171  ISR:  14.239  SAR:   7.554
 ```
 
 ### Performance of multi-threaded inference

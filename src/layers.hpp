@@ -142,21 +142,21 @@ namespace groupnorm {
 
         int group_size = channels / num_groups;
 
-        for (int i = 0; i < freq; ++i)
+        for (int g = 0; g < num_groups; ++g)
         {
-            for (int g = 0; g < num_groups; ++g)
+            int start = g * group_size;
+            int end = (g + 1) * group_size;
+
+            Eigen::Tensor3dXf slice = x.slice(
+                Eigen::array<int, 3>{0, start, 0},
+                Eigen::array<int, 3>{freq, group_size, width});
+
+            Eigen::Tensor<float, 0> mean_tensor = slice.mean();
+            float mean = mean_tensor(0);
+            float var = demucscpp::calculate_variance(slice, mean);
+
+            for (int i = 0; i < freq; ++i)
             {
-                int start = g * group_size;
-                int end = (g + 1) * group_size;
-
-                Eigen::Tensor3dXf slice = x.slice(
-                    Eigen::array<int, 3>{i, start, 0},
-                    Eigen::array<int, 3>{1, group_size, width});
-
-                Eigen::Tensor<float, 0> mean_tensor = slice.mean();
-                float mean = mean_tensor(0);
-                float var = demucscpp::calculate_variance(slice, mean);
-
                 for (int c = start; c < end; ++c)
                 {
                     for (int w = 0; w < width; ++w)
