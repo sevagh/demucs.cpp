@@ -20,9 +20,18 @@ inline Eigen::MatrixXf im2col(const Eigen::Tensor3dXf &input)
     int in_height = input.dimension(1);
     int in_width = input.dimension(2);
 
-    // Apply floating point division before ceiling to correctly calculate dimensions
-    int height_col = static_cast<int>(std::ceil((in_height + 2 * pad_height - dilation_height * (kernel_height - 1) - 1) / float(stride_height)) + 1);
-    int width_col = static_cast<int>(std::ceil((in_width + 2 * pad_width - dilation_width * (kernel_width - 1) - 1) / float(stride_width)) + 1);
+    // Apply floating point division before ceiling to correctly calculate
+    // dimensions
+    int height_col =
+        static_cast<int>(std::ceil((in_height + 2 * pad_height -
+                                    dilation_height * (kernel_height - 1) - 1) /
+                                   float(stride_height)) +
+                         1);
+    int width_col =
+        static_cast<int>(std::ceil((in_width + 2 * pad_width -
+                                    dilation_width * (kernel_width - 1) - 1) /
+                                   float(stride_width)) +
+                         1);
 
     Eigen::MatrixXf output(height_col * width_col,
                            in_channels * kernel_height * kernel_width);
@@ -70,8 +79,16 @@ Eigen::Tensor3dXf conv2d_gemm(const Eigen::Tensor3dXf &x,
     int in_width = x.dimension(2);
 
     // Calculate output dimensions with the correct application of ceil
-    int out_height = static_cast<int>(std::ceil((float)(in_height + 2 * pad_height - (kernel_height - 1) - 1) / stride_height)) + 1;
-    int out_width = static_cast<int>(std::ceil((float)(in_width + 2 * pad_width - (kernel_width - 1) - 1) / stride_width)) + 1;
+    int out_height =
+        static_cast<int>(std::ceil(
+            (float)(in_height + 2 * pad_height - (kernel_height - 1) - 1) /
+            stride_height)) +
+        1;
+    int out_width =
+        static_cast<int>(std::ceil(
+            (float)(in_width + 2 * pad_width - (kernel_width - 1) - 1) /
+            stride_width)) +
+        1;
 
     // Apply im2col
     Eigen::MatrixXf im2col_matrix =
@@ -133,8 +150,16 @@ Eigen::Tensor3dXf conv2d_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
     int in_width = x.dimension(2);
 
     // Calculate output dimensions with the correct application of ceil
-    int out_height = static_cast<int>(std::ceil((float)(in_height + 2 * pad_height - (kernel_height - 1) - 1) / stride_height)) + 1;
-    int out_width = static_cast<int>(std::ceil((float)(in_width + 2 * pad_width - (kernel_width - 1) - 1) / stride_width)) + 1;
+    int out_height =
+        static_cast<int>(std::ceil(
+            (float)(in_height + 2 * pad_height - (kernel_height - 1) - 1) /
+            stride_height)) +
+        1;
+    int out_width =
+        static_cast<int>(std::ceil(
+            (float)(in_width + 2 * pad_width - (kernel_width - 1) - 1) /
+            stride_width)) +
+        1;
 
     // Apply im2col
     Eigen::MatrixXf im2col_matrix =
@@ -258,30 +283,48 @@ Eigen::MatrixXf im2col_transposed(const Eigen::Tensor3dXf &input)
     int input_width = input.dimension(2);
 
     // Calculate the effective kernel size after dilation
-    int effective_kernel_height = kernel_height + (kernel_height - 1) * (dilation_height - 1);
-    int effective_kernel_width = kernel_width + (kernel_width - 1) * (dilation_width - 1);
+    int effective_kernel_height =
+        kernel_height + (kernel_height - 1) * (dilation_height - 1);
+    int effective_kernel_width =
+        kernel_width + (kernel_width - 1) * (dilation_width - 1);
 
     // Calculate the expanded output height and width considering dilation
-    int expanded_height = (input_height - 1) * stride_height + effective_kernel_height;
-    int expanded_width = (input_width - 1) * stride_width + effective_kernel_width;
+    int expanded_height =
+        (input_height - 1) * stride_height + effective_kernel_height;
+    int expanded_width =
+        (input_width - 1) * stride_width + effective_kernel_width;
 
     // Initialize the output matrix
-    Eigen::MatrixXf output = Eigen::MatrixXf::Zero(expanded_height * expanded_width, channels * kernel_height * kernel_width);
+    Eigen::MatrixXf output =
+        Eigen::MatrixXf::Zero(expanded_height * expanded_width,
+                              channels * kernel_height * kernel_width);
 
     // Populate the output matrix
-    for (int c = 0; c < channels; ++c) {
-        for (int kh = 0; kh < kernel_height; ++kh) {
-            for (int kw = 0; kw < kernel_width; ++kw) {
-                for (int h = 0; h < input_height; ++h) {
-                    for (int w = 0; w < input_width; ++w) {
+    for (int c = 0; c < channels; ++c)
+    {
+        for (int kh = 0; kh < kernel_height; ++kh)
+        {
+            for (int kw = 0; kw < kernel_width; ++kw)
+            {
+                for (int h = 0; h < input_height; ++h)
+                {
+                    for (int w = 0; w < input_width; ++w)
+                    {
                         // Adjust calculation for dilation
-                        int expanded_h = h * stride_height + (kh * dilation_height) - pad_height;
-                        int expanded_w = w * stride_width + (kw * dilation_width) - pad_width;
+                        int expanded_h = h * stride_height +
+                                         (kh * dilation_height) - pad_height;
+                        int expanded_w = w * stride_width +
+                                         (kw * dilation_width) - pad_width;
 
-                        // Check if the indices are within the bounds of the expanded output
-                        if (expanded_h >= 0 && expanded_h < expanded_height && expanded_w >= 0 && expanded_w < expanded_width) {
-                            int col_index = expanded_h * expanded_width + expanded_w;
-                            int row_index = c * kernel_height * kernel_width + kh * kernel_width + kw;
+                        // Check if the indices are within the bounds of the
+                        // expanded output
+                        if (expanded_h >= 0 && expanded_h < expanded_height &&
+                            expanded_w >= 0 && expanded_w < expanded_width)
+                        {
+                            int col_index =
+                                expanded_h * expanded_width + expanded_w;
+                            int row_index = c * kernel_height * kernel_width +
+                                            kh * kernel_width + kw;
                             output(col_index, row_index) = input(c, h, w);
                         }
                     }
@@ -303,11 +346,15 @@ Eigen::Tensor3dXf conv2d_tr_gemm(const Eigen::Tensor3dXf &x,
     int in_height = x.dimension(1);
     int in_width = x.dimension(2);
 
-    int effective_kernel_height = kernel_height + (kernel_height - 1) * (dilation_height - 1);
-    int effective_kernel_width = kernel_width + (kernel_width - 1) * (dilation_width - 1);
+    int effective_kernel_height =
+        kernel_height + (kernel_height - 1) * (dilation_height - 1);
+    int effective_kernel_width =
+        kernel_width + (kernel_width - 1) * (dilation_width - 1);
 
-    int out_height = (in_height - 1) * stride_height + effective_kernel_height - 2 * pad_height;
-    int out_width = (in_width - 1) * stride_width + effective_kernel_width - 2 * pad_width;
+    int out_height = (in_height - 1) * stride_height + effective_kernel_height -
+                     2 * pad_height;
+    int out_width =
+        (in_width - 1) * stride_width + effective_kernel_width - 2 * pad_width;
 
     //  Apply an adapted im2col for transposed convolution
     Eigen::MatrixXf im2col_matrix =
@@ -370,11 +417,15 @@ Eigen::Tensor3dXf conv2d_tr_gemm_fused_gelu(const Eigen::Tensor3dXf &x,
     int in_height = x.dimension(1);
     int in_width = x.dimension(2);
 
-    int effective_kernel_height = kernel_height + (kernel_height - 1) * (dilation_height - 1);
-    int effective_kernel_width = kernel_width + (kernel_width - 1) * (dilation_width - 1);
+    int effective_kernel_height =
+        kernel_height + (kernel_height - 1) * (dilation_height - 1);
+    int effective_kernel_width =
+        kernel_width + (kernel_width - 1) * (dilation_width - 1);
 
-    int out_height = (in_height - 1) * stride_height + effective_kernel_height - 2 * pad_height;
-    int out_width = (in_width - 1) * stride_width + effective_kernel_width - 2 * pad_width;
+    int out_height = (in_height - 1) * stride_height + effective_kernel_height -
+                     2 * pad_height;
+    int out_width =
+        (in_width - 1) * stride_width + effective_kernel_width - 2 * pad_width;
 
     //  Apply an adapted im2col for transposed convolution
     Eigen::MatrixXf im2col_matrix =
@@ -489,25 +540,6 @@ Eigen::Tensor3dXf conv1d_tr_fused_gelu(const Eigen::Tensor3dXf &x,
         conv2d_tr_gemm_fused_gelu<in_channels, out_channels, kernel_size, 1,
                                   stride, 1, pad, 0, dilation, 1>(x_shuff, w_4d,
                                                                   b);
-
-    // Move end axis to the front
-    Eigen::Tensor3dXf y_out_shuf =
-        y_out.shuffle(Eigen::array<int, 3>({2, 0, 1}));
-
-    return y_out_shuf;
-}
-
-template <int in_channels, int out_channels, int kernel_size_height, int kernel_size_width, int stride_height, int stride_width,
-          int pad_height, int pad_width, int dilation_height, int dilation_width>
-Eigen::Tensor3dXf conv2d_tr_fused_gelu(const Eigen::Tensor3dXf &x,
-                                       const Eigen::Tensor4dXf &w,
-                                       const Eigen::Tensor1dXf &b)
-{
-    // Call the 2D transposed convolution function
-    Eigen::Tensor3dXf y_out =
-        conv2d_tr_gemm_fused_gelu<in_channels, out_channels, kernel_size_height, kernel_size_width,
-                                  stride_height, stride_width, pad_height, pad_width, dilation_height, dilation_width>(
-                                    x, w, b);
 
     // Move end axis to the front
     Eigen::Tensor3dXf y_out_shuf =

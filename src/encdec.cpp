@@ -363,10 +363,9 @@ void demucscpp::apply_time_decoder(const struct demucscpp::demucs_model &model,
                           {yt.dimension(0), yt.dimension(1), out_length}));
 }
 
-void demucscpp_v3::apply_freq_encoder_v3(const struct demucscpp_v3::demucs_v3_model &model,
-                                   int encoder_idx,
-                                   const Eigen::Tensor3dXf &x_in,
-                                   Eigen::Tensor3dXf &x_out)
+void demucscpp_v3::apply_freq_encoder_v3(
+    const struct demucscpp_v3::demucs_v3_model &model, int encoder_idx,
+    const Eigen::Tensor3dXf &x_in, Eigen::Tensor3dXf &x_out)
 {
     Eigen::Tensor3dXf x_shuf = x_in.shuffle(Eigen::array<int, 3>({2, 0, 1}));
 
@@ -400,7 +399,7 @@ void demucscpp_v3::apply_freq_encoder_v3(const struct demucscpp_v3::demucs_v3_mo
     // reverse all dims
     Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({2, 1, 0}));
     demucscpp_v3::apply_dconv_v3(model, y_shuff, 0, encoder_idx,
-                           y_shuff.dimension(2));
+                                 y_shuff.dimension(2));
 
     // swap back from H,C,W to C,H,W
     // then put W in front to use conv1d function for width=1 conv2d
@@ -437,10 +436,9 @@ void demucscpp_v3::apply_freq_encoder_v3(const struct demucscpp_v3::demucs_v3_mo
     x_out = demucscpp::glu(y_shuff, 0);
 }
 
-void demucscpp_v3::apply_time_encoder_v3(const struct demucscpp_v3::demucs_v3_model &model,
-                                   int tencoder_idx,
-                                   const Eigen::Tensor3dXf &xt_in,
-                                   Eigen::Tensor3dXf &xt_out)
+void demucscpp_v3::apply_time_encoder_v3(
+    const struct demucscpp_v3::demucs_v3_model &model, int tencoder_idx,
+    const Eigen::Tensor3dXf &xt_in, Eigen::Tensor3dXf &xt_out)
 {
     int crop = demucscpp::TIME_BRANCH_LEN_0;
     // switch case for tencoder_idx
@@ -521,25 +519,24 @@ void demucscpp_v3::apply_time_encoder_v3(const struct demucscpp_v3::demucs_v3_mo
     xt_out = demucscpp::glu(yt, 1);
 }
 
-void demucscpp_v3::apply_time_encoder_4(const struct demucscpp_v3::demucs_v3_model &model,
-                                   const Eigen::Tensor3dXf &xt_in,
-                                   Eigen::Tensor3dXf &xt_out)
+void demucscpp_v3::apply_time_encoder_4(
+    const struct demucscpp_v3::demucs_v3_model &model,
+    const Eigen::Tensor3dXf &xt_in, Eigen::Tensor3dXf &xt_out)
 {
     // now implement the forward pass
     // first, apply the convolution
     // Conv1d(2, 48, kernel_size=(8,), stride=(4,), padding=(2,))
     Eigen::Tensor3dXf yt = demucscpp::conv1d<384, 768, 8, 4, 2, 1>(
-            xt_in, model.tencoder_4_conv_weight,
-            model.tencoder_4_conv_bias);
+        xt_in, model.tencoder_4_conv_weight, model.tencoder_4_conv_bias);
 
     xt_out = yt;
 }
 
-void demucscpp_v3::apply_freq_encoder_4(const struct demucscpp_v3::demucs_v3_model &model,
-                                   const Eigen::Tensor3dXf &x_in,
-                                   const Eigen::Tensor3dXf &x_inject,
-                                   Eigen::Tensor3dXf &x_out,
-                                   struct demucscpp_v3::demucs_v3_segment_buffers &buffers)
+void demucscpp_v3::apply_freq_encoder_4(
+    const struct demucscpp_v3::demucs_v3_model &model,
+    const Eigen::Tensor3dXf &x_in, const Eigen::Tensor3dXf &x_inject,
+    Eigen::Tensor3dXf &x_out,
+    struct demucscpp_v3::demucs_v3_segment_buffers &buffers)
 {
     const int encoder_idx = 0;
 
@@ -556,12 +553,13 @@ void demucscpp_v3::apply_freq_encoder_4(const struct demucscpp_v3::demucs_v3_mod
     y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2})) + x_inject;
 
     // apply groupnorm
-    y = groupnorm::group_norm_fused_gelu(y_shuff, model.encoder_4_5_norm1_weight[encoder_idx],
-                             model.encoder_4_5_norm1_bias[encoder_idx], 4, 1e-05);
+    y = groupnorm::group_norm_fused_gelu(
+        y_shuff, model.encoder_4_5_norm1_weight[encoder_idx],
+        model.encoder_4_5_norm1_bias[encoder_idx], 4, 1e-05);
 
     // special dconv with bilstm + local attn
     demucscpp_v3::apply_dconv_v3_encoder_4_5(model, y, encoder_idx,
-                           y_shuff.dimension(2), buffers);
+                                             y_shuff.dimension(2), buffers);
 
     y = demucscpp::conv1d<768, 1536, 1, 1, 0, 1>(
         y, model.encoder_4_5_rewrite_weight[encoder_idx],
@@ -569,17 +567,18 @@ void demucscpp_v3::apply_freq_encoder_4(const struct demucscpp_v3::demucs_v3_mod
 
     // apply groupnorm
     y = demucscpp::group_norm(y, model.encoder_4_5_norm2_weight[encoder_idx],
-                             model.encoder_4_5_norm2_bias[encoder_idx], 4, 1e-05);
+                              model.encoder_4_5_norm2_bias[encoder_idx], 4,
+                              1e-05);
 
     // copy into x_out
     y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
     x_out = demucscpp::glu(y_shuff, 0);
 }
 
-void demucscpp_v3::apply_shared_encoder_5(const struct demucscpp_v3::demucs_v3_model &model,
-                                   const Eigen::Tensor3dXf &x_in,
-                                   Eigen::Tensor3dXf &x_out,
-                                   struct demucscpp_v3::demucs_v3_segment_buffers &buffers)
+void demucscpp_v3::apply_shared_encoder_5(
+    const struct demucscpp_v3::demucs_v3_model &model,
+    const Eigen::Tensor3dXf &x_in, Eigen::Tensor3dXf &x_out,
+    struct demucscpp_v3::demucs_v3_segment_buffers &buffers)
 {
     // 2D Convolution operation
     Eigen::Tensor3dXf y;
@@ -596,12 +595,13 @@ void demucscpp_v3::apply_shared_encoder_5(const struct demucscpp_v3::demucs_v3_m
         model.encoder_4_5_conv_bias[encoder_idx]);
 
     // apply groupnorm
-    y = groupnorm::group_norm_fused_gelu(y, model.encoder_4_5_norm1_weight[encoder_idx],
-                             model.encoder_4_5_norm1_bias[encoder_idx], 4, 1e-05);
+    y = groupnorm::group_norm_fused_gelu(
+        y, model.encoder_4_5_norm1_weight[encoder_idx],
+        model.encoder_4_5_norm1_bias[encoder_idx], 4, 1e-05);
 
     // special dconv with bilstm + local attn
     demucscpp_v3::apply_dconv_v3_encoder_4_5(model, y, encoder_idx,
-                           y.dimension(2), buffers);
+                                             y.dimension(2), buffers);
 
     // need rewrite, norm2, glu
     y = demucscpp::conv1d<1536, 3072, 1, 1, 0, 1>(
@@ -610,15 +610,15 @@ void demucscpp_v3::apply_shared_encoder_5(const struct demucscpp_v3::demucs_v3_m
 
     // apply groupnorm
     y = demucscpp::group_norm(y, model.encoder_4_5_norm2_weight[encoder_idx],
-                             model.encoder_4_5_norm2_bias[encoder_idx], 4, 1e-05);
+                              model.encoder_4_5_norm2_bias[encoder_idx], 4,
+                              1e-05);
 
     // copy into x_out
     x_out = demucscpp::glu(y, 1);
 }
 
 Eigen::Tensor3dXf demucscpp_v3::apply_shared_decoder_0(
-    const struct demucscpp_v3::demucs_v3_model &model,
-    Eigen::Tensor3dXf &x_out,
+    const struct demucscpp_v3::demucs_v3_model &model, Eigen::Tensor3dXf &x_out,
     const Eigen::Tensor3dXf &skip)
 {
     const int decoder_idx = 0;
@@ -632,7 +632,8 @@ Eigen::Tensor3dXf demucscpp_v3::apply_shared_decoder_0(
 
     // apply groupnorm1 with norm1 weights
     y = groupnorm::group_norm(y, model.decoder_0_1_norm1_weight[decoder_idx],
-                            model.decoder_0_1_norm1_bias[decoder_idx], 4, 1e-05);
+                              model.decoder_0_1_norm1_bias[decoder_idx], 4,
+                              1e-05);
 
     y = demucscpp::glu(y, 1);
 
@@ -645,8 +646,9 @@ Eigen::Tensor3dXf demucscpp_v3::apply_shared_decoder_0(
         y, model.decoder_0_conv_tr_weight,
         model.decoder_0_1_conv_tr_bias[decoder_idx]);
 
-    y = groupnorm::group_norm_fused_gelu(y, model.decoder_0_1_norm2_weight[decoder_idx],
-                            model.decoder_0_1_norm2_bias[decoder_idx], 4, 1e-05);
+    y = groupnorm::group_norm_fused_gelu(
+        y, model.decoder_0_1_norm2_weight[decoder_idx],
+        model.decoder_0_1_norm2_bias[decoder_idx], 4, 1e-05);
 
     // remove extra elems equivalent to `1:337`
     x_out = y.slice(Eigen::array<Eigen::Index, 3>({0, 0, 1}),
@@ -658,8 +660,7 @@ Eigen::Tensor3dXf demucscpp_v3::apply_shared_decoder_0(
 
 Eigen::Tensor3dXf demucscpp_v3::apply_freq_decoder_1(
     const struct demucscpp_v3::demucs_v3_model &model,
-    const Eigen::Tensor3dXf &x_in,
-    Eigen::Tensor3dXf &x_out,
+    const Eigen::Tensor3dXf &x_in, Eigen::Tensor3dXf &x_out,
     const Eigen::Tensor3dXf &skip)
 {
     const int decoder_idx = 1;
@@ -673,7 +674,8 @@ Eigen::Tensor3dXf demucscpp_v3::apply_freq_decoder_1(
 
     // apply groupnorm1 with norm1 weights
     y = groupnorm::group_norm_2(y, model.decoder_0_1_norm1_weight[decoder_idx],
-                            model.decoder_0_1_norm1_bias[decoder_idx], 4, 1e-05);
+                                model.decoder_0_1_norm1_bias[decoder_idx], 4,
+                                1e-05);
 
     y = demucscpp::glu(y, 0);
 
@@ -688,8 +690,9 @@ Eigen::Tensor3dXf demucscpp_v3::apply_freq_decoder_1(
         y, model.decoder_1_conv_tr_weight,
         model.decoder_0_1_conv_tr_bias[decoder_idx]);
 
-    y = groupnorm::group_norm_fused_gelu_2(y, model.decoder_0_1_norm2_weight[decoder_idx],
-                            model.decoder_0_1_norm2_bias[decoder_idx], 4, 1e-05);
+    y = groupnorm::group_norm_fused_gelu_2(
+        y, model.decoder_0_1_norm2_weight[decoder_idx],
+        model.decoder_0_1_norm2_bias[decoder_idx], 4, 1e-05);
 
     // no slicing for this one
 
@@ -699,8 +702,7 @@ Eigen::Tensor3dXf demucscpp_v3::apply_freq_decoder_1(
 
 void demucscpp_v3::apply_time_decoder_0(
     const struct demucscpp_v3::demucs_v3_model &model,
-    const Eigen::Tensor3dXf &x_in,
-    Eigen::Tensor3dXf &x_out)
+    const Eigen::Tensor3dXf &x_in, Eigen::Tensor3dXf &x_out)
 {
     // simple decoder
     // rewrite and conv_tr, no group norms
@@ -717,7 +719,7 @@ void demucscpp_v3::apply_time_decoder_0(
 
     // now apply groupnorm2 with norm2 weights
     y = groupnorm::group_norm_fused_gelu(y, model.tdecoder_0_norm2_weight,
-                             model.tdecoder_0_norm2_bias, 4, 1e-05);
+                                         model.tdecoder_0_norm2_bias, 4, 1e-05);
 
     // for time branch, crop to length
     int out_length = x_out.dimension(2);
@@ -728,10 +730,8 @@ void demucscpp_v3::apply_time_decoder_0(
 
 void demucscpp_v3::apply_common_decoder(
     const struct demucscpp_v3::demucs_v3_model &model,
-    const int freq_or_time_idx,
-    const int decoder_idx,
-    const Eigen::Tensor3dXf &x_in,
-    Eigen::Tensor3dXf &x_out,
+    const int freq_or_time_idx, const int decoder_idx,
+    const Eigen::Tensor3dXf &x_in, Eigen::Tensor3dXf &x_out,
     const Eigen::Tensor3dXf &skip)
 {
     // simple decoder
@@ -740,35 +740,50 @@ void demucscpp_v3::apply_common_decoder(
     Eigen::Tensor3dXf y = x_in + skip;
 
     // first glu(norm1(rewrite))
-    if ((freq_or_time_idx == 0) && (decoder_idx == 0)) {
+    if ((freq_or_time_idx == 0) && (decoder_idx == 0))
+    {
         y = demucscpp::conv2d<384, 768, 3, 3, 1, 1, 1, 1, 1, 1>(
             y, model.freq_decoders_rewrite_weight[decoder_idx],
             model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
-    } else if ((freq_or_time_idx == 1) && (decoder_idx == 0)) {
+    }
+    else if ((freq_or_time_idx == 1) && (decoder_idx == 0))
+    {
         y = demucscpp::conv1d<384, 768, 3, 1, 1, 1>(
             y, model.time_decoders_rewrite_weight[decoder_idx],
             model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
-    } else if ((freq_or_time_idx == 0) && (decoder_idx == 1)) {
+    }
+    else if ((freq_or_time_idx == 0) && (decoder_idx == 1))
+    {
         y = demucscpp::conv2d<192, 384, 3, 3, 1, 1, 1, 1, 1, 1>(
             y, model.freq_decoders_rewrite_weight[decoder_idx],
             model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
-    } else if ((freq_or_time_idx == 1) && (decoder_idx == 1)) {
+    }
+    else if ((freq_or_time_idx == 1) && (decoder_idx == 1))
+    {
         y = demucscpp::conv1d<192, 384, 3, 1, 1, 1>(
             y, model.time_decoders_rewrite_weight[decoder_idx],
             model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
-    } else if ((freq_or_time_idx == 0) && (decoder_idx == 2)) {
+    }
+    else if ((freq_or_time_idx == 0) && (decoder_idx == 2))
+    {
         y = demucscpp::conv2d<96, 192, 3, 3, 1, 1, 1, 1, 1, 1>(
             y, model.freq_decoders_rewrite_weight[decoder_idx],
             model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
-    } else if ((freq_or_time_idx == 1) && (decoder_idx == 2)) {
+    }
+    else if ((freq_or_time_idx == 1) && (decoder_idx == 2))
+    {
         y = demucscpp::conv1d<96, 192, 3, 1, 1, 1>(
             y, model.time_decoders_rewrite_weight[decoder_idx],
             model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
-    } else if ((freq_or_time_idx == 0) && (decoder_idx == 3)) {
+    }
+    else if ((freq_or_time_idx == 0) && (decoder_idx == 3))
+    {
         y = demucscpp::conv2d<48, 96, 3, 3, 1, 1, 1, 1, 1, 1>(
             y, model.freq_decoders_rewrite_weight[decoder_idx],
             model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
-    } else if ((freq_or_time_idx == 1) && (decoder_idx == 3)) {
+    }
+    else if ((freq_or_time_idx == 1) && (decoder_idx == 3))
+    {
         y = demucscpp::conv1d<48, 96, 3, 1, 1, 1>(
             y, model.time_decoders_rewrite_weight[decoder_idx],
             model.decoders_rewrite_bias[freq_or_time_idx][decoder_idx]);
@@ -780,54 +795,75 @@ void demucscpp_v3::apply_common_decoder(
     // simply conv_tr
 
     // 2D Convolution operation
-    if ((freq_or_time_idx == 0) && (decoder_idx == 0)) {
-        y = demucscpp::conv2d_tr_gemm_fused_gelu<384, 192, 8, 1, 4, 1, 0, 0, 1, 1>(
+    if ((freq_or_time_idx == 0) && (decoder_idx == 0))
+    {
+        y = demucscpp::conv2d_tr_gemm_fused_gelu<384, 192, 8, 1, 4, 1, 0, 0, 1,
+                                                 1>(
             y, model.freq_decoders_conv_tr_weight[decoder_idx],
             model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
-    } else if ((freq_or_time_idx == 1) && (decoder_idx == 0)) {
+    }
+    else if ((freq_or_time_idx == 1) && (decoder_idx == 0))
+    {
         y = demucscpp::conv1d_tr_fused_gelu<384, 192, 8, 4, 0, 1>(
             y, model.time_decoders_conv_tr_weight[decoder_idx],
             model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
-    } else if ((freq_or_time_idx == 0) && (decoder_idx == 1)) {
-        y = demucscpp::conv2d_tr_gemm_fused_gelu<192, 96, 8, 1, 4, 1, 0, 0, 1, 1>(
+    }
+    else if ((freq_or_time_idx == 0) && (decoder_idx == 1))
+    {
+        y = demucscpp::conv2d_tr_gemm_fused_gelu<192, 96, 8, 1, 4, 1, 0, 0, 1,
+                                                 1>(
             y, model.freq_decoders_conv_tr_weight[decoder_idx],
             model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
-    } else if ((freq_or_time_idx == 1) && (decoder_idx == 1)) {
+    }
+    else if ((freq_or_time_idx == 1) && (decoder_idx == 1))
+    {
         y = demucscpp::conv1d_tr_fused_gelu<192, 96, 8, 4, 0, 1>(
             y, model.time_decoders_conv_tr_weight[decoder_idx],
             model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
-    } else if ((freq_or_time_idx == 0) && (decoder_idx == 2)) {
-        y = demucscpp::conv2d_tr_gemm_fused_gelu<96, 48, 8, 1, 4, 1, 0, 0, 1, 1>(
+    }
+    else if ((freq_or_time_idx == 0) && (decoder_idx == 2))
+    {
+        y = demucscpp::conv2d_tr_gemm_fused_gelu<96, 48, 8, 1, 4, 1, 0, 0, 1,
+                                                 1>(
             y, model.freq_decoders_conv_tr_weight[decoder_idx],
             model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
-    } else if ((freq_or_time_idx == 1) && (decoder_idx == 2)) {
+    }
+    else if ((freq_or_time_idx == 1) && (decoder_idx == 2))
+    {
         y = demucscpp::conv1d_tr_fused_gelu<96, 48, 8, 4, 0, 1>(
             y, model.time_decoders_conv_tr_weight[decoder_idx],
             model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
-    } else if ((freq_or_time_idx == 0) && (decoder_idx == 3)) {
+    }
+    else if ((freq_or_time_idx == 0) && (decoder_idx == 3))
+    {
         y = demucscpp::conv2d_tr<48, 16, 8, 1, 4, 1, 0, 0, 1, 1>(
             y, model.freq_decoders_conv_tr_weight[decoder_idx],
             model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
-    } else if ((freq_or_time_idx == 1) && (decoder_idx == 3)) {
+    }
+    else if ((freq_or_time_idx == 1) && (decoder_idx == 3))
+    {
         y = demucscpp::conv1d_tr<48, 8, 8, 4, 0, 1>(
             y, model.time_decoders_conv_tr_weight[decoder_idx],
             model.decoders_conv_tr_bias[freq_or_time_idx][decoder_idx]);
     }
 
-    if (freq_or_time_idx == 1) {
+    if (freq_or_time_idx == 1)
+    {
         // for time branch, crop to length
         int out_length = x_out.dimension(2);
         x_out = y.slice(Eigen::array<Eigen::Index, 3>({0, 0, 2}),
                         Eigen::array<Eigen::Index, 3>(
                             {y.dimension(0), y.dimension(1), out_length}));
-    } else {
+    }
+    else
+    {
         // for freq branch
         int desired_dim1_length = x_out.dimension(1);
 
         // remove 2 elements from begin and end of y along dimension 1 (0, 1, 2)
-        x_out = y.slice(Eigen::array<Eigen::Index, 3>({0, 2, 0}),
-                        Eigen::array<Eigen::Index, 3>(
-                            {y.dimension(0), desired_dim1_length, y.dimension(2)}));
-
+        x_out =
+            y.slice(Eigen::array<Eigen::Index, 3>({0, 2, 0}),
+                    Eigen::array<Eigen::Index, 3>(
+                        {y.dimension(0), desired_dim1_length, y.dimension(2)}));
     }
 }

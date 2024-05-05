@@ -54,12 +54,10 @@ other           ==> SDR:   7.384  SIR:  12.812  ISR:  12.977  SAR:   7.798
 ```
 CPP inference (this codebase, `demucs_ft.cpp`)
 ```
-vocals          ==> SDR:   8.594  SIR:  19.045  ISR:  16.313  SAR:   8.617
-drums           ==> SDR:  10.463  SIR:  19.782  ISR:  17.144  SAR:  11.132
-bass            ==> SDR:   4.584  SIR:   9.359  ISR:   9.068  SAR:   4.885
-other           ==> SDR:   7.426  SIR:  12.793  ISR:  12.975  SAR:   7.830
-
-
+vocals          ==> SDR:   8.679  SIR:  18.861  ISR:  16.611  SAR:   8.664
+drums           ==> SDR:  10.480  SIR:  19.898  ISR:  17.125  SAR:  11.053
+bass            ==> SDR:   4.590  SIR:   9.516  ISR:   9.102  SAR:   4.935
+other           ==> SDR:   7.370  SIR:  12.853  ISR:  12.926  SAR:   7.805
 ```
 
 ### Performance of v3 (hdemucs_mmi) model

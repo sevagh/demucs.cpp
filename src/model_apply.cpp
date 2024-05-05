@@ -111,8 +111,8 @@ shift_inference(const struct demucscpp::demucs_model &model,
 
     symmetric_zero_padding(padded_mix, full_audio, 2 * max_shift);
 
-    int offset = rand() % max_shift;
-    // int offset = 1337;
+    // int offset = rand() % max_shift;
+    int offset = 1337;
 
     std::cout << "1., apply model w/ shift, offset: " << offset << std::endl;
 
@@ -302,9 +302,9 @@ static Eigen::Tensor3dXf segment_inference(
     struct demucscpp::stft_buffers &stft_buf, demucscpp::ProgressCallback cb,
     float current_progress, float segment_progress);
 
-Eigen::Tensor3dXf demucscpp_v3::demucs_v3_inference(const struct demucscpp_v3::demucs_v3_model &model,
-                                              const Eigen::MatrixXf &audio,
-                                              demucscpp::ProgressCallback cb)
+Eigen::Tensor3dXf demucscpp_v3::demucs_v3_inference(
+    const struct demucscpp_v3::demucs_v3_model &model,
+    const Eigen::MatrixXf &audio, demucscpp::ProgressCallback cb)
 {
     // working copy to modify
     Eigen::MatrixXf full_audio = audio;
@@ -356,8 +356,8 @@ shift_inference(const struct demucscpp_v3::demucs_v3_model &model,
 
     symmetric_zero_padding(padded_mix, full_audio, 2 * max_shift);
 
-    int offset = rand() % max_shift;
-    // int offset = 1337;
+    // int offset = rand() % max_shift;
+    int offset = 1337;
 
     std::cout << "1., apply model w/ shift, offset: " << offset << std::endl;
 
@@ -394,7 +394,7 @@ split_inference(const struct demucscpp_v3::demucs_v3_model &model,
 
     // let's create reusable buffers with padded sizes
     struct demucscpp_v3::demucs_v3_segment_buffers buffers(2, segment_samples,
-                                                     nb_out_sources);
+                                                           nb_out_sources);
     struct demucscpp::stft_buffers stft_buf(buffers.padded_segment_samples);
 
     // next, use splits with weighted transition and overlap
@@ -492,11 +492,13 @@ split_inference(const struct demucscpp_v3::demucs_v3_model &model,
     return out;
 }
 
-static Eigen::Tensor3dXf segment_inference(
-    const struct demucscpp_v3::demucs_v3_model &model, Eigen::MatrixXf chunk,
-    int segment_samples, struct demucscpp_v3::demucs_v3_segment_buffers &buffers,
-    struct demucscpp::stft_buffers &stft_buf, demucscpp::ProgressCallback cb,
-    float current_progress, float segment_progress)
+static Eigen::Tensor3dXf
+segment_inference(const struct demucscpp_v3::demucs_v3_model &model,
+                  Eigen::MatrixXf chunk, int segment_samples,
+                  struct demucscpp_v3::demucs_v3_segment_buffers &buffers,
+                  struct demucscpp::stft_buffers &stft_buf,
+                  demucscpp::ProgressCallback cb, float current_progress,
+                  float segment_progress)
 {
     int chunk_length = chunk.cols();
 
@@ -506,8 +508,8 @@ static Eigen::Tensor3dXf segment_inference(
         buffers.mix, chunk, segment_samples - chunk_length);
 
     // apply demucs inference
-    demucscpp_v3::model_v3_inference(model, buffers, stft_buf, cb, current_progress,
-                               segment_progress);
+    demucscpp_v3::model_v3_inference(model, buffers, stft_buf, cb,
+                                     current_progress, segment_progress);
 
     const int nb_out_sources = 4;
 

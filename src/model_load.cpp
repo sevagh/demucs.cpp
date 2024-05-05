@@ -38,10 +38,6 @@ static size_t load_single_matrix(FILE *f, std::string &name,
                                  Eigen::MatrixXf &matrix, int *ne,
                                  int32_t nelements);
 
-static size_t load_single_tensor2d(FILE *f, std::string &name,
-                                   Eigen::Tensor2dXf &tensor, int *ne,
-                                   int32_t nelements);
-
 static size_t load_single_tensor3d(FILE *f, std::string &name,
                                    Eigen::Tensor3dXf &tensor, int *ne,
                                    int32_t nelements);
@@ -1137,47 +1133,6 @@ static size_t load_single_matrix(FILE *f, std::string &name,
     return nbytes_tensor;
 }
 
-static size_t load_single_tensor2d(FILE *f, std::string &name,
-                                   Eigen::Tensor2dXf &tensor, int *ne,
-                                   int32_t nelements)
-{
-    if (tensor.size() != nelements)
-    {
-        my_fprintf(stderr, "%s: tensor '%s' has wrong size in model file\n",
-                   __func__, name.data());
-        my_fprintf(stderr,
-                   "%s: model file shape: [%d, %d], demucs.cpp shape: [%d, "
-                   "%d]\n",
-                   __func__, ne[0], ne[1], (int)tensor.dimension(0),
-                   (int)tensor.dimension(1));
-        return 0;
-    }
-
-    // loading weights
-    const size_t bpe_half = sizeof(Eigen::half);
-    auto nbytes_tensor = tensor.size() * bpe_half;
-
-    // create a Eigen::half Eigen::Matrix to hold the quantized weights
-    // of the same shape as the float matrix
-    Eigen::Tensor<Eigen::half, 2, Eigen::RowMajor> tensor_half(ne[0], ne[1]);
-    fread(tensor_half.data(), bpe_half, nelements, f);
-
-    // Uncomment to print tensor info
-    // my_fprintf(stdout, "%16s: [%5d, %5d], type = float, %6.2f MB\n",
-    //            name.data(), ne[0], ne[1], nbytes_tensor / 1024.0 / 1024.0);
-
-    // Manually copy the data from tensor_half to tensor
-    for (int i = 0; i < ne[0]; ++i)
-    {
-        for (int j = 0; j < ne[1]; ++j)
-        {
-            tensor(i, j) = static_cast<float>(tensor_half(i, j));
-        }
-    }
-
-    return nbytes_tensor;
-}
-
 static size_t load_single_tensor3d(FILE *f, std::string &name,
                                    Eigen::Tensor3dXf &tensor, int *ne,
                                    int32_t nelements)
@@ -1344,8 +1299,8 @@ static size_t load_single_vector(FILE *f, std::string &name,
     return nbytes_vector;
 }
 
-bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
-                                  struct demucscpp_v3::demucs_v3_model *model)
+bool demucscpp_v3::load_demucs_v3_model(
+    const std::string &model_file, struct demucscpp_v3::demucs_v3_model *model)
 {
     my_fprintf(stderr, "%s: loading model\n", __func__);
 
@@ -1424,9 +1379,9 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
             break;
         }
 
-        //std::cout << "Loading tensor " << name << " with shape [" << ne[0]
-        //            << ", " << ne[1] << ", " << ne[2] << ", " << ne[3] << "]"
-        //            << std::endl;
+        // std::cout << "Loading tensor " << name << " with shape [" << ne[0]
+        //             << ", " << ne[1] << ", " << ne[2] << ", " << ne[3] << "]"
+        //             << std::endl;
 
         // match the tensor name to the correct tensor in the model
         size_t loaded_size = 0;
@@ -1462,17 +1417,16 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                                 std::to_string(j) + ".0.weight")
                 {
                     loaded_size = load_single_tensor3d(
-                        f, name,
-                        model->dconv_layers_0_conv1d_weight[0][i][j], ne,
-                        nelements);
+                        f, name, model->dconv_layers_0_conv1d_weight[0][i][j],
+                        ne, nelements);
                 }
                 else if (name == "encoder." + std::to_string(i) +
                                      ".dconv.layers." + std::to_string(j) +
                                      ".0.bias")
                 {
                     loaded_size = load_single_tensor1d(
-                        f, name, model->dconv_layers_0_conv1d_bias[0][i][j],
-                        ne, nelements);
+                        f, name, model->dconv_layers_0_conv1d_bias[0][i][j], ne,
+                        nelements);
                 }
                 else if (name == "encoder." + std::to_string(i) +
                                      ".dconv.layers." + std::to_string(j) +
@@ -1488,26 +1442,24 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                                      ".1.bias")
                 {
                     loaded_size = load_single_tensor1d(
-                        f, name,
-                        model->dconv_layers_1_groupnorm_bias[0][i][j], ne,
-                        nelements);
+                        f, name, model->dconv_layers_1_groupnorm_bias[0][i][j],
+                        ne, nelements);
                 }
                 else if (name == "encoder." + std::to_string(i) +
                                      ".dconv.layers." + std::to_string(j) +
                                      ".3.weight")
                 {
                     loaded_size = load_single_tensor3d(
-                        f, name,
-                        model->dconv_layers_3_conv1d_weight[0][i][j], ne,
-                        nelements);
+                        f, name, model->dconv_layers_3_conv1d_weight[0][i][j],
+                        ne, nelements);
                 }
                 else if (name == "encoder." + std::to_string(i) +
                                      ".dconv.layers." + std::to_string(j) +
                                      ".3.bias")
                 {
                     loaded_size = load_single_tensor1d(
-                        f, name, model->dconv_layers_3_conv1d_bias[0][i][j],
-                        ne, nelements);
+                        f, name, model->dconv_layers_3_conv1d_bias[0][i][j], ne,
+                        nelements);
                 }
                 else if (name == "encoder." + std::to_string(i) +
                                      ".dconv.layers." + std::to_string(j) +
@@ -1523,9 +1475,8 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                                      ".4.bias")
                 {
                     loaded_size = load_single_tensor1d(
-                        f, name,
-                        model->dconv_layers_4_groupnorm_bias[0][i][j], ne,
-                        nelements);
+                        f, name, model->dconv_layers_4_groupnorm_bias[0][i][j],
+                        ne, nelements);
                 }
                 else if (name == "encoder." + std::to_string(i) +
                                      ".dconv.layers." + std::to_string(j) +
@@ -1540,227 +1491,368 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
 
         // Loop over encoders 4 and 5 non-dconv layers
         // dconv will be treated specially in the next block
-        for (int encoder_index = 4; encoder_index <= 5; ++encoder_index) {
+        for (int encoder_index = 4; encoder_index <= 5; ++encoder_index)
+        {
             int array_index = encoder_index - 4; // Maps 4 to 0, 5 to 1
 
-            if (name == "encoder." + std::to_string(encoder_index) + ".conv.weight") {
-                if (encoder_index == 4) {
+            if (name ==
+                "encoder." + std::to_string(encoder_index) + ".conv.weight")
+            {
+                if (encoder_index == 4)
+                {
                     loaded_size = load_single_tensor4d(
-                            f, name, model->encoder_4_conv_weight, ne, nelements);
-                } else {
+                        f, name, model->encoder_4_conv_weight, ne, nelements);
+                }
+                else
+                {
                     loaded_size = load_single_tensor3d(
                         f, name, model->encoder_5_conv_weight, ne, nelements);
                 }
-            } else if (name == "encoder." + std::to_string(encoder_index) + ".conv.bias") {
+            }
+            else if (name ==
+                     "encoder." + std::to_string(encoder_index) + ".conv.bias")
+            {
                 loaded_size = load_single_tensor1d(
-                    f, name, model->encoder_4_5_conv_bias[array_index], ne, nelements);
-            } else if (name == "encoder." + std::to_string(encoder_index) + ".norm1.weight") {
+                    f, name, model->encoder_4_5_conv_bias[array_index], ne,
+                    nelements);
+            }
+            else if (name == "encoder." + std::to_string(encoder_index) +
+                                 ".norm1.weight")
+            {
                 loaded_size = load_single_tensor1d(
-                    f, name, model->encoder_4_5_norm1_weight[array_index], ne, nelements);
-            } else if (name == "encoder." + std::to_string(encoder_index) + ".norm1.bias") {
+                    f, name, model->encoder_4_5_norm1_weight[array_index], ne,
+                    nelements);
+            }
+            else if (name ==
+                     "encoder." + std::to_string(encoder_index) + ".norm1.bias")
+            {
                 loaded_size = load_single_tensor1d(
-                    f, name, model->encoder_4_5_norm1_bias[array_index], ne, nelements);
-            } else if (name == "encoder." + std::to_string(encoder_index) + ".rewrite.weight") {
+                    f, name, model->encoder_4_5_norm1_bias[array_index], ne,
+                    nelements);
+            }
+            else if (name == "encoder." + std::to_string(encoder_index) +
+                                 ".rewrite.weight")
+            {
                 loaded_size = load_single_tensor3d(
-                    f, name, model->encoder_4_5_rewrite_weight[array_index], ne, nelements);
-            } else if (name == "encoder." + std::to_string(encoder_index) + ".rewrite.bias") {
+                    f, name, model->encoder_4_5_rewrite_weight[array_index], ne,
+                    nelements);
+            }
+            else if (name == "encoder." + std::to_string(encoder_index) +
+                                 ".rewrite.bias")
+            {
                 loaded_size = load_single_tensor1d(
-                    f, name, model->encoder_4_5_rewrite_bias[array_index], ne, nelements);
-            } else if (name == "encoder." + std::to_string(encoder_index) + ".norm2.weight") {
+                    f, name, model->encoder_4_5_rewrite_bias[array_index], ne,
+                    nelements);
+            }
+            else if (name == "encoder." + std::to_string(encoder_index) +
+                                 ".norm2.weight")
+            {
                 loaded_size = load_single_tensor1d(
-                    f, name, model->encoder_4_5_norm2_weight[array_index], ne, nelements);
-            } else if (name == "encoder." + std::to_string(encoder_index) + ".norm2.bias") {
+                    f, name, model->encoder_4_5_norm2_weight[array_index], ne,
+                    nelements);
+            }
+            else if (name ==
+                     "encoder." + std::to_string(encoder_index) + ".norm2.bias")
+            {
                 loaded_size = load_single_tensor1d(
-                    f, name, model->encoder_4_5_norm2_bias[array_index], ne, nelements);
+                    f, name, model->encoder_4_5_norm2_bias[array_index], ne,
+                    nelements);
             }
 
             // dconv time: 2 per layer
-            for (int dconv_index = 0; dconv_index < 2; ++dconv_index) {
-                if (name == "encoder." + std::to_string(encoder_index) + ".dconv.layers." +
-                                std::to_string(dconv_index) + ".0.weight") {
+            for (int dconv_index = 0; dconv_index < 2; ++dconv_index)
+            {
+                if (name == "encoder." + std::to_string(encoder_index) +
+                                ".dconv.layers." + std::to_string(dconv_index) +
+                                ".0.weight")
+                {
                     loaded_size = load_single_tensor3d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_0_conv1d_weight[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".0.bias") {
-                    loaded_size = load_single_tensor1d(
-                        f, name, model->encoder_4_5_dconv_layers_0_conv1d_bias[array_index][dconv_index], ne, nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".1.weight") {
+                        model->encoder_4_5_dconv_layers_0_conv1d_weight
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) + ".0.bias")
+                {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_1_groupnorm_weight[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".1.bias") {
+                        model->encoder_4_5_dconv_layers_0_conv1d_bias
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) + ".1.weight")
+                {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_1_groupnorm_bias[array_index][dconv_index], ne,
-                        nelements);
+                        model->encoder_4_5_dconv_layers_1_groupnorm_weight
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) + ".1.bias")
+                {
+                    loaded_size = load_single_tensor1d(
+                        f, name,
+                        model->encoder_4_5_dconv_layers_1_groupnorm_bias
+                            [array_index][dconv_index],
+                        ne, nelements);
                 }
 
                 // dconv lstm for encoder 4, 5
-                for (int lstm_index = 0; lstm_index < 2; ++lstm_index) {
-                    for (int direction = 0; direction < 2; ++direction) {
-                        std::string direction_suffix = direction == 0 ? "" : "_reverse";
-                        std::string layer_suffix = "l" + std::to_string(lstm_index);
+                for (int lstm_index = 0; lstm_index < 2; ++lstm_index)
+                {
+                    for (int direction = 0; direction < 2; ++direction)
+                    {
+                        std::string direction_suffix =
+                            direction == 0 ? "" : "_reverse";
+                        std::string layer_suffix =
+                            "l" + std::to_string(lstm_index);
 
                         if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".3.lstm.weight_ih_" + layer_suffix + direction_suffix) {
+                                        ".dconv.layers." +
+                                        std::to_string(dconv_index) +
+                                        ".3.lstm.weight_ih_" + layer_suffix +
+                                        direction_suffix)
+                        {
                             loaded_size = load_single_matrix(
                                 f, name,
-                                model->encoder_4_5_dconv_layers_3_lstm_ih_w[array_index][dconv_index][lstm_index][direction], ne,
-                                nelements);
-                        } else if (name == "encoder." + std::to_string(encoder_index) +
-                                        ".dconv.layers." + std::to_string(dconv_index) +
-                                        ".3.lstm.weight_hh_" + layer_suffix + direction_suffix) {
+                                model->encoder_4_5_dconv_layers_3_lstm_ih_w
+                                    [array_index][dconv_index][lstm_index]
+                                    [direction],
+                                ne, nelements);
+                        }
+                        else if (name == "encoder." +
+                                             std::to_string(encoder_index) +
+                                             ".dconv.layers." +
+                                             std::to_string(dconv_index) +
+                                             ".3.lstm.weight_hh_" +
+                                             layer_suffix + direction_suffix)
+                        {
                             loaded_size = load_single_matrix(
                                 f, name,
-                                model->encoder_4_5_dconv_layers_3_lstm_hh_w[array_index][dconv_index][lstm_index][direction], ne,
-                                nelements);
-                        } else if (name == "encoder." + std::to_string(encoder_index) +
-                                        ".dconv.layers." + std::to_string(dconv_index) +
-                                        ".3.lstm.bias_ih_" + layer_suffix + direction_suffix) {
+                                model->encoder_4_5_dconv_layers_3_lstm_hh_w
+                                    [array_index][dconv_index][lstm_index]
+                                    [direction],
+                                ne, nelements);
+                        }
+                        else if (name == "encoder." +
+                                             std::to_string(encoder_index) +
+                                             ".dconv.layers." +
+                                             std::to_string(dconv_index) +
+                                             ".3.lstm.bias_ih_" + layer_suffix +
+                                             direction_suffix)
+                        {
                             loaded_size = load_single_matrix(
                                 f, name,
-                                model->encoder_4_5_dconv_layers_3_lstm_ih_b[array_index][dconv_index][lstm_index][direction], ne,
-                                nelements);
-                        } else if (name == "encoder." + std::to_string(encoder_index) +
-                                        ".dconv.layers." + std::to_string(dconv_index) +
-                                        ".3.lstm.bias_hh_" + layer_suffix + direction_suffix) {
+                                model->encoder_4_5_dconv_layers_3_lstm_ih_b
+                                    [array_index][dconv_index][lstm_index]
+                                    [direction],
+                                ne, nelements);
+                        }
+                        else if (name == "encoder." +
+                                             std::to_string(encoder_index) +
+                                             ".dconv.layers." +
+                                             std::to_string(dconv_index) +
+                                             ".3.lstm.bias_hh_" + layer_suffix +
+                                             direction_suffix)
+                        {
                             loaded_size = load_single_matrix(
                                 f, name,
-                                model->encoder_4_5_dconv_layers_3_lstm_hh_b[array_index][dconv_index][lstm_index][direction], ne,
-                                nelements);
+                                model->encoder_4_5_dconv_layers_3_lstm_hh_b
+                                    [array_index][dconv_index][lstm_index]
+                                    [direction],
+                                ne, nelements);
                         }
                     }
                 }
 
                 // continue after the lstm with the attn etc.
                 if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".3.linear.weight") {
+                                ".dconv.layers." + std::to_string(dconv_index) +
+                                ".3.linear.weight")
+                {
                     loaded_size = load_single_matrix(
                         f, name,
-                        model->encoder_4_5_dconv_layers_3_linear_weight[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".3.linear.bias") {
+                        model->encoder_4_5_dconv_layers_3_linear_weight
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) +
+                                     ".3.linear.bias")
+                {
                     loaded_size = load_single_vector(
                         f, name,
-                        model->encoder_4_5_dconv_layers_3_linear_bias[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".4.content.weight") {
+                        model->encoder_4_5_dconv_layers_3_linear_bias
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) +
+                                     ".4.content.weight")
+                {
                     loaded_size = load_single_tensor3d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_4_content_weight[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".4.content.bias") {
+                        model->encoder_4_5_dconv_layers_4_content_weight
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) +
+                                     ".4.content.bias")
+                {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_4_content_bias[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".4.query.weight") {
+                        model->encoder_4_5_dconv_layers_4_content_bias
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) +
+                                     ".4.query.weight")
+                {
                     loaded_size = load_single_tensor3d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_4_query_weight[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".4.query.bias") {
+                        model->encoder_4_5_dconv_layers_4_query_weight
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) +
+                                     ".4.query.bias")
+                {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_4_query_bias[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".4.key.weight") {
+                        model->encoder_4_5_dconv_layers_4_query_bias
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) +
+                                     ".4.key.weight")
+                {
                     loaded_size = load_single_tensor3d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_4_key_weight[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".4.key.bias") {
+                        model->encoder_4_5_dconv_layers_4_key_weight
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) +
+                                     ".4.key.bias")
+                {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_4_key_bias[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".4.query_decay.weight") {
+                        model->encoder_4_5_dconv_layers_4_key_bias[array_index]
+                                                                  [dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) +
+                                     ".4.query_decay.weight")
+                {
                     loaded_size = load_single_tensor3d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_4_query_decay_weight[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".4.query_decay.bias") {
+                        model->encoder_4_5_dconv_layers_4_query_decay_weight
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) +
+                                     ".4.query_decay.bias")
+                {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_4_query_decay_bias[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".4.proj.weight") {
+                        model->encoder_4_5_dconv_layers_4_query_decay_bias
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) +
+                                     ".4.proj.weight")
+                {
                     loaded_size = load_single_tensor3d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_4_proj_weight[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".4.proj.bias") {
+                        model->encoder_4_5_dconv_layers_4_proj_weight
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) +
+                                     ".4.proj.bias")
+                {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_4_proj_bias[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".5.weight") {
+                        model
+                            ->encoder_4_5_dconv_layers_4_proj_bias[array_index]
+                                                                  [dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) + ".5.weight")
+                {
                     loaded_size = load_single_tensor3d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_5_conv1d_weight[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".5.bias") {
+                        model->encoder_4_5_dconv_layers_5_conv1d_weight
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) + ".5.bias")
+                {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_5_conv1d_bias[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".6.weight") {
+                        model->encoder_4_5_dconv_layers_5_conv1d_bias
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) + ".6.weight")
+                {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_6_groupnorm_weight[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".6.bias") {
+                        model->encoder_4_5_dconv_layers_6_groupnorm_weight
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) + ".6.bias")
+                {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_6_groupnorm_bias[array_index][dconv_index], ne,
-                        nelements);
-                } else if (name == "encoder." + std::to_string(encoder_index) +
-                                    ".dconv.layers." + std::to_string(dconv_index) +
-                                    ".8.scale") {
+                        model->encoder_4_5_dconv_layers_6_groupnorm_bias
+                            [array_index][dconv_index],
+                        ne, nelements);
+                }
+                else if (name == "encoder." + std::to_string(encoder_index) +
+                                     ".dconv.layers." +
+                                     std::to_string(dconv_index) + ".8.scale")
+                {
                     loaded_size = load_single_tensor1d(
                         f, name,
-                        model->encoder_4_5_dconv_layers_8_scale[array_index][dconv_index], ne,
-                        nelements);
+                        model->encoder_4_5_dconv_layers_8_scale[array_index]
+                                                               [dconv_index],
+                        ne, nelements);
                 }
             }
         }
@@ -1797,17 +1889,16 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                                 std::to_string(j) + ".0.weight")
                 {
                     loaded_size = load_single_tensor3d(
-                        f, name,
-                        model->dconv_layers_0_conv1d_weight[1][i][j], ne,
-                        nelements);
+                        f, name, model->dconv_layers_0_conv1d_weight[1][i][j],
+                        ne, nelements);
                 }
                 else if (name == "tencoder." + std::to_string(i) +
                                      ".dconv.layers." + std::to_string(j) +
                                      ".0.bias")
                 {
                     loaded_size = load_single_tensor1d(
-                        f, name, model->dconv_layers_0_conv1d_bias[1][i][j],
-                        ne, nelements);
+                        f, name, model->dconv_layers_0_conv1d_bias[1][i][j], ne,
+                        nelements);
                 }
                 else if (name == "tencoder." + std::to_string(i) +
                                      ".dconv.layers." + std::to_string(j) +
@@ -1823,26 +1914,24 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                                      ".1.bias")
                 {
                     loaded_size = load_single_tensor1d(
-                        f, name,
-                        model->dconv_layers_1_groupnorm_bias[1][i][j], ne,
-                        nelements);
+                        f, name, model->dconv_layers_1_groupnorm_bias[1][i][j],
+                        ne, nelements);
                 }
                 else if (name == "tencoder." + std::to_string(i) +
                                      ".dconv.layers." + std::to_string(j) +
                                      ".3.weight")
                 {
                     loaded_size = load_single_tensor3d(
-                        f, name,
-                        model->dconv_layers_3_conv1d_weight[1][i][j], ne,
-                        nelements);
+                        f, name, model->dconv_layers_3_conv1d_weight[1][i][j],
+                        ne, nelements);
                 }
                 else if (name == "tencoder." + std::to_string(i) +
                                      ".dconv.layers." + std::to_string(j) +
                                      ".3.bias")
                 {
                     loaded_size = load_single_tensor1d(
-                        f, name, model->dconv_layers_3_conv1d_bias[1][i][j],
-                        ne, nelements);
+                        f, name, model->dconv_layers_3_conv1d_bias[1][i][j], ne,
+                        nelements);
                 }
                 else if (name == "tencoder." + std::to_string(i) +
                                      ".dconv.layers." + std::to_string(j) +
@@ -1858,9 +1947,8 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
                                      ".4.bias")
                 {
                     loaded_size = load_single_tensor1d(
-                        f, name,
-                        model->dconv_layers_4_groupnorm_bias[1][i][j], ne,
-                        nelements);
+                        f, name, model->dconv_layers_4_groupnorm_bias[1][i][j],
+                        ne, nelements);
                 }
                 else if (name == "tencoder." + std::to_string(i) +
                                      ".dconv.layers." + std::to_string(j) +
@@ -1878,7 +1966,8 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
         {
             loaded_size = load_single_tensor3d(
                 f, name, model->tencoder_4_conv_weight, ne, nelements);
-        } else if (name == "tencoder.4.conv.bias")
+        }
+        else if (name == "tencoder.4.conv.bias")
         {
             loaded_size = load_single_tensor1d(
                 f, name, model->tencoder_4_conv_bias, ne, nelements);
@@ -1895,96 +1984,150 @@ bool demucscpp_v3::load_demucs_v3_model(const std::string &model_file,
         // with arrays of size [8]
 
         // start with decoder 0,1 for frequency which has its own arrays
-        for (int i = 0; i < 2; ++i) {
-            if (name == "decoder." + std::to_string(i) + ".conv_tr.weight") {
-                if (i == 0) {
+        for (int i = 0; i < 2; ++i)
+        {
+            if (name == "decoder." + std::to_string(i) + ".conv_tr.weight")
+            {
+                if (i == 0)
+                {
                     loaded_size = load_single_tensor3d(
-                        f, name, model->decoder_0_conv_tr_weight, ne, nelements);
-                } else {
-                    loaded_size = load_single_tensor4d(
-                        f, name, model->decoder_1_conv_tr_weight, ne, nelements);
+                        f, name, model->decoder_0_conv_tr_weight, ne,
+                        nelements);
                 }
-            } else if (name == "decoder." + std::to_string(i) + ".conv_tr.bias") {
+                else
+                {
+                    loaded_size = load_single_tensor4d(
+                        f, name, model->decoder_1_conv_tr_weight, ne,
+                        nelements);
+                }
+            }
+            else if (name == "decoder." + std::to_string(i) + ".conv_tr.bias")
+            {
                 loaded_size = load_single_tensor1d(
                     f, name, model->decoder_0_1_conv_tr_bias[i], ne, nelements);
-            } else if (name == "decoder." + std::to_string(i) + ".norm2.weight") {
+            }
+            else if (name == "decoder." + std::to_string(i) + ".norm2.weight")
+            {
                 loaded_size = load_single_tensor1d(
                     f, name, model->decoder_0_1_norm2_weight[i], ne, nelements);
-            } else if (name == "decoder." + std::to_string(i) + ".norm2.bias") {
+            }
+            else if (name == "decoder." + std::to_string(i) + ".norm2.bias")
+            {
                 loaded_size = load_single_tensor1d(
                     f, name, model->decoder_0_1_norm2_bias[i], ne, nelements);
-            } else if (name == "decoder." + std::to_string(i) + ".rewrite.weight") {
-                if (i == 0) {
+            }
+            else if (name == "decoder." + std::to_string(i) + ".rewrite.weight")
+            {
+                if (i == 0)
+                {
                     loaded_size = load_single_tensor3d(
-                        f, name, model->decoder_0_rewrite_weight, ne, nelements);
-                } else {
-                    loaded_size = load_single_tensor4d(
-                        f, name, model->decoder_1_rewrite_weight, ne, nelements);
+                        f, name, model->decoder_0_rewrite_weight, ne,
+                        nelements);
                 }
-            } else if (name == "decoder." + std::to_string(i) + ".rewrite.bias") {
+                else
+                {
+                    loaded_size = load_single_tensor4d(
+                        f, name, model->decoder_1_rewrite_weight, ne,
+                        nelements);
+                }
+            }
+            else if (name == "decoder." + std::to_string(i) + ".rewrite.bias")
+            {
                 loaded_size = load_single_tensor1d(
                     f, name, model->decoder_0_1_rewrite_bias[i], ne, nelements);
-            } else if (name == "decoder." + std::to_string(i) + ".norm1.weight") {
+            }
+            else if (name == "decoder." + std::to_string(i) + ".norm1.weight")
+            {
                 loaded_size = load_single_tensor1d(
                     f, name, model->decoder_0_1_norm1_weight[i], ne, nelements);
-            } else if (name == "decoder." + std::to_string(i) + ".norm1.bias") {
+            }
+            else if (name == "decoder." + std::to_string(i) + ".norm1.bias")
+            {
                 loaded_size = load_single_tensor1d(
                     f, name, model->decoder_0_1_norm1_bias[i], ne, nelements);
             }
         }
 
         // next, tdecoder_0 which is unique
-        if (name == "tdecoder.0.conv_tr.weight") {
+        if (name == "tdecoder.0.conv_tr.weight")
+        {
             loaded_size = load_single_tensor3d(
                 f, name, model->tdecoder_0_conv_tr_weight, ne, nelements);
-        } else if (name == "tdecoder.0.conv_tr.bias") {
+        }
+        else if (name == "tdecoder.0.conv_tr.bias")
+        {
             loaded_size = load_single_tensor1d(
                 f, name, model->tdecoder_0_conv_tr_bias, ne, nelements);
-        } else if (name == "tdecoder.0.norm2.weight") {
+        }
+        else if (name == "tdecoder.0.norm2.weight")
+        {
             loaded_size = load_single_tensor1d(
                 f, name, model->tdecoder_0_norm2_weight, ne, nelements);
-        } else if (name == "tdecoder.0.norm2.bias") {
+        }
+        else if (name == "tdecoder.0.norm2.bias")
+        {
             loaded_size = load_single_tensor1d(
                 f, name, model->tdecoder_0_norm2_bias, ne, nelements);
         }
 
-        // finally, decoder 2,3,4,5 and tdecoder 1,2,3,4 which are all grouped together in struct members with arrays of size [8]
-        // Loop over the first dimension [2] for freq, time
-        for (int freq_time = 0; freq_time < 2; ++freq_time) {
+        // finally, decoder 2,3,4,5 and tdecoder 1,2,3,4 which are all grouped
+        // together in struct members with arrays of size [8] Loop over the
+        // first dimension [2] for freq, time
+        for (int freq_time = 0; freq_time < 2; ++freq_time)
+        {
             // Loop over the second dimension [4] for layers
-            for (int layer = 0; layer < 4; ++layer) {
+            for (int layer = 0; layer < 4; ++layer)
+            {
                 // Construct the base name for current decoder/tdecoder
-                std::string base_name = (freq_time == 0 ? "decoder." : "tdecoder.") + std::to_string(layer + (freq_time == 0 ? 2 : 1));
+                std::string base_name =
+                    (freq_time == 0 ? "decoder." : "tdecoder.") +
+                    std::to_string(layer + (freq_time == 0 ? 2 : 1));
 
                 // Load conv_tr.weight
-                if (name == base_name + ".conv_tr.weight") {
-                    if (freq_time == 0) {
+                if (name == base_name + ".conv_tr.weight")
+                {
+                    if (freq_time == 0)
+                    {
                         loaded_size = load_single_tensor4d(
-                            f, name, model->freq_decoders_conv_tr_weight[layer], ne, nelements);
-                    } else {
+                            f, name, model->freq_decoders_conv_tr_weight[layer],
+                            ne, nelements);
+                    }
+                    else
+                    {
                         loaded_size = load_single_tensor3d(
-                            f, name, model->time_decoders_conv_tr_weight[layer], ne, nelements);
+                            f, name, model->time_decoders_conv_tr_weight[layer],
+                            ne, nelements);
                     }
                 }
                 // Load conv_tr.bias
-                else if (name == base_name + ".conv_tr.bias") {
+                else if (name == base_name + ".conv_tr.bias")
+                {
                     loaded_size = load_single_tensor1d(
-                        f, name, model->decoders_conv_tr_bias[freq_time][layer], ne, nelements);
+                        f, name, model->decoders_conv_tr_bias[freq_time][layer],
+                        ne, nelements);
                 }
                 // Load rewrite.weight
-                else if (name == base_name + ".rewrite.weight") {
-                    if (freq_time == 0) {
+                else if (name == base_name + ".rewrite.weight")
+                {
+                    if (freq_time == 0)
+                    {
                         loaded_size = load_single_tensor4d(
-                            f, name, model->freq_decoders_rewrite_weight[layer], ne, nelements);
-                    } else {
+                            f, name, model->freq_decoders_rewrite_weight[layer],
+                            ne, nelements);
+                    }
+                    else
+                    {
                         loaded_size = load_single_tensor3d(
-                            f, name, model->time_decoders_rewrite_weight[layer], ne, nelements);
+                            f, name, model->time_decoders_rewrite_weight[layer],
+                            ne, nelements);
                     }
                 }
                 // Load rewrite.bias
-                else if (name == base_name + ".rewrite.bias") {
+                else if (name == base_name + ".rewrite.bias")
+                {
                     loaded_size = load_single_tensor1d(
-                        f, name, model->decoders_rewrite_bias[freq_time][layer], ne, nelements);
+                        f, name, model->decoders_rewrite_bias[freq_time][layer],
+                        ne, nelements);
                 }
             }
         }

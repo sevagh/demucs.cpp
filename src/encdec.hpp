@@ -32,52 +32,49 @@ void apply_time_decoder(const struct demucscpp::demucs_model &model,
 namespace demucscpp_v3
 {
 void apply_freq_encoder_v3(const struct demucscpp_v3::demucs_v3_model &model,
-                        int encoder_idx, const Eigen::Tensor3dXf &x_in,
-                        Eigen::Tensor3dXf &x_out);
+                           int encoder_idx, const Eigen::Tensor3dXf &x_in,
+                           Eigen::Tensor3dXf &x_out);
 
 // forward declaration to apply a time encoder
 void apply_time_encoder_v3(const struct demucscpp_v3::demucs_v3_model &model,
-                        int encoder_idx, const Eigen::Tensor3dXf &xt_in,
-                        Eigen::Tensor3dXf &xt_out);
+                           int encoder_idx, const Eigen::Tensor3dXf &xt_in,
+                           Eigen::Tensor3dXf &xt_out);
 
 // unique time encoder 4
 void apply_time_encoder_4(const struct demucscpp_v3::demucs_v3_model &model,
-                        const Eigen::Tensor3dXf &xt_in,
-                        Eigen::Tensor3dXf &xt_out);
+                          const Eigen::Tensor3dXf &xt_in,
+                          Eigen::Tensor3dXf &xt_out);
 
 // freq encoder 4, shared encoder 5
 // uniquely contain bilstm, localattn
-void apply_freq_encoder_4(const struct demucscpp_v3::demucs_v3_model &model,
-                          const Eigen::Tensor3dXf &x_in,
-                          const Eigen::Tensor3dXf &x_inject,
-                          Eigen::Tensor3dXf &x_out,
-                          struct demucscpp_v3::demucs_v3_segment_buffers &buffers);
-
-void apply_shared_encoder_5(const struct demucscpp_v3::demucs_v3_model &model,
-                          const Eigen::Tensor3dXf &x_in,
-                          Eigen::Tensor3dXf &x_out,
-                          struct demucscpp_v3::demucs_v3_segment_buffers &buffers);
-
-Eigen::Tensor3dXf apply_shared_decoder_0(
+void apply_freq_encoder_4(
     const struct demucscpp_v3::demucs_v3_model &model,
+    const Eigen::Tensor3dXf &x_in, const Eigen::Tensor3dXf &x_inject,
     Eigen::Tensor3dXf &x_out,
-    const Eigen::Tensor3dXf &skip);
+    struct demucscpp_v3::demucs_v3_segment_buffers &buffers);
 
-Eigen::Tensor3dXf apply_freq_decoder_1(
+void apply_shared_encoder_5(
     const struct demucscpp_v3::demucs_v3_model &model,
-    const Eigen::Tensor3dXf &x_in,
-    Eigen::Tensor3dXf &x_out,
-    const Eigen::Tensor3dXf &skip);
+    const Eigen::Tensor3dXf &x_in, Eigen::Tensor3dXf &x_out,
+    struct demucscpp_v3::demucs_v3_segment_buffers &buffers);
 
-void apply_time_decoder_0(
-    const struct demucscpp_v3::demucs_v3_model &model,
-    const Eigen::Tensor3dXf &x_in,
-    Eigen::Tensor3dXf &x_out);
+Eigen::Tensor3dXf
+apply_shared_decoder_0(const struct demucscpp_v3::demucs_v3_model &model,
+                       Eigen::Tensor3dXf &x_out, const Eigen::Tensor3dXf &skip);
+
+Eigen::Tensor3dXf
+apply_freq_decoder_1(const struct demucscpp_v3::demucs_v3_model &model,
+                     const Eigen::Tensor3dXf &x_in, Eigen::Tensor3dXf &x_out,
+                     const Eigen::Tensor3dXf &skip);
+
+void apply_time_decoder_0(const struct demucscpp_v3::demucs_v3_model &model,
+                          const Eigen::Tensor3dXf &x_in,
+                          Eigen::Tensor3dXf &x_out);
 
 // forward declaration to apply a common freq or time decoder
 void apply_common_decoder(const struct demucscpp_v3::demucs_v3_model &model,
-                          const int freq_or_time_idx,
-                          const int decoder_idx, const Eigen::Tensor3dXf &x_in,
+                          const int freq_or_time_idx, const int decoder_idx,
+                          const Eigen::Tensor3dXf &x_in,
                           Eigen::Tensor3dXf &x_out,
                           const Eigen::Tensor3dXf &skip);
 

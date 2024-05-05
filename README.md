@@ -1,6 +1,6 @@
 # demucs.cpp
 
-C++17 library that implements the inference of the [Demucs v4 hybrid transformer](https://github.com/facebookresearch/demucs) and [Demucs v3 hybrid](https://github.com/facebookresearch/demucs/tree/v3) models, which are high-performance PyTorch neural networks for music source separation.
+C++17 library that implements inference for the [Demucs v4 hybrid transformer](https://github.com/facebookresearch/demucs) and [Demucs v3 hybrid](https://github.com/facebookresearch/demucs/tree/v3) models, which are high-performance PyTorch neural networks for music source separation.
 
 It uses only the standard library (C++17) and the header-only library [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) as dependencies, making it suitable to compile and run on many platforms. It was designed for low-memory environments by sacrificing the speed of the Torch implementation.
 
@@ -12,7 +12,7 @@ See my other project [umx.cpp](https://github.com/sevagh/umx.cpp) for a similar 
 
 ### Library design
 
-The inference library (in `src/`) uses the [ggml](https://github.com/ggerganov/ggml) file format to serialize the PyTorch weights of `htdemucs`, `htdemucs_6s`, and `htdemucs_ft` (4-source, 6-source, fine-tuned) to a binary file format, and [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) to implement the inference (with OpenMP as a requirement).
+The inference library (in `src/`) uses the [ggml](https://github.com/ggerganov/ggml) file format to serialize the PyTorch weights of `hdemucs_mmi`, `htdemucs`, `htdemucs_6s`, and `htdemucs_ft` (v3, v4 4-source, v4 6-source, v4 fine-tuned) to a binary file format, and [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) to implement the inference (with OpenMP as a requirement).
 
 The cli programs (in `cli-apps/`) additionally use [libnyquist](https://github.com/ddiakopoulos/libnyquist) to read and write audio files, and the multithreaded cli programs use C++11's `std::thread`.
 

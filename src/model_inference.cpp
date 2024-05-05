@@ -584,10 +584,12 @@ void demucscpp_v3::model_v3_inference(
     float float_steps = 22.0f;
 
     demucscpp_v3::apply_time_encoder_v3(model, 0, buffers.xt, buffers.xt_0);
-    cb(current_progress + segment_progress * 1.0f / float_steps, "Time encoder 0");
+    cb(current_progress + segment_progress * 1.0f / float_steps,
+       "Time encoder 0");
 
     demucscpp_v3::apply_freq_encoder_v3(model, 0, buffers.x, buffers.x_0);
-    cb(current_progress + segment_progress * 2.0f / float_steps, "Freq encoder 0");
+    cb(current_progress + segment_progress * 2.0f / float_steps,
+       "Freq encoder 0");
 
     // absorb both scaling factors in one expression
     //   i.e. eliminate const float freq_emb_scale = 0.2f;
@@ -616,49 +618,59 @@ void demucscpp_v3::model_v3_inference(
        "Freq branch: applied frequency embedding");
 
     apply_time_encoder_v3(model, 1, buffers.xt_0, buffers.xt_1);
-    cb(current_progress + segment_progress * 3.0f / float_steps, "Time encoder 1");
+    cb(current_progress + segment_progress * 3.0f / float_steps,
+       "Time encoder 1");
 
     apply_freq_encoder_v3(model, 1, buffers.x_0, buffers.x_1);
-    cb(current_progress + segment_progress * 4.0f / float_steps, "Freq encoder 1");
+    cb(current_progress + segment_progress * 4.0f / float_steps,
+       "Freq encoder 1");
 
     buffers.saved_1 = buffers.x_1;
     buffers.savedt_1 = buffers.xt_1;
 
     apply_time_encoder_v3(model, 2, buffers.xt_1, buffers.xt_2);
-    cb(current_progress + segment_progress * 5.0f / float_steps, "Time encoder 2");
+    cb(current_progress + segment_progress * 5.0f / float_steps,
+       "Time encoder 2");
 
     apply_freq_encoder_v3(model, 2, buffers.x_1, buffers.x_2);
-    cb(current_progress + segment_progress * 6.0f / float_steps, "Freq encoder 2");
+    cb(current_progress + segment_progress * 6.0f / float_steps,
+       "Freq encoder 2");
 
     buffers.saved_2 = buffers.x_2;
     buffers.savedt_2 = buffers.xt_2;
 
     apply_time_encoder_v3(model, 3, buffers.xt_2, buffers.xt_3);
-    cb(current_progress + segment_progress * 7.0f / float_steps, "Time encoder 3");
+    cb(current_progress + segment_progress * 7.0f / float_steps,
+       "Time encoder 3");
 
     apply_freq_encoder_v3(model, 3, buffers.x_2, buffers.x_3);
-    cb(current_progress + segment_progress * 8.0f / float_steps, "Freq encoder 3");
+    cb(current_progress + segment_progress * 8.0f / float_steps,
+       "Freq encoder 3");
 
     buffers.saved_3 = buffers.x_3;
     buffers.savedt_3 = buffers.xt_3;
 
     // t/time branch: unique tencoder 4
     apply_time_encoder_4(model, buffers.xt_3, buffers.xt_4);
-    cb(current_progress + segment_progress * 9.0f / float_steps, "Time encoder 4");
+    cb(current_progress + segment_progress * 9.0f / float_steps,
+       "Time encoder 4");
 
     // possible this is not used, since it is the "inject" parameter
-    //buffers.savedt_4 = buffers.xt_4;
+    // buffers.savedt_4 = buffers.xt_4;
 
     // z/spec branch: unique encoder 4 (bilstm, local attn)
     // merge time and frequency with the inject parameter
-    apply_freq_encoder_4(model, buffers.x_3, buffers.xt_4, buffers.x_4, buffers);
-    cb(current_progress + segment_progress * 10.0f / float_steps, "Freq encoder 4");
+    apply_freq_encoder_4(model, buffers.x_3, buffers.xt_4, buffers.x_4,
+                         buffers);
+    cb(current_progress + segment_progress * 10.0f / float_steps,
+       "Freq encoder 4");
 
     buffers.saved_4 = buffers.x_4;
 
     // shared: unique encoder 5 (bistlm local attn)
     apply_shared_encoder_5(model, buffers.x_4, buffers.x_shared_5, buffers);
-    cb(current_progress + segment_progress * 11.0f / float_steps, "Shared encoder 5");
+    cb(current_progress + segment_progress * 11.0f / float_steps,
+       "Shared encoder 5");
 
     // now decoder time!
 
@@ -666,39 +678,60 @@ void demucscpp_v3::model_v3_inference(
 
     // start from 0 tensors
 
-    Eigen::Tensor3dXf pre_t_unused = apply_shared_decoder_0(model, buffers.x_4, buffers.x_shared_5);
-    cb(current_progress + segment_progress * 12.0f / float_steps, "Shared decoder 0");
+    Eigen::Tensor3dXf pre_t_unused =
+        apply_shared_decoder_0(model, buffers.x_4, buffers.x_shared_5);
+    cb(current_progress + segment_progress * 12.0f / float_steps,
+       "Shared decoder 0");
 
-    Eigen::Tensor3dXf pre_t = apply_freq_decoder_1(model, buffers.x_4, buffers.x_3, buffers.saved_4);
-    cb(current_progress + segment_progress * 13.0f / float_steps, "Freq decoder 1");
+    Eigen::Tensor3dXf pre_t =
+        apply_freq_decoder_1(model, buffers.x_4, buffers.x_3, buffers.saved_4);
+    cb(current_progress + segment_progress * 13.0f / float_steps,
+       "Freq decoder 1");
 
     // we're skipping the inject branch i.e. xt_4, leapfrogging to xt_3
     apply_time_decoder_0(model, pre_t, buffers.xt_3);
-    cb(current_progress + segment_progress * 14.0f / float_steps, "Time decoder 1");
+    cb(current_progress + segment_progress * 14.0f / float_steps,
+       "Time decoder 1");
 
-    apply_common_decoder(model, 0, 0, buffers.x_3, buffers.x_2, buffers.saved_3);
-    cb(current_progress + segment_progress * 15.0f / float_steps, "Freq decoder 2");
+    apply_common_decoder(model, 0, 0, buffers.x_3, buffers.x_2,
+                         buffers.saved_3);
+    cb(current_progress + segment_progress * 15.0f / float_steps,
+       "Freq decoder 2");
 
-    apply_common_decoder(model, 1, 0, buffers.xt_3, buffers.xt_2, buffers.savedt_3);
-    cb(current_progress + segment_progress * 16.0f / float_steps, "Time decoder 2");
+    apply_common_decoder(model, 1, 0, buffers.xt_3, buffers.xt_2,
+                         buffers.savedt_3);
+    cb(current_progress + segment_progress * 16.0f / float_steps,
+       "Time decoder 2");
 
-    apply_common_decoder(model, 0, 1, buffers.x_2, buffers.x_1, buffers.saved_2);
-    cb(current_progress + segment_progress * 17.0f / float_steps, "Freq decoder 3");
+    apply_common_decoder(model, 0, 1, buffers.x_2, buffers.x_1,
+                         buffers.saved_2);
+    cb(current_progress + segment_progress * 17.0f / float_steps,
+       "Freq decoder 3");
 
-    apply_common_decoder(model, 1, 1, buffers.xt_2, buffers.xt_1, buffers.savedt_2);
-    cb(current_progress + segment_progress * 18.0f / float_steps, "Time decoder 3");
+    apply_common_decoder(model, 1, 1, buffers.xt_2, buffers.xt_1,
+                         buffers.savedt_2);
+    cb(current_progress + segment_progress * 18.0f / float_steps,
+       "Time decoder 3");
 
-    apply_common_decoder(model, 0, 2, buffers.x_1, buffers.x_0, buffers.saved_1);
-    cb(current_progress + segment_progress * 19.0f / float_steps, "Freq decoder 4");
+    apply_common_decoder(model, 0, 2, buffers.x_1, buffers.x_0,
+                         buffers.saved_1);
+    cb(current_progress + segment_progress * 19.0f / float_steps,
+       "Freq decoder 4");
 
-    apply_common_decoder(model, 1, 2, buffers.xt_1, buffers.xt_0, buffers.savedt_1);
-    cb(current_progress + segment_progress * 20.0f / float_steps, "Time decoder 4");
+    apply_common_decoder(model, 1, 2, buffers.xt_1, buffers.xt_0,
+                         buffers.savedt_1);
+    cb(current_progress + segment_progress * 20.0f / float_steps,
+       "Time decoder 4");
 
-    apply_common_decoder(model, 0, 3, buffers.x_0, buffers.x_out, buffers.saved_0);
-    cb(current_progress + segment_progress * 21.0f / float_steps, "Freq decoder 5");
+    apply_common_decoder(model, 0, 3, buffers.x_0, buffers.x_out,
+                         buffers.saved_0);
+    cb(current_progress + segment_progress * 21.0f / float_steps,
+       "Freq decoder 5");
 
-    apply_common_decoder(model, 1, 3, buffers.xt_0, buffers.xt_out, buffers.savedt_0);
-    cb(current_progress + segment_progress * 22.0f / float_steps, "Time decoder 5");
+    apply_common_decoder(model, 1, 3, buffers.xt_0, buffers.xt_out,
+                         buffers.savedt_0);
+    cb(current_progress + segment_progress * 22.0f / float_steps,
+       "Time decoder 5");
 
     cb(current_progress + segment_progress, "Mask + istft");
 

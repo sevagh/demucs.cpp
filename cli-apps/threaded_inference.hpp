@@ -284,9 +284,10 @@ threaded_inference(const struct demucscpp_v3::demucs_v3_model &model,
     for (int i = 0; i < num_threads; ++i)
     {
         threads.emplace_back(
-            [&model, &segments, &segment_outs, i, &cbs]() {
-                segment_outs[i] =
-                    demucscpp_v3::demucs_v3_inference(model, segments[i], cbs[i]);
+            [&model, &segments, &segment_outs, i, &cbs]()
+            {
+                segment_outs[i] = demucscpp_v3::demucs_v3_inference(
+                    model, segments[i], cbs[i]);
             });
     }
 
@@ -365,4 +366,4 @@ threaded_inference(const struct demucscpp_v3::demucs_v3_model &model,
 
     return final_output;
 }
-}; // namespace demucscppthreaded
+}; // namespace demucscppthreaded_v3
