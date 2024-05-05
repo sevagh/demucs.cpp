@@ -111,8 +111,8 @@ shift_inference(const struct demucscpp::demucs_model &model,
 
     symmetric_zero_padding(padded_mix, full_audio, 2 * max_shift);
 
-    // int offset = rand() % max_shift;
-    int offset = 1337;
+    int offset = rand() % max_shift;
+    // int offset = 1337;
 
     std::cout << "1., apply model w/ shift, offset: " << offset << std::endl;
 
@@ -356,8 +356,8 @@ shift_inference(const struct demucscpp_v3::demucs_v3_model &model,
 
     symmetric_zero_padding(padded_mix, full_audio, 2 * max_shift);
 
-    // int offset = rand() % max_shift;
-    int offset = 1337;
+    int offset = rand() % max_shift;
+    // int offset = 1337;
 
     std::cout << "1., apply model w/ shift, offset: " << offset << std::endl;
 
