@@ -552,30 +552,23 @@ void demucscpp_v3::apply_freq_encoder_4(const struct demucscpp_v3::demucs_v3_mod
         model.encoder_4_5_conv_bias[encoder_idx]);
     // encoder 4 (i.e. encoder_idx 0) has the inject param
     // swap first two dims of x_inject
-    y += x_inject.shuffle(Eigen::array<int, 3>({1, 0, 2}));
+
+    y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2})) + x_inject;
 
     // apply groupnorm
-    y = groupnorm::group_norm_fused_gelu_2(y, model.encoder_4_5_norm1_weight[encoder_idx],
+    y = groupnorm::group_norm_fused_gelu(y_shuff, model.encoder_4_5_norm1_weight[encoder_idx],
                              model.encoder_4_5_norm1_bias[encoder_idx], 4, 1e-05);
 
-    // swap first two dims
-    y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
-
     // special dconv with bilstm + local attn
-    demucscpp_v3::apply_dconv_v3_encoder_4_5(model, y_shuff, encoder_idx,
+    demucscpp_v3::apply_dconv_v3_encoder_4_5(model, y, encoder_idx,
                            y_shuff.dimension(2), buffers);
-
-    // swap back from H,C,W to C,H,W
-    // then put W in front to use conv1d function for width=1 conv2d
-    //y = y_shuff.shuffle(Eigen::array<int, 3>({1, 0, 2}));
-    y = y_shuff;
 
     y = demucscpp::conv1d<768, 1536, 1, 1, 0, 1>(
         y, model.encoder_4_5_rewrite_weight[encoder_idx],
         model.encoder_4_5_rewrite_bias[encoder_idx]);
 
     // apply groupnorm
-    y = groupnorm::group_norm(y, model.encoder_4_5_norm2_weight[encoder_idx],
+    y = demucscpp::group_norm(y, model.encoder_4_5_norm2_weight[encoder_idx],
                              model.encoder_4_5_norm2_bias[encoder_idx], 4, 1e-05);
 
     // copy into x_out
@@ -597,28 +590,18 @@ void demucscpp_v3::apply_shared_encoder_5(const struct demucscpp_v3::demucs_v3_m
     // shuffle first two dims of x_in
     // first assign y to x_in with first two dims swapped
     y = x_in.shuffle(Eigen::array<int, 3>({1, 0, 2}));
+
     y = demucscpp::conv1d<768, 1536, 4, 2, 1, 1>(
         y, model.encoder_5_conv_weight,
         model.encoder_4_5_conv_bias[encoder_idx]);
-    // shuffle dims of y for group norm + gelu
-    y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
-    y = y_shuff;
 
     // apply groupnorm
-    y = groupnorm::group_norm_fused_gelu_2(y, model.encoder_4_5_norm1_weight[encoder_idx],
+    y = groupnorm::group_norm_fused_gelu(y, model.encoder_4_5_norm1_weight[encoder_idx],
                              model.encoder_4_5_norm1_bias[encoder_idx], 4, 1e-05);
 
-    // swap first two dims
-    y_shuff = y.shuffle(Eigen::array<int, 3>({1, 0, 2}));
-
     // special dconv with bilstm + local attn
-    demucscpp_v3::apply_dconv_v3_encoder_4_5(model, y_shuff, encoder_idx,
-                           y_shuff.dimension(2), buffers);
-
-    // swap back from H,C,W to C,H,W
-    // then put W in front to use conv1d function for width=1 conv2d
-    //y = y_shuff.shuffle(Eigen::array<int, 3>({1, 0, 2}));
-    y = y_shuff;
+    demucscpp_v3::apply_dconv_v3_encoder_4_5(model, y, encoder_idx,
+                           y.dimension(2), buffers);
 
     // need rewrite, norm2, glu
     y = demucscpp::conv1d<1536, 3072, 1, 1, 0, 1>(
@@ -626,12 +609,11 @@ void demucscpp_v3::apply_shared_encoder_5(const struct demucscpp_v3::demucs_v3_m
         model.encoder_4_5_rewrite_bias[encoder_idx]);
 
     // apply groupnorm
-    y = groupnorm::group_norm(y, model.encoder_4_5_norm2_weight[encoder_idx],
+    y = demucscpp::group_norm(y, model.encoder_4_5_norm2_weight[encoder_idx],
                              model.encoder_4_5_norm2_bias[encoder_idx], 4, 1e-05);
 
     // copy into x_out
-    y_shuff = y;
-    x_out = demucscpp::glu(y_shuff, 1);
+    x_out = demucscpp::glu(y, 1);
 }
 
 Eigen::Tensor3dXf demucscpp_v3::apply_shared_decoder_0(

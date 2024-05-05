@@ -1528,7 +1528,7 @@ TEST(DemucsCPP_V3_Layers, End2End)
     demucscppdebug_test_v3::debug_tensor_3dxf(pre_t, "pre_t");
 
     // remember we leapfrog xt_fake_dec_4
-    Eigen::Tensor3dXf xt_fake_dec_3(1, 768, 336);
+    Eigen::Tensor3dXf xt_fake_dec_3(1, 384, 1344);
 
     demucscpp_v3::apply_time_decoder_0(model, pre_t, xt_fake_dec_3);
 
@@ -1712,7 +1712,7 @@ TEST(DemucsCPP_V3_Layers, End2End)
 
     demucscpp_v3::apply_common_decoder(model, 0, 0, x_fake_dec_3, x_fake_dec_2, skip_fake_dec_3);
 
-    Eigen::Tensor3dXf xt_fake_dec_2(1, 384, 1344);
+    Eigen::Tensor3dXf xt_fake_dec_2(1, 384, 5375);
     demucscpp_v3::apply_common_decoder(model, 1, 0, xt_fake_dec_3, xt_fake_dec_2, skip_fake_tdec_3);
 
     demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_dec_2, "x_fake_dec_2");
@@ -1721,7 +1721,7 @@ TEST(DemucsCPP_V3_Layers, End2End)
     Eigen::Tensor3dXf x_fake_dec_1(96, 128, 336);
     demucscpp_v3::apply_common_decoder(model, 0, 1, x_fake_dec_2, x_fake_dec_1, skip_fake_dec_2);
 
-    Eigen::Tensor3dXf xt_fake_dec_1(1, 192, 5375);
+    Eigen::Tensor3dXf xt_fake_dec_1(1, 192, 21499);
     demucscpp_v3::apply_common_decoder(model, 1, 1, xt_fake_dec_2, xt_fake_dec_1, skip_fake_tdec_2);
 
     demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_dec_1, "x_fake_dec_1");
@@ -1730,7 +1730,7 @@ TEST(DemucsCPP_V3_Layers, End2End)
     Eigen::Tensor3dXf x_fake_dec_0(48, 512, 336);
     demucscpp_v3::apply_common_decoder(model, 0, 2, x_fake_dec_1, x_fake_dec_0, skip_fake_dec_1);
 
-    Eigen::Tensor3dXf xt_fake_dec_0(1, 96, 21499);
+    Eigen::Tensor3dXf xt_fake_dec_0(1, 96, 85995);
     demucscpp_v3::apply_common_decoder(model, 1, 2, xt_fake_dec_1, xt_fake_dec_0, skip_fake_tdec_1);
 
     demucscppdebug_test_v3::debug_tensor_3dxf(x_fake_dec_0, "x_fake_dec_0");
