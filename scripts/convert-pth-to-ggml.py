@@ -12,6 +12,7 @@ from pathlib import Path
 
 DEMUCS_MODEL = "htdemucs"
 DEMUCS_MODEL_6S = "htdemucs_6s"
+DEMUCS_V3_MMI = "hdemucs_mmi"
 DEMUCS_MODEL_FT = "htdemucs_ft"
 DEMUCS_MODEL_FT_DRUMS = "htdemucs_ft_drums"
 DEMUCS_MODEL_FT_BASS = "htdemucs_ft_bass"
@@ -20,6 +21,7 @@ DEMUCS_MODEL_FT_VOCALS = "htdemucs_ft_vocals"
 
 HT_HUB_PATH = "955717e8-8726e21a.th"
 HT_HUB_PATH_6S = "5c90dfd2-34c22ccb.th"
+V3_HUB_PATH = "75fc33f5-1941ce65.th"
 HT_HUB_PATH_FT_DRUMS = "f7e0c4bc-ba3fe64a.th"
 HT_HUB_PATH_FT_BASS = "d12395a8-e57c48e6.th"
 HT_HUB_PATH_FT_OTHER = "92cfc3b6-ef3bcb9c.th"
@@ -32,6 +34,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Convert Demucs PyTorch models to GGML')
     parser.add_argument("dest_dir", type=str, help="destination path for the converted model")
     parser.add_argument("--six-source", default=False, action="store_true", help="convert 6s model (default: 4s)")
+    parser.add_argument("--v3", default=False, action="store_true", help="convert demucs v3-mmi model (default: 4s)")
     parser.add_argument("--ft-drums", default=False, action="store_true", help="convert fine-tuned drum model")
     parser.add_argument("--ft-bass", default=False, action="store_true", help="convert fine-tuned bass model")
     parser.add_argument("--ft-other", default=False, action="store_true", help="convert fine-tuned other model")
@@ -57,13 +60,20 @@ if __name__ == '__main__':
             model_name = DEMUCS_MODEL_FT_OTHER
         elif args.ft_vocals:
             model_name = DEMUCS_MODEL_FT_VOCALS
+    elif args.v3:
+        model = get_model(DEMUCS_V3_MMI)
+        model_name = DEMUCS_V3_MMI
 
     print(model)
 
     # get torchub path
     torchhub_path = Path(torch.hub.get_dir()) / "checkpoints"
 
-    suffix = "-6s" if args.six_source else "-4s"
+    suffix = "-4s"
+    if args.six_source:
+        suffix = "-6s"
+    if args.v3:
+        suffix = "-v3"
     dest_name = dir_out / f"ggml-model-{model_name}{suffix}-f16.bin"
 
     fname_inp = torchhub_path / HT_HUB_PATH
@@ -77,6 +87,8 @@ if __name__ == '__main__':
         fname_inp = torchhub_path / HT_HUB_PATH_FT_OTHER
     elif args.ft_vocals:
         fname_inp = torchhub_path / HT_HUB_PATH_FT_VOCALS
+    elif args.v3:
+        fname_inp = torchhub_path / V3_HUB_PATH
 
     # try to load PyTorch binary data
     # even though we loaded it above to print its info
@@ -100,6 +112,8 @@ if __name__ == '__main__':
     magic = 0x646d6334
     if args.six_source:
         magic = 0x646d6336
+    if args.v3:
+        magic = 0x646d6333
 
     # fine-tuned has same magic
 

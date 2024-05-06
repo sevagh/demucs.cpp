@@ -13,10 +13,10 @@ other           ==> SDR:   7.421  SIR:  11.289  ISR:  14.241  SAR:   8.179
 ```
 CPP inference (this codebase):
 ```
-vocals          ==> SDR:   8.339  SIR:  18.276  ISR:  15.836  SAR:   8.346
-drums           ==> SDR:  10.058  SIR:  18.596  ISR:  17.019  SAR:  10.810
-bass            ==> SDR:   3.919  SIR:  12.436  ISR:   6.931  SAR:   3.182
-other           ==> SDR:   7.421  SIR:  11.286  ISR:  14.252  SAR:   8.183
+vocals          ==> SDR:   8.370  SIR:  18.188  ISR:  15.924  SAR:   8.475
+drums           ==> SDR:  10.002  SIR:  18.571  ISR:  17.027  SAR:  10.645
+bass            ==> SDR:   4.021  SIR:  12.407  ISR:   7.031  SAR:   3.223
+other           ==> SDR:   7.469  SIR:  11.367  ISR:  14.186  SAR:   8.182
 ```
 *n.b.* for the above results, the random shift in the beginning of the song was fixed to 1337 in both PyTorch and C++.
 
@@ -33,10 +33,10 @@ other           ==> SDR:   0.168  SIR:  11.449  ISR:   0.411  SAR:  -2.720
 ```
 CPP inference (this codebase):
 ```
-vocals          ==> SDR:   8.395  SIR:  18.699  ISR:  16.076  SAR:   8.576
-drums           ==> SDR:   9.927  SIR:  17.921  ISR:  17.518  SAR:  10.635
-bass            ==> SDR:   4.519  SIR:  10.458  ISR:   8.606  SAR:   4.370
-other           ==> SDR:   0.164  SIR:  11.443  ISR:   0.409  SAR:  -2.713
+vocals          ==> SDR:   8.395  SIR:  18.581  ISR:  16.101  SAR:   8.579
+drums           ==> SDR:   9.922  SIR:  18.013  ISR:  17.477  SAR:  10.669
+bass            ==> SDR:   4.523  SIR:  10.482  ISR:   8.567  SAR:   4.336
+other           ==> SDR:   0.167  SIR:  11.145  ISR:   0.448  SAR:  -1.238
 ```
 
 *n.b.* the "other" score will be artificially low because of the extra guitar + piano separation where there are no stems to compare to
@@ -54,10 +54,36 @@ other           ==> SDR:   7.384  SIR:  12.812  ISR:  12.977  SAR:   7.798
 ```
 CPP inference (this codebase, `demucs_ft.cpp`)
 ```
-vocals          ==> SDR:   8.594  SIR:  19.045  ISR:  16.313  SAR:   8.617
-drums           ==> SDR:  10.463  SIR:  19.782  ISR:  17.144  SAR:  11.132
-bass            ==> SDR:   4.584  SIR:   9.359  ISR:   9.068  SAR:   4.885
-other           ==> SDR:   7.426  SIR:  12.793  ISR:  12.975  SAR:   7.830
+vocals          ==> SDR:   8.679  SIR:  18.861  ISR:  16.611  SAR:   8.664
+drums           ==> SDR:  10.480  SIR:  19.898  ISR:  17.125  SAR:  11.053
+bass            ==> SDR:   4.590  SIR:   9.516  ISR:   9.102  SAR:   4.935
+other           ==> SDR:   7.370  SIR:  12.853  ISR:  12.926  SAR:   7.805
+```
+
+### Performance of v3 (hdemucs_mmi) model
+
+Track 'Zeno - Signs' from MUSDB18-HQ test set
+
+PyTorch inference (using v3-mmi default segment length + LSTM max length of 200):
+```
+vocals          ==> SDR:   8.328  SIR:  18.943  ISR:  16.097  SAR:   8.563
+drums           ==> SDR:   9.284  SIR:  18.123  ISR:  16.230  SAR:  10.125
+bass            ==> SDR:   3.612  SIR:  10.313  ISR:   6.958  SAR:   3.077
+other           ==> SDR:   7.122  SIR:  11.391  ISR:  14.363  SAR:   7.910
+```
+PyTorch inference (using v4 7.8s segment length + LSTM max length of 336):
+```
+vocals          ==> SDR:   8.304  SIR:  18.916  ISR:  16.087  SAR:   8.557
+drums           ==> SDR:   9.279  SIR:  18.149  ISR:  16.203  SAR:  10.109
+bass            ==> SDR:   3.601  SIR:  10.350  ISR:   6.971  SAR:   3.076
+other           ==> SDR:   7.123  SIR:  11.373  ISR:  14.373  SAR:   7.907
+```
+CPP inference (this codebase, `demucs_v3.cpp`):
+```
+vocals          ==> SDR:   8.332  SIR:  18.889  ISR:  16.083  SAR:   8.557
+drums           ==> SDR:   9.285  SIR:  18.242  ISR:  16.194  SAR:  10.140
+bass            ==> SDR:   3.668  SIR:  10.040  ISR:   7.056  SAR:   3.210
+other           ==> SDR:   7.130  SIR:  11.440  ISR:  14.257  SAR:   7.860
 ```
 
 ### Performance of multi-threaded inference

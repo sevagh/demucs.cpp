@@ -54,3 +54,10 @@ sys     3m28.465s
 ```
 
 More than 2x faster for 4 threads. This is inspired by the parallelism strategy used in <https://freemusicdemixer.com>.
+
+V3 is a faster algorithm and the mt variant (with 4 threads) runs in 2.5 min:
+```
+real    2m35.737s
+user    10m28.019s
+sys     2m42.292s
+```

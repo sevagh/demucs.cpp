@@ -473,3 +473,384 @@ void demucscpp::model_inference(
         }
     }
 }
+
+void demucscpp_v3::model_v3_inference(
+    const struct demucscpp_v3::demucs_v3_model &model,
+    struct demucscpp_v3::demucs_v3_segment_buffers &buffers,
+    struct demucscpp::stft_buffers &stft_buf, demucscpp::ProgressCallback cb,
+    float current_progress, float segment_progress)
+{
+    // apply demucs inference
+    std::ostringstream ss;
+    ss << "3., apply_model mix shape: (" << buffers.mix.rows() << ", "
+       << buffers.mix.cols() << ")";
+    cb(current_progress + 0.0f, ss.str());
+    ss.str("");
+
+    // pad buffers.pad on the left, reflect
+    // pad buffers.pad_end on the right, reflect
+    // copy buffers.mix into buffers.padded_mix with reflect padding as above
+    reflect_padding(buffers.padded_mix, buffers.mix, buffers.pad,
+                    buffers.pad_end);
+
+    // copy buffers.padded_mix into stft_buf.waveform
+    stft_buf.waveform = buffers.padded_mix;
+
+    // let's get a stereo complex spectrogram first
+    demucscpp::stft(stft_buf);
+
+    // remove 2: 2 + le of stft
+    // same behavior as _spec in the python apply.py code
+    buffers.z = stft_buf.spec.slice(
+        Eigen::array<int, 3>{0, 0, 2},
+        Eigen::array<int, 3>{2, (int)stft_buf.spec.dimension(1),
+                             (int)stft_buf.spec.dimension(2) - 4});
+
+    // print z shape
+    ss << "buffers.z: " << buffers.z.dimension(0) << ", "
+       << buffers.z.dimension(1) << ", " << buffers.z.dimension(2);
+    cb(current_progress + 0.0f, ss.str());
+    ss.str("");
+
+    // x = mag = z.abs(), but for CaC we're simply stacking the complex
+    // spectrogram along the channel dimension
+    for (int i = 0; i < buffers.z.dimension(0); ++i)
+    {
+        // limiting to j-1 because we're dropping 2049 to 2048 bins
+        for (int j = 0; j < buffers.z.dimension(1) - 1; ++j)
+        {
+            for (int k = 0; k < buffers.z.dimension(2); ++k)
+            {
+                buffers.x(2 * i, j, k) = buffers.z(i, j, k).real();
+                buffers.x(2 * i + 1, j, k) = buffers.z(i, j, k).imag();
+            }
+        }
+    }
+
+    // x shape is complex*chan, nb_frames, nb_bins (2048)
+    // using CaC (complex-as-channels)
+    // print x shape
+    ss << "buffers.x: " << buffers.x.dimension(0) << ", "
+       << buffers.x.dimension(1) << ", " << buffers.x.dimension(2);
+    cb(current_progress + 0.0f, ss.str());
+    ss.str("");
+
+    // apply following pytorch operations to buffers.x in Eigen C++ code:
+    //  mean = x.mean(dim=(1, 2, 3), keepdim=True)
+    //  std = x.std(dim=(1, 2, 3), keepdim=True)
+    //  x = (x - mean) / (1e-5 + std)
+
+    // Compute mean and standard deviation using Eigen
+    Eigen::Tensor<float, 0> mean_tensor = buffers.x.mean();
+    float mean = mean_tensor(0);
+    float variance = demucscpp::calculate_variance(buffers.x, mean);
+    float std_ = std::sqrt(variance);
+
+    // Normalize x
+    const float epsilon = 1e-5;
+
+    // buffers.x will be the freq branch input
+    buffers.x = (buffers.x - mean) / (std_ + epsilon);
+
+    // prepare time branch input by copying buffers.mix into buffers.xt(0, ...)
+    for (int i = 0; i < buffers.mix.rows(); ++i)
+    {
+        for (int j = 0; j < buffers.mix.cols(); ++j)
+        {
+            buffers.xt(0, i, j) = buffers.mix(i, j);
+        }
+    }
+
+    cb(current_progress + 0.0f, "Freq branch: normalized");
+
+    // apply similar mean, std normalization as above using 2d mean, std
+    Eigen::Tensor<float, 0> meant_tensor = buffers.xt.mean();
+    float meant = meant_tensor(0);
+    float variancet = demucscpp::calculate_variance(buffers.xt, meant);
+    float stdt = std::sqrt(variancet);
+
+    // Normalize x
+    buffers.xt = (buffers.xt - meant) / (stdt + epsilon);
+
+    cb(current_progress + 0.0f, "Time branch: normalized");
+
+    // buffers.xt will be the time branch input
+
+    /* HEART OF INFERENCE CODE HERE !! */
+    // ITERATION 0
+
+    // apply tenc, enc
+
+    float float_steps = 22.0f;
+
+    demucscpp_v3::apply_time_encoder_v3(model, 0, buffers.xt, buffers.xt_0);
+    cb(current_progress + segment_progress * 1.0f / float_steps,
+       "Time encoder 0");
+
+    demucscpp_v3::apply_freq_encoder_v3(model, 0, buffers.x, buffers.x_0);
+    cb(current_progress + segment_progress * 2.0f / float_steps,
+       "Freq encoder 0");
+
+    // absorb both scaling factors in one expression
+    //   i.e. eliminate const float freq_emb_scale = 0.2f;
+    const float emb_scale = 10.0f * 0.2f;
+
+    Eigen::MatrixXf emb =
+        model.freq_emb_embedding_weight.transpose() * emb_scale;
+
+    // apply embedding to buffers.x_0
+    for (int i = 0; i < 48; ++i)
+    {
+        for (int j = 0; j < 512; ++j)
+        {
+            for (int k = 0; k < buffers.x_0.dimension(2); ++k)
+            {
+                // implicit broadcasting
+                buffers.x_0(i, j, k) += emb(i, j);
+            }
+        }
+    }
+
+    buffers.saved_0 = buffers.x_0;
+    buffers.savedt_0 = buffers.xt_0;
+
+    cb(current_progress + segment_progress * 2.0f / float_steps,
+       "Freq branch: applied frequency embedding");
+
+    apply_time_encoder_v3(model, 1, buffers.xt_0, buffers.xt_1);
+    cb(current_progress + segment_progress * 3.0f / float_steps,
+       "Time encoder 1");
+
+    apply_freq_encoder_v3(model, 1, buffers.x_0, buffers.x_1);
+    cb(current_progress + segment_progress * 4.0f / float_steps,
+       "Freq encoder 1");
+
+    buffers.saved_1 = buffers.x_1;
+    buffers.savedt_1 = buffers.xt_1;
+
+    apply_time_encoder_v3(model, 2, buffers.xt_1, buffers.xt_2);
+    cb(current_progress + segment_progress * 5.0f / float_steps,
+       "Time encoder 2");
+
+    apply_freq_encoder_v3(model, 2, buffers.x_1, buffers.x_2);
+    cb(current_progress + segment_progress * 6.0f / float_steps,
+       "Freq encoder 2");
+
+    buffers.saved_2 = buffers.x_2;
+    buffers.savedt_2 = buffers.xt_2;
+
+    apply_time_encoder_v3(model, 3, buffers.xt_2, buffers.xt_3);
+    cb(current_progress + segment_progress * 7.0f / float_steps,
+       "Time encoder 3");
+
+    apply_freq_encoder_v3(model, 3, buffers.x_2, buffers.x_3);
+    cb(current_progress + segment_progress * 8.0f / float_steps,
+       "Freq encoder 3");
+
+    buffers.saved_3 = buffers.x_3;
+    buffers.savedt_3 = buffers.xt_3;
+
+    // t/time branch: unique tencoder 4
+    apply_time_encoder_4(model, buffers.xt_3, buffers.xt_4);
+    cb(current_progress + segment_progress * 9.0f / float_steps,
+       "Time encoder 4");
+
+    // possible this is not used, since it is the "inject" parameter
+    // buffers.savedt_4 = buffers.xt_4;
+
+    // z/spec branch: unique encoder 4 (bilstm, local attn)
+    // merge time and frequency with the inject parameter
+    apply_freq_encoder_4(model, buffers.x_3, buffers.xt_4, buffers.x_4,
+                         buffers);
+    cb(current_progress + segment_progress * 10.0f / float_steps,
+       "Freq encoder 4");
+
+    buffers.saved_4 = buffers.x_4;
+
+    // shared: unique encoder 5 (bistlm local attn)
+    apply_shared_encoder_5(model, buffers.x_4, buffers.x_shared_5, buffers);
+    cb(current_progress + segment_progress * 11.0f / float_steps,
+       "Shared encoder 5");
+
+    // now decoder time!
+
+    // shared decoder 5, which is one of the two unique decoder_0_1
+
+    // start from 0 tensors
+
+    Eigen::Tensor3dXf pre_t_unused =
+        apply_shared_decoder_0(model, buffers.x_4, buffers.x_shared_5);
+    cb(current_progress + segment_progress * 12.0f / float_steps,
+       "Shared decoder 0");
+
+    Eigen::Tensor3dXf pre_t =
+        apply_freq_decoder_1(model, buffers.x_4, buffers.x_3, buffers.saved_4);
+    cb(current_progress + segment_progress * 13.0f / float_steps,
+       "Freq decoder 1");
+
+    // we're skipping the inject branch i.e. xt_4, leapfrogging to xt_3
+    apply_time_decoder_0(model, pre_t, buffers.xt_3);
+    cb(current_progress + segment_progress * 14.0f / float_steps,
+       "Time decoder 1");
+
+    apply_common_decoder(model, 0, 0, buffers.x_3, buffers.x_2,
+                         buffers.saved_3);
+    cb(current_progress + segment_progress * 15.0f / float_steps,
+       "Freq decoder 2");
+
+    apply_common_decoder(model, 1, 0, buffers.xt_3, buffers.xt_2,
+                         buffers.savedt_3);
+    cb(current_progress + segment_progress * 16.0f / float_steps,
+       "Time decoder 2");
+
+    apply_common_decoder(model, 0, 1, buffers.x_2, buffers.x_1,
+                         buffers.saved_2);
+    cb(current_progress + segment_progress * 17.0f / float_steps,
+       "Freq decoder 3");
+
+    apply_common_decoder(model, 1, 1, buffers.xt_2, buffers.xt_1,
+                         buffers.savedt_2);
+    cb(current_progress + segment_progress * 18.0f / float_steps,
+       "Time decoder 3");
+
+    apply_common_decoder(model, 0, 2, buffers.x_1, buffers.x_0,
+                         buffers.saved_1);
+    cb(current_progress + segment_progress * 19.0f / float_steps,
+       "Freq decoder 4");
+
+    apply_common_decoder(model, 1, 2, buffers.xt_1, buffers.xt_0,
+                         buffers.savedt_1);
+    cb(current_progress + segment_progress * 20.0f / float_steps,
+       "Time decoder 4");
+
+    apply_common_decoder(model, 0, 3, buffers.x_0, buffers.x_out,
+                         buffers.saved_0);
+    cb(current_progress + segment_progress * 21.0f / float_steps,
+       "Freq decoder 5");
+
+    apply_common_decoder(model, 1, 3, buffers.xt_0, buffers.xt_out,
+                         buffers.savedt_0);
+    cb(current_progress + segment_progress * 22.0f / float_steps,
+       "Time decoder 5");
+
+    cb(current_progress + segment_progress, "Mask + istft");
+
+    // xt dim 1 is a fake dim of 1
+    // so we could have symmetry between the tensor3dxf of the freq and time
+    // branches
+
+    const int nb_out_sources = 4;
+
+    // 4 sources, 2 channels * 2 complex channels (real+imag), F bins, T frames
+    Eigen::Tensor4dXf x_4d = Eigen::Tensor4dXf(
+        nb_out_sources, 4, buffers.x.dimension(1), buffers.x.dimension(2));
+
+    // 4 sources, 2 channels, N samples
+    std::vector<Eigen::MatrixXf> xt_3d = {
+        Eigen::MatrixXf(2, buffers.xt.dimension(2)),
+        Eigen::MatrixXf(2, buffers.xt.dimension(2)),
+        Eigen::MatrixXf(2, buffers.xt.dimension(2)),
+        Eigen::MatrixXf(2, buffers.xt.dimension(2))};
+
+    // distribute the channels of buffers.x into x_4d
+    // in pytorch it's (16, 2048, 336) i.e. (chan, freq, time)
+    // then apply `.view(4, -1, freq, time)
+
+    // implement above logic in Eigen C++
+    // copy buffers.x into x_4d
+    // apply opposite of
+    // buffers.x(i, j, k) = (buffers.x(i, j, k) - mean) / (epsilon + std_);
+    for (int s = 0; s < nb_out_sources; ++s)
+    { // loop over 4 sources
+        for (int i = 0; i < 4; ++i)
+        {
+            for (int j = 0; j < buffers.x.dimension(1); ++j)
+            {
+                for (int k = 0; k < buffers.x.dimension(2); ++k)
+                {
+                    x_4d(s, i, j, k) =
+                        std_ * buffers.x_out(s * 4 + i, j, k) + mean;
+                }
+            }
+        }
+    }
+
+    // let's also copy buffers.xt into xt_4d
+    for (int s = 0; s < nb_out_sources; ++s)
+    { // loop over 4 sources
+        for (int i = 0; i < 2; ++i)
+        {
+            for (int j = 0; j < buffers.xt.dimension(2); ++j)
+            {
+                xt_3d[s](i, j) = stdt * buffers.xt_out(0, s * 2 + i, j) + meant;
+            }
+        }
+    }
+
+    // If `cac` is True, `m` is actually a full spectrogram and `z` is ignored.
+    // undo complex-as-channels by splitting the 2nd dim of x_4d into (2, 2)
+    for (int source = 0; source < nb_out_sources; ++source)
+    {
+        Eigen::Tensor3dXcf x_target = Eigen::Tensor3dXcf(
+            2, buffers.x.dimension(1), buffers.x.dimension(2));
+
+        // in the CaC case, we're simply unstacking the complex
+        // spectrogram from the channel dimension
+        for (int i = 0; i < buffers.z.dimension(0); ++i)
+        {
+            // limiting to j-1 because we're dropping 2049 to 2048 bins
+            for (int j = 0; j < buffers.z.dimension(1) - 1; ++j)
+            {
+                for (int k = 0; k < buffers.z.dimension(2); ++k)
+                {
+                    // buffers.x(2*i, j, k) = buffers.z(i, j, k).real();
+                    // buffers.x(2*i + 1, j, k) = buffers.z(i, j, k).imag();
+                    x_target(i, j, k) =
+                        std::complex<float>(x_4d(source, 2 * i, j, k),
+                                            x_4d(source, 2 * i + 1, j, k));
+                }
+            }
+        }
+
+        // need to re-pad 2: 2 + le on spectrogram
+        // opposite of this
+        // buffers.z = stft_buf.spec.slice(Eigen::array<int, 3>{0, 0, 2},
+        //         Eigen::array<int, 3>{2, (int)stft_buf.spec.dimension(1),
+        //         (int)stft_buf.spec.dimension(2) - 4});
+        // Add padding to spectrogram
+
+        Eigen::array<std::pair<int, int>, 3> paddings = {
+            std::make_pair(0, 0), std::make_pair(0, 1), std::make_pair(2, 2)};
+        Eigen::Tensor3dXcf x_target_padded =
+            x_target.pad(paddings, std::complex<float>(0.0f, 0.0f));
+
+        stft_buf.spec = x_target_padded;
+
+        demucscpp::istft(stft_buf);
+
+        // now we have waveform from istft(x), the frequency branch
+        // that we need to sum with xt, the time branch
+        Eigen::MatrixXf padded_waveform = stft_buf.waveform;
+
+        // undo the reflect pad 1d by copying padded_mix into mix
+        // from range buffers.pad:buffers.pad + buffers.segment_samples
+        Eigen::MatrixXf unpadded_waveform =
+            padded_waveform.block(0, buffers.pad, 2, buffers.segment_samples);
+
+        // sum with xt
+        unpadded_waveform += xt_3d[source];
+
+        ss << "mix: " << buffers.mix.rows() << ", " << buffers.mix.cols();
+        cb(current_progress + segment_progress, ss.str());
+        ss.str("");
+
+        // copy target waveform into all 4 dims of targets_out
+        for (int j = 0; j < 2; ++j)
+        {
+            for (int k = 0; k < buffers.mix.cols(); ++k)
+            {
+                buffers.targets_out(source, j, k) = unpadded_waveform(j, k);
+            }
+        }
+    }
+}

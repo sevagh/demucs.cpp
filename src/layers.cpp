@@ -1,4 +1,6 @@
 #include "layers.hpp"
+#include "conv.hpp"
+#include "lstm.hpp"
 #include "model.hpp"
 #include "tensor.hpp"
 #include <Eigen/Dense>
@@ -526,4 +528,586 @@ void demucscpp::common_encoder_layer(
     q_shuf = q.shuffle(permute_dims_4);
 
     q = q_shuf;
+}
+
+void demucscpp_v3::local_attention(
+    Eigen::Tensor3dXf &x, // x = frequency, time, or combined
+                          // input tensor [B, C, T]
+    const Eigen::Tensor3dXf &content_weight,
+    const Eigen::Tensor1dXf &content_bias,
+    const Eigen::Tensor3dXf &query_weight, const Eigen::Tensor1dXf &query_bias,
+    const Eigen::Tensor3dXf &key_weight, const Eigen::Tensor1dXf &key_bias,
+    const Eigen::Tensor3dXf &query_decay_weight,
+    const Eigen::Tensor1dXf &query_decay_bias,
+    const Eigen::Tensor2dXf &query_decay_kernel,
+    const Eigen::Tensor3dXf &proj_weight, const Eigen::Tensor1dXf &proj_bias,
+    const int hidden_size)
+{
+    // local-attention block
+
+    int B = x.dimension(0);
+    int C = x.dimension(1);
+    int T = x.dimension(2);
+
+    const int num_heads = demucscpp_v3::LOCAL_ATTN_N_HEADS;
+
+    // apply query conv1d on x
+    Eigen::Tensor3dXf queries;
+    Eigen::Tensor3dXf query_decays;
+    Eigen::Tensor3dXf keys;
+    Eigen::Tensor3dXf content;
+
+    if (hidden_size == 192)
+    {
+        queries = demucscpp::conv1d<192, 192, 1, 1, 0, 1>(x, query_weight,
+                                                          query_bias);
+        keys = demucscpp::conv1d<192, 192, 1, 1, 0, 1>(x, key_weight, key_bias);
+        query_decays = demucscpp::conv1d<192, 16, 1, 1, 0, 1>(
+            x, query_decay_weight, query_decay_bias);
+        content = demucscpp::conv1d<192, 192, 1, 1, 0, 1>(x, content_weight,
+                                                          content_bias);
+    }
+    else
+    {
+        queries = demucscpp::conv1d<384, 384, 1, 1, 0, 1>(x, query_weight,
+                                                          query_bias);
+        keys = demucscpp::conv1d<384, 384, 1, 1, 0, 1>(x, key_weight, key_bias);
+        query_decays = demucscpp::conv1d<384, 16, 1, 1, 0, 1>(
+            x, query_decay_weight, query_decay_bias);
+        content = demucscpp::conv1d<384, 384, 1, 1, 0, 1>(x, content_weight,
+                                                          content_bias);
+    }
+
+    // so far, this is correct and matches pytorch
+
+    int features_per_head = C / num_heads;
+
+    // now implement dots calculation
+
+    // Initialize the dots tensor
+    Eigen::Tensor4dXf dots(B, num_heads, T, T);
+    dots.setZero();
+
+    // Precompute the square root of features_per_head
+    float sqrt_features_per_head = std::sqrt(features_per_head);
+
+    // apply a sigmoid activation with a 1/2 incorporated
+    query_decays = query_decays.unaryExpr(
+        [](float v) { return 0.5f / (1.0f + std::exp(-v)); });
+
+    // Initialize the weights tensor for softmax
+    Eigen::Tensor4dXf weights(B, num_heads, T, T);
+
+    // Loop structure to compute both dot products and apply decay
+    // simultaneously
+    for (int b = 0; b < B; ++b)
+    {
+        for (int h = 0; h < num_heads; ++h)
+        {
+            for (int t = 0; t < T; ++t)
+            {
+                for (int s = 0; s < T; ++s)
+                {
+                    float dot_product = 0.0f;
+                    float decay_effect = 0.0f;
+
+                    // Compute the standard dot product
+                    for (int c = 0; c < features_per_head; ++c)
+                    {
+                        int channel_index = h * features_per_head + c;
+                        dot_product += queries(b, channel_index, s) *
+                                       keys(b, channel_index, t);
+                    }
+                    dots(b, h, t, s) = dot_product / sqrt_features_per_head;
+
+                    // Calculate decay effect for this dot product
+                    for (int n = 0; n < LOCAL_ATTN_N_DECAY; ++n)
+                    {
+                        int decay_index = std::abs(
+                            t - s); // Assuming decay_kernel is indexed by delta
+                        float decay_kernel_value =
+                            query_decay_kernel(n, decay_index);
+
+                        // Transform query_decay by applying sigmoid directly
+                        // here
+                        float decay_query_value =
+                            query_decays(b, h * LOCAL_ATTN_N_DECAY + n, s);
+
+                        decay_effect += decay_kernel_value * decay_query_value;
+                    }
+
+                    // Apply decay effect directly to the dot product
+                    if (t != s)
+                    {
+                        dots(b, h, t, s) += decay_effect;
+                    }
+                    else
+                    {
+                        dots(b, h, t, s) = -100.0f;
+                    }
+                }
+            }
+
+            for (int t = 0; t < T; ++t)
+            {
+                float max_val = -std::numeric_limits<float>::infinity();
+                for (int s = 0; s < T; ++s)
+                {
+                    if (dots(b, h, s, t) > max_val)
+                    {
+                        max_val = dots(b, h, s, t);
+                    }
+                }
+
+                float sum_exp = 0.0f;
+                // Calculate the exponentials and sum them
+                for (int s = 0; s < T; ++s)
+                {
+                    weights(b, h, s, t) = std::exp(dots(b, h, s, t) - max_val);
+                    sum_exp += weights(b, h, s, t);
+                }
+
+                // Normalize the weights to form a proper probability
+                // distribution
+                for (int s = 0; s < T; ++s)
+                {
+                    weights(b, h, s, t) /= sum_exp;
+                }
+            }
+        }
+    }
+
+    // Initialize the reshaped result tensor directly
+    Eigen::Tensor3dXf reshaped_result(B, C, T);
+    reshaped_result.setZero();
+
+    // Merge computation of result tensor and reshaping
+    for (int b = 0; b < B; ++b)
+    {
+        for (int h = 0; h < num_heads; ++h)
+        {
+            for (int c = 0; c < C / num_heads; ++c)
+            {
+                for (int s = 0; s < T; ++s)
+                {
+                    for (int t = 0; t < T; ++t)
+                    {
+                        // Directly update the reshaped_result tensor
+                        int full_channel_index = h * (C / num_heads) + c;
+                        reshaped_result(b, full_channel_index, s) +=
+                            weights(b, h, t, s) *
+                            content(b, h * (C / num_heads) + c, t);
+                    }
+                }
+            }
+        }
+    }
+
+    // Apply projection layer
+    Eigen::Tensor3dXf projected_result;
+    if (hidden_size == 192)
+    {
+        projected_result = demucscpp::conv1d<192, 192, 1, 1, 0, 1>(
+            reshaped_result, proj_weight, proj_bias);
+    }
+    else
+    {
+        projected_result = demucscpp::conv1d<384, 384, 1, 1, 0, 1>(
+            reshaped_result, proj_weight, proj_bias);
+    }
+
+    // Add x to projected_result
+    x += projected_result;
+}
+
+void demucscpp_v3::apply_dconv_v3(
+    const struct demucscpp_v3::demucs_v3_model &model, Eigen::Tensor3dXf &y,
+    int freq_idx, int layer_idx, int mid_crop)
+{
+    // store another copy of y to sum back later
+    Eigen::Tensor3dXf y_copy = y;
+
+    // now dconv time
+
+    switch (layer_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<48, 12, 3, 1, 1, 1>(
+            y, model.dconv_layers_0_conv1d_weight[freq_idx][layer_idx][0],
+            model.dconv_layers_0_conv1d_bias[freq_idx][layer_idx][0]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<96, 24, 3, 1, 1, 1>(
+            y, model.dconv_layers_0_conv1d_weight[freq_idx][layer_idx][0],
+            model.dconv_layers_0_conv1d_bias[freq_idx][layer_idx][0]);
+        break;
+    case 2:
+        y = demucscpp::conv1d<192, 48, 3, 1, 1, 1>(
+            y, model.dconv_layers_0_conv1d_weight[freq_idx][layer_idx][0],
+            model.dconv_layers_0_conv1d_bias[freq_idx][layer_idx][0]);
+        break;
+    case 3:
+        y = demucscpp::conv1d<384, 96, 3, 1, 1, 1>(
+            y, model.dconv_layers_0_conv1d_weight[freq_idx][layer_idx][0],
+            model.dconv_layers_0_conv1d_bias[freq_idx][layer_idx][0]);
+        break;
+    };
+
+    // y = demucscpp_v3::groupnorm::group_norm_fused_gelu(
+    //     y,
+    //     model.dconv_layers_1_groupnorm_weight[freq_idx][layer_idx]
+    //                                          [0],
+    //     model.dconv_layers_1_groupnorm_bias[freq_idx][layer_idx][0],
+    //     1,
+    //     1e-05);
+
+    y = demucscpp::group_norm_fused_gelu(
+        y, model.dconv_layers_1_groupnorm_weight[freq_idx][layer_idx][0],
+        model.dconv_layers_1_groupnorm_bias[freq_idx][layer_idx][0], 1e-05);
+
+    switch (layer_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<12, 96, 1, 1, 0, 1>(
+            y, model.dconv_layers_3_conv1d_weight[freq_idx][layer_idx][0],
+            model.dconv_layers_3_conv1d_bias[freq_idx][layer_idx][0]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<24, 192, 1, 1, 0, 1>(
+            y, model.dconv_layers_3_conv1d_weight[freq_idx][layer_idx][0],
+            model.dconv_layers_3_conv1d_bias[freq_idx][layer_idx][0]);
+        break;
+    case 2:
+        y = demucscpp::conv1d<48, 384, 1, 1, 0, 1>(
+            y, model.dconv_layers_3_conv1d_weight[freq_idx][layer_idx][0],
+            model.dconv_layers_3_conv1d_bias[freq_idx][layer_idx][0]);
+        break;
+    case 3:
+        y = demucscpp::conv1d<96, 768, 1, 1, 0, 1>(
+            y, model.dconv_layers_3_conv1d_weight[freq_idx][layer_idx][0],
+            model.dconv_layers_3_conv1d_bias[freq_idx][layer_idx][0]);
+        break;
+    };
+
+    y = demucscpp::group_norm(
+        y, model.dconv_layers_4_groupnorm_weight[freq_idx][layer_idx][0],
+        model.dconv_layers_4_groupnorm_bias[freq_idx][layer_idx][0], 1, 1e-05);
+
+    y = demucscpp::glu(y, 1);
+
+    y = demucscpp::layer_scale(
+        y, model.dconv_layers_6_scale[freq_idx][layer_idx][0]);
+
+    // now we add y to itself
+    y = y + y_copy;
+
+    // store another copy of y to sum back later
+    y_copy = y;
+
+    // NEXT ENTIRE SUBSEQUENCE OF DCONV WITH SLIGHTLY DIFFERENT PARAMS
+
+    // Conv1d(48, 6, kernel_size=(3,), stride=(1,), padding=(2,), dilation=(2,))
+    switch (layer_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<48, 12, 3, 1, 2, 2>(
+            y, model.dconv_layers_0_conv1d_weight[freq_idx][layer_idx][1],
+            model.dconv_layers_0_conv1d_bias[freq_idx][layer_idx][1]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<96, 24, 3, 1, 2, 2>(
+            y, model.dconv_layers_0_conv1d_weight[freq_idx][layer_idx][1],
+            model.dconv_layers_0_conv1d_bias[freq_idx][layer_idx][1]);
+        break;
+    case 2:
+        y = demucscpp::conv1d<192, 48, 3, 1, 2, 2>(
+            y, model.dconv_layers_0_conv1d_weight[freq_idx][layer_idx][1],
+            model.dconv_layers_0_conv1d_bias[freq_idx][layer_idx][1]);
+        break;
+    case 3:
+        y = demucscpp::conv1d<384, 96, 3, 1, 2, 2>(
+            y, model.dconv_layers_0_conv1d_weight[freq_idx][layer_idx][1],
+            model.dconv_layers_0_conv1d_bias[freq_idx][layer_idx][1]);
+        break;
+    };
+
+    Eigen::Tensor3dXf y_cropped =
+        y.slice(Eigen::array<Eigen::Index, 3>({0, 0, 0}),
+                Eigen::array<Eigen::Index, 3>(
+                    {y.dimension(0), y.dimension(1), mid_crop}));
+
+    y = y_cropped;
+
+    y = demucscpp::group_norm_fused_gelu(
+        y, model.dconv_layers_1_groupnorm_weight[freq_idx][layer_idx][1],
+        model.dconv_layers_1_groupnorm_bias[freq_idx][layer_idx][1], 1e-05);
+
+    // Conv1d(6, 96, kernel_size=(1,), stride=(1,))
+    switch (layer_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<12, 96, 1, 1, 0, 1>(
+            y, model.dconv_layers_3_conv1d_weight[freq_idx][layer_idx][1],
+            model.dconv_layers_3_conv1d_bias[freq_idx][layer_idx][1]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<24, 192, 1, 1, 0, 1>(
+            y, model.dconv_layers_3_conv1d_weight[freq_idx][layer_idx][1],
+            model.dconv_layers_3_conv1d_bias[freq_idx][layer_idx][1]);
+        break;
+    case 2:
+        y = demucscpp::conv1d<48, 384, 1, 1, 0, 1>(
+            y, model.dconv_layers_3_conv1d_weight[freq_idx][layer_idx][1],
+            model.dconv_layers_3_conv1d_bias[freq_idx][layer_idx][1]);
+        break;
+    case 3:
+        y = demucscpp::conv1d<96, 768, 1, 1, 0, 1>(
+            y, model.dconv_layers_3_conv1d_weight[freq_idx][layer_idx][1],
+            model.dconv_layers_3_conv1d_bias[freq_idx][layer_idx][1]);
+        break;
+    };
+
+    y = demucscpp::group_norm(
+        y, model.dconv_layers_4_groupnorm_weight[freq_idx][layer_idx][1],
+        model.dconv_layers_4_groupnorm_bias[freq_idx][layer_idx][1], 1, 1e-05);
+
+    y = demucscpp::glu(y, 1);
+    y = demucscpp::layer_scale(
+        y, model.dconv_layers_6_scale[freq_idx][layer_idx][1]);
+
+    // if y_copy is shorter than y in the last dim
+    // pad the last dim with zeros to match
+
+    if (y_copy.dimension(2) < y.dimension(2))
+    {
+        // pad the last dim with zeros to match
+        Eigen::Tensor3dXf padded_tensor_copy(
+            y_copy.dimension(0), y_copy.dimension(1), y.dimension(2));
+        padded_tensor_copy.setZero();
+        padded_tensor_copy.slice(Eigen::array<Eigen::Index, 3>({0, 0, 0}),
+                                 y_copy.dimensions()) = y_copy;
+        y_copy = padded_tensor_copy;
+    }
+
+    // now sum with itself
+    y = y + y_copy;
+}
+
+void demucscpp_v3::apply_dconv_v3_encoder_4_5(
+    const struct demucscpp_v3::demucs_v3_model &model, Eigen::Tensor3dXf &y,
+    int encoder_idx, int mid_crop,
+    struct demucscpp_v3::demucs_v3_segment_buffers &buffers)
+{
+    int lstm_hidden_size = encoder_idx == 0 ? demucscpp_v3::LSTM_HIDDEN_SIZE_0
+                                            : demucscpp_v3::LSTM_HIDDEN_SIZE_1;
+
+    // store another copy of y to sum back later
+    Eigen::Tensor3dXf y_copy = y;
+
+    // now dconv time
+
+    switch (encoder_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<768, 192, 3, 1, 1, 1>(
+            y, model.encoder_4_5_dconv_layers_0_conv1d_weight[encoder_idx][0],
+            model.encoder_4_5_dconv_layers_0_conv1d_bias[encoder_idx][0]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<1536, 384, 3, 1, 1, 1>(
+            y, model.encoder_4_5_dconv_layers_0_conv1d_weight[encoder_idx][0],
+            model.encoder_4_5_dconv_layers_0_conv1d_bias[encoder_idx][0]);
+        break;
+    };
+
+    y = demucscpp::group_norm_fused_gelu(
+        y, model.encoder_4_5_dconv_layers_1_groupnorm_weight[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_1_groupnorm_bias[encoder_idx][0], 1e-05);
+
+    // transpose it to put time seq last
+    Eigen::MatrixXf y_mat =
+        Eigen::Map<Eigen::MatrixXf>(y.data(), y.dimension(1), y.dimension(2))
+            .transpose();
+
+    // then, bilstm
+    demucscpp_v3::lstm_forward(model, encoder_idx, 0, y_mat, buffers,
+                               lstm_hidden_size);
+
+    // access last element of the last dim which is the output of the bilstm
+    Eigen::MatrixXf lstm_out_0 = buffers.lstm_output[encoder_idx][0][1];
+
+    // set lstm state to 0
+    demucscpp_v3::lstm_reset_zero(encoder_idx, 0, buffers);
+
+    // apply the linear layer on the lstm_out_0
+    lstm_out_0 = (lstm_out_0 *
+                  model.encoder_4_5_dconv_layers_3_linear_weight[encoder_idx][0]
+                      .transpose())
+                     .rowwise() +
+                 model.encoder_4_5_dconv_layers_3_linear_bias[encoder_idx][0]
+                     .transpose();
+
+    // then apply skip connection
+    lstm_out_0 = lstm_out_0 + y_mat;
+
+    // copy it to a original 3d tensor
+    y = Eigen::TensorMap<Eigen::Tensor3dXf>(
+        lstm_out_0.data(), lstm_out_0.rows(), 1, lstm_out_0.cols());
+
+    // swap dims from 0,1,2 to 1,2,0
+    Eigen::Tensor3dXf y_shuff = y.shuffle(Eigen::array<int, 3>({1, 2, 0}));
+
+    // then, localattn
+    demucscpp_v3::local_attention(
+        y_shuff,
+        model.encoder_4_5_dconv_layers_4_content_weight[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_content_bias[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_query_weight[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_query_bias[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_key_weight[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_key_bias[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_query_decay_weight[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_query_decay_bias[encoder_idx][0],
+        buffers.local_attn_decay_kernel,
+        model.encoder_4_5_dconv_layers_4_proj_weight[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_4_proj_bias[encoder_idx][0],
+        lstm_hidden_size);
+
+    y = y_shuff;
+
+    switch (encoder_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<192, 1536, 1, 1, 0, 1>(
+            y, model.encoder_4_5_dconv_layers_5_conv1d_weight[encoder_idx][0],
+            model.encoder_4_5_dconv_layers_5_conv1d_bias[encoder_idx][0]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<384, 3072, 1, 1, 0, 1>(
+            y, model.encoder_4_5_dconv_layers_5_conv1d_weight[encoder_idx][0],
+            model.encoder_4_5_dconv_layers_5_conv1d_bias[encoder_idx][0]);
+        break;
+    };
+
+    y = demucscpp::group_norm(
+        y, model.encoder_4_5_dconv_layers_6_groupnorm_weight[encoder_idx][0],
+        model.encoder_4_5_dconv_layers_6_groupnorm_bias[encoder_idx][0], 1,
+        1e-05);
+
+    y = demucscpp::glu(y, 1);
+
+    y = demucscpp::layer_scale(
+        y, model.encoder_4_5_dconv_layers_8_scale[encoder_idx][0]);
+
+    // now we add y to itself
+    y = y + y_copy;
+
+    // store another copy of y to sum back later
+    y_copy = y;
+
+    // NEXT ENTIRE SUBSEQUENCE OF DCONV WITH SLIGHTLY DIFFERENT PARAMS
+    // now dconv time
+
+    switch (encoder_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<768, 192, 3, 1, 2, 2>(
+            y, model.encoder_4_5_dconv_layers_0_conv1d_weight[encoder_idx][1],
+            model.encoder_4_5_dconv_layers_0_conv1d_bias[encoder_idx][1]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<1536, 384, 3, 1, 2, 2>(
+            y, model.encoder_4_5_dconv_layers_0_conv1d_weight[encoder_idx][1],
+            model.encoder_4_5_dconv_layers_0_conv1d_bias[encoder_idx][1]);
+        break;
+    };
+
+    Eigen::Tensor3dXf y_cropped =
+        y.slice(Eigen::array<Eigen::Index, 3>({0, 0, 0}),
+                Eigen::array<Eigen::Index, 3>(
+                    {y.dimension(0), y.dimension(1), mid_crop}));
+
+    y = y_cropped;
+
+    y = demucscpp::group_norm_fused_gelu(
+        y, model.encoder_4_5_dconv_layers_1_groupnorm_weight[encoder_idx][1],
+        model.encoder_4_5_dconv_layers_1_groupnorm_bias[encoder_idx][1], 1e-05);
+
+    // transpose it to put time seq last
+    y_mat =
+        Eigen::Map<Eigen::MatrixXf>(y.data(), y.dimension(1), y.dimension(2))
+            .transpose();
+
+    // then, bilstm
+    demucscpp_v3::lstm_forward(model, encoder_idx, 1, y_mat, buffers,
+                               lstm_hidden_size);
+
+    // access last element of the last dim which is the output of the bilstm
+    lstm_out_0 = buffers.lstm_output[encoder_idx][1][1];
+
+    // reset lstm state to 0
+    demucscpp_v3::lstm_reset_zero(encoder_idx, 1, buffers);
+
+    // apply the linear layer on the lstm_out_0
+    lstm_out_0 = (lstm_out_0 *
+                  model.encoder_4_5_dconv_layers_3_linear_weight[encoder_idx][1]
+                      .transpose())
+                     .rowwise() +
+                 model.encoder_4_5_dconv_layers_3_linear_bias[encoder_idx][1]
+                     .transpose();
+
+    // then apply skip connection
+    lstm_out_0 = lstm_out_0 + y_mat;
+
+    // copy it to a original 3d tensor
+    y = Eigen::TensorMap<Eigen::Tensor3dXf>(
+        lstm_out_0.data(), lstm_out_0.rows(), 1, lstm_out_0.cols());
+
+    // swap dims from 0,1,2 to 1,2,0
+    y_shuff = y.shuffle(Eigen::array<int, 3>({1, 2, 0}));
+
+    // then, localattn
+    demucscpp_v3::local_attention(
+        y_shuff,
+        model.encoder_4_5_dconv_layers_4_content_weight[encoder_idx][1],
+        model.encoder_4_5_dconv_layers_4_content_bias[encoder_idx][1],
+        model.encoder_4_5_dconv_layers_4_query_weight[encoder_idx][1],
+        model.encoder_4_5_dconv_layers_4_query_bias[encoder_idx][1],
+        model.encoder_4_5_dconv_layers_4_key_weight[encoder_idx][1],
+        model.encoder_4_5_dconv_layers_4_key_bias[encoder_idx][1],
+        model.encoder_4_5_dconv_layers_4_query_decay_weight[encoder_idx][1],
+        model.encoder_4_5_dconv_layers_4_query_decay_bias[encoder_idx][1],
+        buffers.local_attn_decay_kernel,
+        model.encoder_4_5_dconv_layers_4_proj_weight[encoder_idx][1],
+        model.encoder_4_5_dconv_layers_4_proj_bias[encoder_idx][1],
+        lstm_hidden_size);
+
+    y = y_shuff;
+
+    switch (encoder_idx)
+    {
+    case 0:
+        y = demucscpp::conv1d<192, 1536, 1, 1, 0, 1>(
+            y, model.encoder_4_5_dconv_layers_5_conv1d_weight[encoder_idx][1],
+            model.encoder_4_5_dconv_layers_5_conv1d_bias[encoder_idx][1]);
+        break;
+    case 1:
+        y = demucscpp::conv1d<384, 3072, 1, 1, 0, 1>(
+            y, model.encoder_4_5_dconv_layers_5_conv1d_weight[encoder_idx][1],
+            model.encoder_4_5_dconv_layers_5_conv1d_bias[encoder_idx][1]);
+        break;
+    };
+
+    y = demucscpp::group_norm(
+        y, model.encoder_4_5_dconv_layers_6_groupnorm_weight[encoder_idx][1],
+        model.encoder_4_5_dconv_layers_6_groupnorm_bias[encoder_idx][1], 1,
+        1e-05);
+
+    y = demucscpp::glu(y, 1);
+
+    y = demucscpp::layer_scale(
+        y, model.encoder_4_5_dconv_layers_8_scale[encoder_idx][1]);
+
+    // now sum with itself
+    y = y + y_copy;
 }
