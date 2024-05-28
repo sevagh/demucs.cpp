@@ -93,7 +93,7 @@ You need `_malloc` and `_free` (built-in memory management functions) alongside 
 
 In my website, I download the model files from my own Cloudflare R2 bucket: <https://github.com/sevagh/freemusicdemixer.com/blob/main/docs/main.js#L299C1-L321C1>
 
-These are model files converted to GGML binary format as per the repo of this project. For your own project, you should host this file yourself.
+These are model files converted to GGML binary format as per the main README of this project. For your own project, you should host this file yourself.
 
 ## Load weights files and pass to Demucs worker init
 
