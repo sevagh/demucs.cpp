@@ -8,8 +8,8 @@ This document gives a brief overview of how it works
 
 Set up the Emscripten SDK:
 
-    * <https://emscripten.org/docs/tools_reference/emsdk.html>
-    * <https://github.com/emscripten-core/emsdk>
+* <https://emscripten.org/docs/tools_reference/emsdk.html>
+* <https://github.com/emscripten-core/emsdk>
 
 On my computer, once it's set up, this is how it looks:
 ```
@@ -44,8 +44,8 @@ variables so that emcc etc. are used. Typical usage:
 
 The demucs.cpp inference libraries stays as is in `src/`. There is a new directory, `src_wasm/`, containing a CMakeLists.txt file for compiling for WASM, and two new source files:
 
-    * `demucs.cpp`, which contains the C++/Javascript boundary functions that call demucs.cpp's inference library
-    * `model_load.hpp`, a copy of the model load function that's designed to take in bytes representing the loaded model file (more useful for web than loading from a filesystem path)
+* `demucs.cpp`, which contains the C++/Javascript boundary functions that call demucs.cpp's inference library
+* `model_load.hpp`, a copy of the model load function that's designed to take in bytes representing the loaded model file (more useful for web than loading from a filesystem path)
 
 I build like this:
 ```
