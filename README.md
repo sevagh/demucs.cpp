@@ -53,7 +53,7 @@ $ mkdir -p build && cd build && cmake .. && make -j16
 
 ### Download weights
 
-Pre-converted and ready to use weights can be downloaded at https://huggingface.co/datasets/Retrobear/demucs.cpp/tree/main
+Pre-converted and ready to use ggml-weights can be downloaded at [huggingface](https://huggingface.co/datasets/Retrobear/demucs.cpp/tree/main).
 These were created as described below.
 
 ### Convert weights
