@@ -51,6 +51,11 @@ Compile with CMake:
 $ mkdir -p build && cd build && cmake .. && make -j16
 ```
 
+### Download weights
+
+Pre-converted and ready to use ggml-weights can be downloaded at [huggingface](https://huggingface.co/datasets/Retrobear/demucs.cpp/tree/main).
+These were created as described below.
+
 ### Convert weights
 
 Set up a Python env
