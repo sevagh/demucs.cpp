@@ -4,7 +4,7 @@ C++17 library that implements inference for the [Demucs v4 hybrid transformer](h
 
 It uses only the standard library (C++17) and the header-only library [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) as dependencies, making it suitable to compile and run on many platforms. It was designed for low-memory environments by sacrificing the speed of the Torch implementation.
 
-Demucs.cpp powers my websites (<https://freemusicdemixer.com>, <https://pro.freemusicdemixer.com>) and now my new Android app [Music Demixer](https://play.google.com/store/apps/details?id=com.freemusicdemixer.pro) to bring Demucs to your pocket!
+Demucs.cpp powers my website (<https://freemusicdemixer.com>) and now Android app [Music Demixer](https://freemusicdemixer.com/android) to bring Demucs to your pocket!
 
 <a href="https://play.google.com/store/apps/details?id=com.freemusicdemixer.pro"><img src=".github/android-screenshot.png" width="128px" alt="music-demixer-android"/></a> <a href="https://play.google.com/store/apps/details?id=com.freemusicdemixer.pro"><img alt="google-play-badge" width="150px" src=".github/google-play-badge.png"/></a>
 
