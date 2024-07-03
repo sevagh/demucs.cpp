@@ -6,7 +6,7 @@ It uses only the standard library (C++17) and the header-only library [Eigen](ht
 
 Demucs.cpp powers my website (<https://freemusicdemixer.com>) and now Android app [Music Demixer](https://freemusicdemixer.com/android) to bring Demucs to your pocket!
 
-<a href="https://play.google.com/store/apps/details?id=com.freemusicdemixer.pro"><img src=".github/android-screenshot.png" width="128px" alt="music-demixer-android"/></a> <a href="https://play.google.com/store/apps/details?id=com.freemusicdemixer.pro"><img alt="google-play-badge" width="150px" src=".github/google-play-badge.png"/></a>
+<a href="https://play.google.com/store/apps/details?id=com.freemusicdemixer.pro"><img src=".github/android-screenshot.png" width="128px" alt="music-demixer-android"/></a>
 
 See my other project [umx.cpp](https://github.com/sevagh/umx.cpp) for a similar library for Open-Unmix.
 
