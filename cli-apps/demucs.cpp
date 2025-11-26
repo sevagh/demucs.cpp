@@ -142,7 +142,7 @@ int main(int argc, const char **argv)
         exit(1);
     }
 
-    int nb_sources = model.is_4sources ? 4 : 6;
+    int nb_sources = model.n_sources;
 
     std::cout << "Starting Demucs (" << std::to_string(nb_sources)
               << "-source) inference" << std::endl;
@@ -163,9 +163,7 @@ int main(int argc, const char **argv)
 
     out_targets = audio_targets;
 
-    int nb_out_sources = model.is_4sources ? 4 : 6;
-
-    for (int target = 0; target < nb_out_sources; ++target)
+    for (int target = 0; target < nb_sources; ++target)
     {
         // now write the 4 audio waveforms to files in the output dir
         // using libnyquist
@@ -182,28 +180,24 @@ int main(int argc, const char **argv)
 
         std::string target_name;
 
-        switch (target)
+        if (nb_sources == 2)
         {
-        case 0:
-            target_name = "drums";
-            break;
-        case 1:
-            target_name = "bass";
-            break;
-        case 2:
-            target_name = "other";
-            break;
-        case 3:
-            target_name = "vocals";
-            break;
-        case 4:
-            target_name = "guitar";
-            break;
-        case 5:
-            target_name = "piano";
-            break;
-        default:
-            std::cerr << "Error: target " << target << " not supported"
+            std::vector<std::string> target_names = {"dialogue", "background"};
+            target_name = target_names[target];
+        }
+        else if (nb_sources == 4)
+        {
+            std::vector<std::string> target_names = {"drums", "bass", "other", "vocals"};
+            target_name = target_names[target];
+        }
+        else if (nb_sources == 6)
+        {
+            std::vector<std::string> target_names = {"drums", "bass", "other", "vocals", "guitar", "piano"};
+            target_name = target_names[target];
+        }
+        else
+        {
+            std::cerr << "Error: " << nb_sources << " sources not supported"
                       << std::endl;
             exit(1);
         }

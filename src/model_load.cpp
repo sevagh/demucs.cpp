@@ -78,7 +78,7 @@ bool demucscpp::load_demucs_model(const std::string &model_file,
 
     if (magic == 0x646d6336) // dmc6
     {
-        model->is_4sources = false;
+        model->n_sources = 6;
         std::cout << "Model magic is Demucs 6-source" << std::endl;
 
         // modify a few tensor shapes in the model corresponding to the
@@ -91,8 +91,13 @@ bool demucscpp::load_demucs_model(const std::string &model_file,
     }
     else if (magic == 0x646d6334) // dmc4
     {
-        model->is_4sources = true;
+        model->n_sources = 4;
         std::cout << "Model magic is Demucs 4-source" << std::endl;
+    }
+    else if (magic == 0x646d6332) // dmc2
+    {
+        model->n_sources = 2;
+        std::cout << "Model magic is Demucs 2-source" << std::endl;
     }
     else
     {
@@ -102,7 +107,7 @@ bool demucscpp::load_demucs_model(const std::string &model_file,
     }
 
     model->crosstransformer =
-        demucscpp::initialize_crosstransformer(model->is_4sources);
+        demucscpp::initialize_crosstransformer(model->n_sources);
 
     std::cout << "Loading demucs model... " << std::endl;
 
@@ -604,42 +609,42 @@ bool demucscpp::load_demucs_model(const std::string &model_file,
             loaded_size = load_single_matrix(
                 f, name, model->freq_emb_embedding_weight, ne, nelements);
         }
-        else if ((name == "channel_upsampler.weight") && (model->is_4sources))
+        else if ((name == "channel_upsampler.weight") && (model->n_sources == 4))
         {
             auto *ct_4s = static_cast<demucs_crosstransformer_4s *>(
                 model->crosstransformer.get());
             loaded_size = load_single_tensor3d(
                 f, name, ct_4s->channel_upsampler_weight, ne, nelements);
         }
-        else if ((name == "channel_upsampler.bias") && (model->is_4sources))
+        else if ((name == "channel_upsampler.bias") && (model->n_sources == 4))
         {
             auto *ct_4s = static_cast<demucs_crosstransformer_4s *>(
                 model->crosstransformer.get());
             loaded_size = load_single_tensor1d(
                 f, name, ct_4s->channel_upsampler_bias, ne, nelements);
         }
-        else if ((name == "channel_downsampler.weight") && (model->is_4sources))
+        else if ((name == "channel_downsampler.weight") && (model->n_sources == 4))
         {
             auto *ct_4s = static_cast<demucs_crosstransformer_4s *>(
                 model->crosstransformer.get());
             loaded_size = load_single_tensor3d(
                 f, name, ct_4s->channel_downsampler_weight, ne, nelements);
         }
-        else if ((name == "channel_downsampler.bias") && (model->is_4sources))
+        else if ((name == "channel_downsampler.bias") && (model->n_sources == 4))
         {
             auto *ct_4s = static_cast<demucs_crosstransformer_4s *>(
                 model->crosstransformer.get());
             loaded_size = load_single_tensor1d(
                 f, name, ct_4s->channel_downsampler_bias, ne, nelements);
         }
-        else if ((name == "channel_upsampler_t.weight") && (model->is_4sources))
+        else if ((name == "channel_upsampler_t.weight") && (model->n_sources == 4))
         {
             auto *ct_4s = static_cast<demucs_crosstransformer_4s *>(
                 model->crosstransformer.get());
             loaded_size = load_single_tensor3d(
                 f, name, ct_4s->channel_upsampler_t_weight, ne, nelements);
         }
-        else if ((name == "channel_upsampler_t.bias") && (model->is_4sources))
+        else if ((name == "channel_upsampler_t.bias") && (model->n_sources == 4))
         {
             auto *ct_4s = static_cast<demucs_crosstransformer_4s *>(
                 model->crosstransformer.get());
@@ -647,14 +652,14 @@ bool demucscpp::load_demucs_model(const std::string &model_file,
                 f, name, ct_4s->channel_upsampler_t_bias, ne, nelements);
         }
         else if ((name == "channel_downsampler_t.weight") &&
-                 (model->is_4sources))
+                 (model->n_sources == 4))
         {
             auto *ct_4s = static_cast<demucs_crosstransformer_4s *>(
                 model->crosstransformer.get());
             loaded_size = load_single_tensor3d(
                 f, name, ct_4s->channel_downsampler_t_weight, ne, nelements);
         }
-        else if ((name == "channel_downsampler_t.bias") && (model->is_4sources))
+        else if ((name == "channel_downsampler_t.bias") && (model->n_sources == 4))
         {
             auto *ct_4s = static_cast<demucs_crosstransformer_4s *>(
                 model->crosstransformer.get());

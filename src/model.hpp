@@ -284,7 +284,7 @@ struct demucs_crosstransformer_6s : crosstransformer_base
 
 struct demucs_model
 {
-    bool is_4sources;
+    int n_sources;
 
     // Encoders 0-3
     Eigen::Tensor3dXf encoder_conv_weight[4]{
@@ -554,9 +554,9 @@ struct demucs_model
 };
 
 inline std::unique_ptr<crosstransformer_base>
-initialize_crosstransformer(bool is_4sources)
+initialize_crosstransformer(int n_sources)
 {
-    if (is_4sources)
+    if (n_sources == 4)
     {
         return std::make_unique<struct demucs_crosstransformer_4s>();
     }

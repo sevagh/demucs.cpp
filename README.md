@@ -67,6 +67,18 @@ Dump Demucs weights to ggml file, with flag `--six-source` for the 6-source vari
 ```
 $ python ./scripts/convert-pth-to-ggml.py ./ggml-demucs
 ...
+```
+
+For custom 2-stem models, use the `convert-pth-to-ggml-2stem.py` script:
+```
+$ python scripts/convert-pth-to-ggml-2stem.py \
+    ./ggml-dialogue-bg \
+    --checkpoint /path/to/your/model.th \
+    --name my_htdemucs_2s
+```
+This will create a file named `ggml-model-my_htdemucs_2s-2s-f16.bin` in the `ggml-dialogue-bg` directory.
+
+The output for the 2-stem model will be `dialogue.wav` and `background.wav`.
 Processing variable:  crosstransformer.layers_t.4.norm2.bias  with shape:  (512,)  , dtype:  float16
 Processing variable:  crosstransformer.layers_t.4.norm_out.weight  with shape:  (512,)  , dtype:  float16
 Processing variable:  crosstransformer.layers_t.4.norm_out.bias  with shape:  (512,)  , dtype:  float16
