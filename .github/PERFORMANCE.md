@@ -1,6 +1,6 @@
 ### Multi-core, OpenMP, BLAS, etc.
 
-:warning: `demucs.cpp` library code in `./src` **should not use any threading (e.g. pthread or OpenMP) except through the BLAS interface.** This is because demucs.cpp is compiled to a single-threaded WebAssembly module in <https://freemusicdemixer.com>.
+:warning: `demucs.cpp` library code in `./src` **should not use any threading (e.g. pthread or OpenMP) except through the BLAS interface.** This is because demucs.cpp is also compiled to a single-threaded WebAssembly module.
 
 If you have OpenMP and OpenBLAS installed, OpenBLAS might automatically use all of the threads on your machine, which doesn't always run the fastest. Use the `OMP_NUM_THREADS` environment variable to limit this. On my 16c/32t machine, I found `OMP_NUM_THREADS=16` to be the fastest. This matches the [Eigen recommendation](https://eigen.tuxfamily.org/dox/TopicMultiThreading.html) to use the same number of threads as physical cores:
 >On most OS it is very important to limit the number of threads to the number of physical cores, otherwise significant slowdowns are expected, especially for operations involving dense matrices.
@@ -34,7 +34,7 @@ In the single-threaded programs:
 In the multi-threaded programs:
 * User supplies a waveform of length N seconds and a `num_threads` argument
 * Waveform is split into `num_threads` sub-waveforms (of length M < N) to process in parallel with a 0.75-second overlap
-    * We always need overlapping segments in audio applications to eliminate [boundary artifacts](https://freemusicdemixer.com/under-the-hood/2024/02/23/Demucs-segmentation#boundary-artifacts-and-the-overlap-add-method)
+    * We always need overlapping segments in audio applications to eliminate boundary artifacts (overlap-add)
 * `num_threads` threads are launched to perform Demucs inference on the sub-waveforms in parallel
 * Within each thread, the sub-waveform is split into 7.8-second segments
 * Segments within a thread are still processed sequentially, where each segment inference can use >1 core with `OMP_NUM_THREADS`
@@ -53,7 +53,7 @@ user    18m59.731s
 sys     3m28.465s
 ```
 
-More than 2x faster for 4 threads. This is inspired by the parallelism strategy used in <https://freemusicdemixer.com>.
+More than 2x faster for 4 threads. This splits the track into overlapping segments that run in parallel.
 
 V3 is a faster algorithm and the mt variant (with 4 threads) runs in 2.5 min:
 ```

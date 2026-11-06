@@ -1,7 +1,5 @@
 # Demucs.cpp WebAssembly guide
 
-Demucs.cpp is used to build <https://freemusicdemixer.com>
-
 This document gives a brief overview of how it works
 
 ## Set up emsdk
@@ -72,11 +70,6 @@ drwxrwxr-x 15 sevagh sevagh 4.0K May 28 08:42 ..
 
 The important WASM files are `demucs.wasm` and `demucs.js`
 
-You can see on the freemusicdemixer website, similar files (compiled from different source code but roughly equivalent to demucs.cpp) are committed directly to the repo:
-
-* <https://github.com/sevagh/freemusicdemixer.com/blob/main/docs/demucs_free.js>
-* <https://github.com/sevagh/freemusicdemixer.com/blob/main/docs/demucs_free.wasm>
-
 The exposed library/API to `libdemucs` (to be used in Javascript) is defined in the CMakeLists.txt file:
 ```
 # demucs executable
@@ -91,21 +84,19 @@ You need `_malloc` and `_free` (built-in memory management functions) alongside 
 
 ## Host weights files somewhere
 
-In my website, I download the model files from my own Cloudflare R2 bucket: <https://github.com/sevagh/freemusicdemixer.com/blob/main/docs/main.js#L299C1-L321C1>
-
-These are model files converted to GGML binary format as per the main README of this project. For your own project, you should host this file yourself.
+Use model files converted to GGML binary format as per the main README of this project, and host them yourself.
 
 ## Load weights files and pass to Demucs worker init
 
-I use the WebWorker paradigm to interact between the Demucs WASM module in `worker.js` and the main functions/UI functions in `main.js`. This is my message telling the WASM module to load itself and passing the GGML weights file bytes: <https://github.com/sevagh/freemusicdemixer.com/blob/main/docs/main.js#L291-L294>
+Use a Web Worker to run the Demucs WASM module separately from the UI code, and send it the GGML weights file bytes so it can initialize the model.
 
 ## Pass the left and right channels of audio to the Demucs worker
 
-In this code: <https://github.com/sevagh/freemusicdemixer.com/blob/main/docs/main.js#L357C1-L366C8>
+Send the left and right channel samples of each segment to the worker.
 
 ## In worker.js, call Demucs C++/WASM function
 
-This should give an overview of how to call the compiled WASM module functions: <https://github.com/sevagh/freemusicdemixer.com/blob/main/docs/worker.js#L27-L140>
+In the worker, call the exported `_modelInit` and `_modelDemixSegment` functions, using `_malloc` and `_free` for the audio and weights buffers.
 
 ## Put it all together
 

@@ -88,7 +88,7 @@ other           ==> SDR:   7.130  SIR:  11.440  ISR:  14.257  SAR:   7.860
 
 ### Performance of multi-threaded inference
 
-Zeno - Signs, Demucs 4s multi-threaded using the same strategy used in <https://freemusicdemixer.com>.
+Zeno - Signs, Demucs 4s multi-threaded with parallel overlapping segments.
 
 Optimal performance: `export OMP_NUM_THREADS=4` + 4 threads via cli args for a total of 16 physical cores on my 5950X.
 
